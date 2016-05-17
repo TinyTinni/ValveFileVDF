@@ -1,53 +1,54 @@
 #Valve Data Format (vdf) Reader and Writer in C++
-Vavle has its own JSON-like data format: (KeyValue or also known as vdf.)[https://developer.valvesoftware.com/wiki/KeyValues]
-It is widely used e.g. as a games manifest or SteamCMD output.
-This Header-only file provides a parser and writer, loading and saving
-data.
+Vavle has its own JSON-like data format: [KeyValue, also known as vdf.](https://developer.valvesoftware.com/wiki/KeyValues)
+It is used by valve e.g. in game manifests or as SteamCMD output.
+This header-only file provides a parser and writer to load and save the given data.
 
 The parser is based on [Boost Spirit](www.boost.org).
 
 #Features:
 - read and write vdf data in C++
-- buildt-in encodings: char and wide chars
-- additional character sets can be configured
-- supports C++ one line comments ('//')
+- buildt-in encodings: `char`  and `wchar_t`
+- supports custom character sets
+- supports C++ one line comments (`//`) in parsed strings
 - platform independent (tested only on windows yet)
 - header-only
-- No C++11 is required (tests requires C++11)
-- Does not support the '#include' keyword
+- Supports C++98 (tests requires C++11)
+
+#Limitations:
+- Does not support the `#include`/`#base` keyword
 
 #Requirements
 - [Boost Spirit](www.boost.org)
 
 #How-To Use
-First, you have to include the main file 'vdf-Parser.h'.
+First, you have to include the main file `vdf-Parser.h`.
 This file provides several functions and data-structures which are
-in the namespace 'tyti::vdf'.
+in the namespace `tyti::vdf`.
 
 All functions and data structures suppoers wide characters.
-Functions are templates and the wide character data structure has a 'w' prefix.
+The wide character data structure is indicated by the commonly known `w`-prefix.
+Functions are templates and don't need a prefix.
 
-To read an file, create a stream e.g. 'std::ifsteam' or 'std::wifstream'
-and call the 'tyti::vdf::read' function.
-```
+To read an file, create a stream e.g. `std::ifsteam` or `std::wifstream`
+and call the `tyti::vdf::read` function.
+```c++
 std::ifstream file("PathToMyFile");
 tyti::vdf::object root = tyti::vdf::read(file);
 ```
 You can also define a sequence of character defined by a range.
-```
+```c++
 std::string blob;
 ...
-tyti::vdf::object root = tyti::vdf::read(blob.cbegin(), blob.cend());
+tyti::vdf::object root = tyti::vdf::read(std::cbegin(blob), std::cend(blob));
 ```
 
-The 'tyti::vdf::object' is a tree like data structure.
-It has its name, some attributes as a pair of 'key' and 'value'
-and its object childs. Below you csn find an illustration on how the vdf data
-is stored into an object:
-```
+The `tyti::vdf::object` is a tree like data structure.
+It has its name, some attributes as a pair of `key` and `value`
+and its object childs. Below you can see a vdf data structure and how it is stored by naming:
+```javascript
 "name"
 {
-    "attrib0" "Value"
+    "attrib0" "value" // saved as a pair, first -> key, second -> value
     "child0"
     {
     ...
@@ -57,12 +58,12 @@ is stored into an object:
 ```
 
 Given such an object, you can also write it into vdf files via 'tyti::vdf::write':
-```
+```c++
 tyti::vdf::write(file, object);
 ```
 
 #Reference
-```
+```c++
   // Reader functions
   /// reads vdf data from the given stream
   template<typename iStreamT, typename charT = typename iStreamT::char_type>
