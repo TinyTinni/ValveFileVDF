@@ -39,324 +39,326 @@
 #include <boost/spirit/include/phoenix_stl.hpp>
 #include <boost/spirit/include/phoenix_object.hpp>
 
-
-namespace vdf
+namespace tyti
 {
-    template<typename CharT>
-    struct basic_object;
-
-    template<typename CharT>
-    struct basic_key_value;
-
-    namespace detail
+    namespace vdf
     {
-        ///////////////////////////////////////////////////////////////////////////
-        //  Grammar data structure
-        ///////////////////////////////////////////////////////////////////////////
-        template<typename T>
-        struct parser_ast;
+        template<typename CharT>
+        struct basic_object;
 
-        template<typename charT>
-        struct variant
+        template<typename CharT>
+        struct basic_key_value;
+
+        namespace detail
         {
-            typedef boost::variant <
-                boost::recursive_wrapper< parser_ast<charT> >
-                , std::pair<std::basic_string<charT>, std::basic_string<charT> > > parser_node;
-        };
+            ///////////////////////////////////////////////////////////////////////////
+            //  Grammar data structure
+            ///////////////////////////////////////////////////////////////////////////
+            template<typename T>
+            struct parser_ast;
 
-        
-
-        template<typename charT>
-        struct parser_ast
-        {
-            std::basic_string<charT> name;                           // tag name
-            std::vector< typename variant<charT>::parser_node > children;        // children
-        };
-
-
-        ///////////////////////////////////////////////////////////////////////////
-        //  Helper functions selecting the right encoding (char/wchar_T)
-        ///////////////////////////////////////////////////////////////////////////
-
-        template<typename T>
-        struct literal_macro_help
-        {
-            static const char* result(const char* c, const wchar_t* wc)
+            template<typename charT>
+            struct variant
             {
-                return c;
-            }
-            static const char result(char c, wchar_t wc)
-            {
-                return c;
-            }
-        };
+                typedef boost::variant <
+                    boost::recursive_wrapper< parser_ast<charT> >
+                    , std::pair<std::basic_string<charT>, std::basic_string<charT> > > parser_node;
+            };
 
-        template<>
-        struct literal_macro_help<wchar_t>
-        {
-            static const wchar_t* result(const char* c, const wchar_t* wc)
+
+
+            template<typename charT>
+            struct parser_ast
             {
-                return wc;
-            }
-            static const wchar_t result(char c, wchar_t wc)
+                std::basic_string<charT> name;                           // tag name
+                std::vector< typename variant<charT>::parser_node > children;        // children
+            };
+
+
+            ///////////////////////////////////////////////////////////////////////////
+            //  Helper functions selecting the right encoding (char/wchar_T)
+            ///////////////////////////////////////////////////////////////////////////
+
+            template<typename T>
+            struct literal_macro_help
             {
-                return wc;
-            }
-        };
+                static const char* result(const char* c, const wchar_t* wc)
+                {
+                    return c;
+                }
+                static const char result(char c, wchar_t wc)
+                {
+                    return c;
+                }
+            };
+
+            template<>
+            struct literal_macro_help<wchar_t>
+            {
+                static const wchar_t* result(const char* c, const wchar_t* wc)
+                {
+                    return wc;
+                }
+                static const wchar_t result(char c, wchar_t wc)
+                {
+                    return wc;
+                }
+            };
 #define TYTI_L(type, text) vdf::detail::literal_macro_help<type>::result(text, L##text)
 
-        template<typename T>
-        struct encoding_selector
-        {
-            typedef boost::spirit::standard::char_type char_type;
-            typedef boost::spirit::standard::space_type space_type;
-            static const char_type char_;
-            static const space_type space;
-        };
+            template<typename T>
+            struct encoding_selector
+            {
+                typedef boost::spirit::standard::char_type char_type;
+                typedef boost::spirit::standard::space_type space_type;
+                static const char_type char_;
+                static const space_type space;
+            };
 
-        template<>
-        struct encoding_selector<wchar_t>
-        {
-            typedef boost::spirit::standard_wide::char_type char_type;
-            typedef boost::spirit::standard_wide::space_type space_type;
-            static const char_type char_;
-            static const space_type space;
-        };
-        template<typename T>
-        const typename encoding_selector<T>::char_type encoding_selector<T>::char_ = boost::spirit::standard::char_;
-        template<typename T>
-        const typename encoding_selector<T>::space_type encoding_selector<T>::space = boost::spirit::standard::space;
-        const typename encoding_selector<wchar_t>::char_type encoding_selector<wchar_t>::char_ = boost::spirit::standard_wide::char_;
-        const typename encoding_selector<wchar_t>::space_type encoding_selector<wchar_t>::space = boost::spirit::standard_wide::space;
+            template<>
+            struct encoding_selector<wchar_t>
+            {
+                typedef boost::spirit::standard_wide::char_type char_type;
+                typedef boost::spirit::standard_wide::space_type space_type;
+                static const char_type char_;
+                static const space_type space;
+            };
+            template<typename T>
+            const typename encoding_selector<T>::char_type encoding_selector<T>::char_ = boost::spirit::standard::char_;
+            template<typename T>
+            const typename encoding_selector<T>::space_type encoding_selector<T>::space = boost::spirit::standard::space;
+            const typename encoding_selector<wchar_t>::char_type encoding_selector<wchar_t>::char_ = boost::spirit::standard_wide::char_;
+            const typename encoding_selector<wchar_t>::space_type encoding_selector<wchar_t>::space = boost::spirit::standard_wide::space;
 
-        ///////////////////////////////////////////////////////////////////////////
-        //  Grammar
-        ///////////////////////////////////////////////////////////////////////////
-        template<typename CharT, typename Iterator>
-        struct vdf_skipper : public boost::spirit::qi::grammar<Iterator> {
+            ///////////////////////////////////////////////////////////////////////////
+            //  Grammar
+            ///////////////////////////////////////////////////////////////////////////
+            template<typename CharT, typename Iterator>
+            struct vdf_skipper : public boost::spirit::qi::grammar<Iterator> {
 
-        private:
-            typedef encoding_selector<typename Iterator::value_type> es;
-        public:
+            private:
+                typedef encoding_selector<typename Iterator::value_type> es;
+            public:
 
-            vdf_skipper() : vdf_skipper::base_type(skip, "comment_skipper") {
-                //skip whitespace or C++ comment until next line
-                comment = (TYTI_L(CharT, "//") >> *(es::char_ - TYTI_L(CharT, '\n')));
-                skip = es::space | comment;
+                vdf_skipper() : vdf_skipper::base_type(skip, "comment_skipper") {
+                    //skip whitespace or C++ comment until next line
+                    comment = (TYTI_L(CharT, "//") >> *(es::char_ - TYTI_L(CharT, '\n')));
+                    skip = es::space | comment;
+                }
+                boost::spirit::qi::rule<Iterator> skip;
+                boost::spirit::qi::rule<Iterator> comment;
+            };
+
+            template <typename CharT, typename Iterator>
+            struct vdf_grammar
+                : boost::spirit::qi::grammar<Iterator, parser_ast<CharT>(), boost::spirit::qi::locals< std::basic_string<CharT> >, vdf_skipper<CharT, Iterator> >
+            {
+                typedef CharT char_type;
+                typedef std::basic_string<char_type> gr_string;
+                typedef encoding_selector<char_type> es;
+                typedef typename variant<char_type>::parser_node parser_node;
+                vdf_grammar()
+                    : vdf_grammar::base_type(vdf, "vdf")
+                {
+                    namespace spirit = boost::spirit;
+                    namespace phoenix = boost::phoenix;
+                    using spirit::qi::lit;
+                    using spirit::qi::lexeme;
+                    using spirit::qi::on_error;
+                    using spirit::qi::fail;
+                    using namespace spirit::qi::labels;
+
+                    using phoenix::construct;
+                    using phoenix::val;
+
+                    quoted_string %= lexeme[TYTI_L(char_type, '"') >> +(es::char_ - TYTI_L(char_type, '"')) >> TYTI_L(char_type, '"')];
+                    text %= quoted_string > quoted_string;
+                    node %= vdf | text;
+
+                    vdf %=
+                        quoted_string >> TYTI_L(char_type, "{")
+                        >> *node >> TYTI_L(char_type, "}");
+
+                    vdf.name("vdf");
+                    node.name("node");
+                    text.name("text");
+                    quoted_string.name("string");
+
+                    //on_error<fail>
+                    //    (
+                    //        vdf
+                    //        , std::cout
+                    //        << val("Error! Expecting ")
+                    //        << spirit::_4                               // what failed?
+                    //        << val(" here: \"")
+                    //        << construct<std::string>(spirit::_3, spirit::_2)   // iterators to error-pos, end
+                    //        << val("\"")
+                    //        << std::endl
+                    //        );
+                }
+
+                typedef vdf_skipper<CharT, Iterator> skipper;
+                //typedef typename es::space_type skipper;
+
+                boost::spirit::qi::rule<Iterator, parser_ast<CharT>(), boost::spirit::qi::locals<gr_string>, skipper> vdf;
+                boost::spirit::qi::rule<Iterator, parser_node(), skipper> node;
+                boost::spirit::qi::rule<Iterator, std::pair<gr_string, gr_string>(), skipper> text;
+                boost::spirit::qi::rule<Iterator, gr_string(), skipper> quoted_string;
+            };
+
+            ///////////////////////////////////////////////////////////////////////////
+            //  Visitor
+            ///////////////////////////////////////////////////////////////////////////
+
+            // trasformation from parser_ast to output tree via objects
+            template<typename charT>
+            struct vdf_praser_ast_visitor : public boost::static_visitor<>
+            {
+                typedef basic_object<charT> vis_object;
+                typedef basic_key_value<charT> vis_key_value;
+                vis_object& m_currentObj;
+            public:
+                vdf_praser_ast_visitor(vis_object& t) : m_currentObj(t) {}
+                void operator()(std::pair<std::basic_string<charT>, std::basic_string<charT> > in) const
+                {
+                    vis_key_value k;
+                    k.first = in.first;
+                    k.second = in.second;
+                    m_currentObj.attribs.push_back(k);
+                }
+                void operator()(const parser_ast<charT>& x) const
+                {
+                    vis_object t;
+                    t.name = x.name;
+                    for (size_t i = 0; i < x.children.size(); ++i)
+                        boost::apply_visitor(vdf_praser_ast_visitor<charT>(t), x.children[i]);
+                    m_currentObj.childs.push_back(t);
+                }
+
+            };
+
+            ///////////////////////////////////////////////////////////////////////////
+            //  Writer helper functions
+            ///////////////////////////////////////////////////////////////////////////
+
+            struct tabs
+            {
+                size_t t;
+                tabs(size_t i) :t(i) {}
+            };
+
+            template<typename oStreamT>
+            oStreamT& operator<<(oStreamT& s, tabs t)
+            {
+                for (; t.t > 0; --t.t)
+                    s << "\t";
+                return s;
             }
-            boost::spirit::qi::rule<Iterator> skip;
-            boost::spirit::qi::rule<Iterator> comment;
-        };
+        } // end namespace detail
 
-        template <typename CharT, typename Iterator>
-        struct vdf_grammar
-            : boost::spirit::qi::grammar<Iterator, parser_ast<CharT>(), boost::spirit::qi::locals< std::basic_string<CharT> >, vdf_skipper<CharT, Iterator> >
+        ///////////////////////////////////////////////////////////////////////////
+        //  Interface
+        ///////////////////////////////////////////////////////////////////////////
+
+        /// basic key_value. Used in objects to describe attributes.
+        template<typename CharT>
+        struct basic_key_value : public std::pair<std::basic_string<CharT>, std::basic_string<CharT> >
         {
             typedef CharT char_type;
-            typedef std::basic_string<char_type> gr_string;
-            typedef encoding_selector<char_type> es;
-            typedef typename variant<char_type>::parser_node parser_node;
-            vdf_grammar()
-                : vdf_grammar::base_type(vdf, "vdf")
-            {
-                namespace spirit = boost::spirit;
-                namespace phoenix = boost::phoenix;
-                using spirit::qi::lit;
-                using spirit::qi::lexeme;
-                using spirit::qi::on_error;
-                using spirit::qi::fail;
-                using namespace spirit::qi::labels;
-
-                using phoenix::construct;
-                using phoenix::val;
-
-                quoted_string %= lexeme[TYTI_L(char_type, '"') >> +(es::char_ - TYTI_L(char_type, '"')) >> TYTI_L(char_type, '"')];
-                text %= quoted_string > quoted_string;
-                node %= vdf | text; 
-
-                vdf %=
-                    quoted_string >> TYTI_L(char_type, "{")
-                    >> *node >> TYTI_L(char_type, "}");
-
-                vdf.name("vdf");
-                node.name("node");
-                text.name("text");
-                quoted_string.name("string");
-
-                //on_error<fail>
-                //    (
-                //        vdf
-                //        , std::cout
-                //        << val("Error! Expecting ")
-                //        << spirit::_4                               // what failed?
-                //        << val(" here: \"")
-                //        << construct<std::string>(spirit::_3, spirit::_2)   // iterators to error-pos, end
-                //        << val("\"")
-                //        << std::endl
-                //        );
-            }
-
-            typedef vdf_skipper<CharT, Iterator> skipper;
-            //typedef typename es::space_type skipper;
-
-            boost::spirit::qi::rule<Iterator, parser_ast<CharT>(), boost::spirit::qi::locals<gr_string>, skipper> vdf;
-            boost::spirit::qi::rule<Iterator, parser_node(), skipper> node;
-            boost::spirit::qi::rule<Iterator, std::pair<gr_string, gr_string>(), skipper> text;
-            boost::spirit::qi::rule<Iterator, gr_string(), skipper> quoted_string;
         };
 
-        ///////////////////////////////////////////////////////////////////////////
-        //  Visitor
-        ///////////////////////////////////////////////////////////////////////////
+        typedef basic_key_value<char> key_value;
+        typedef basic_key_value<wchar_t> wkey_value;
 
-        // trasformation from parser_ast to output tree via objects
-        template<typename charT>
-        struct vdf_praser_ast_visitor : public boost::static_visitor<>
+        /// basic object node. Every object has a name and can contains attributes saved as key_value pairs or childrens
+        template<typename CharT>
+        struct basic_object
         {
-            typedef basic_object<charT> vis_object;
-            typedef basic_key_value<charT> vis_key_value;
-            vis_object& m_currentObj;
-        public:
-            vdf_praser_ast_visitor(vis_object& t) : m_currentObj(t) {}
-            void operator()(std::pair<std::basic_string<charT>, std::basic_string<charT> > in) const
-            {
-                vis_key_value k;
-                k.first = in.first;
-                k.second = in.second;
-                m_currentObj.attribs.push_back(k);
-            }
-            void operator()(const parser_ast<charT>& x) const
-            {
-                vis_object t;
-                t.name = x.name;
-                for(size_t i = 0; i < x.children.size(); ++i)
-                    boost::apply_visitor(vdf_praser_ast_visitor<charT>(t), x.children[i]);
-                m_currentObj.childs.push_back(t);
-            }
-
+            typedef CharT char_type;
+            std::basic_string<char_type> name;
+            std::vector< basic_key_value<char_type> > attribs;
+            std::vector< basic_object<char_type> > childs;
         };
 
-        ///////////////////////////////////////////////////////////////////////////
-        //  Writer helper functions
-        ///////////////////////////////////////////////////////////////////////////
-        
-        struct tabs
-        {
-            size_t t;
-            tabs(size_t i) :t(i) {}
-        };
+        typedef basic_object<char> object;
+        typedef basic_object<wchar_t> wobject;
 
-        template<typename oStreamT>
-        oStreamT& operator<<(oStreamT& s, tabs t)
+        /** \brief writes given object tree in vdf format to given stream.
+        Uses tabs instead of whitespaces.
+        */
+        template<typename oStreamT, typename charT = typename oStreamT::char_type>
+        void write(oStreamT& s, const basic_object<charT>& r, size_t t = 0)
         {
-            for (; t.t > 0; --t.t)
-                s << "\t";
-            return s;
+            using namespace detail;
+            s << tabs(t) << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tabs(t) << TYTI_L(charT, "{\n");
+            for (size_t i = 0; i < r.attribs.size(); ++i)
+                s << tabs(t + 1) << TYTI_L(charT, '"') << r.attribs[i].first << TYTI_L(charT, "\"\t\t\"") << r.attribs[i].second << TYTI_L(charT, "\"\n");
+            for (size_t i = 0; i < r.childs.size(); ++i)
+                write(s, r.childs[i], t + 1);
+            s << tabs(t) << TYTI_L(charT, "}\n");
         }
-    } // end namespace detail
-
-    ///////////////////////////////////////////////////////////////////////////
-    //  Interface
-    ///////////////////////////////////////////////////////////////////////////
-
-    /// basic key_value. Used in objects to describe attributes.
-    template<typename CharT>
-    struct basic_key_value : public std::pair<std::basic_string<CharT>, std::basic_string<CharT> >
-    {
-        typedef CharT char_type;
-    };
-
-    typedef basic_key_value<char> key_value;
-    typedef basic_key_value<wchar_t> wkey_value;
-
-    /// basic object node. Every object has a name and can contains attributes saved as key_value pairs or childrens
-    template<typename CharT>
-    struct basic_object
-    {
-        typedef CharT char_type;
-        std::basic_string<char_type> name;
-        std::vector< basic_key_value<char_type> > attribs;
-        std::vector< basic_object<char_type> > childs;
-    };
-
-    typedef basic_object<char> object;
-    typedef basic_object<wchar_t> wobject;
-
-    /** \brief writes given object tree in vdf format to given stream.
-    Uses tabs instead of whitespaces.
-    */
-    template<typename oStreamT, typename charT = typename oStreamT::char_type>
-    void write(oStreamT& s, const basic_object<charT>& r, size_t t = 0)
-    {
-        using namespace detail;
-        s << tabs(t) << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tabs(t) << TYTI_L(charT, "{\n");
-        for(size_t i = 0; i < r.attribs.size(); ++i)
-            s << tabs(t + 1) << TYTI_L(charT, '"') << r.attribs[i].first << TYTI_L(charT, "\"\t\t\"") << r.attribs[i].second << TYTI_L(charT, "\"\n");
-        for(size_t i = 0; i < r.childs.size(); ++i)
-            write(s, r.childs[i], t + 1);
-        s << tabs(t) << TYTI_L(charT, "}\n");
-    }
 
 
-    /** \brief Read VDF formatted sequences defined by the range [first, last).
-    If the file is mailformatted, parser will try to read it until it can.
-    @param first begin iterator
-    @param end end iterator
-    @param ok output bool. true, if parser successed, false, if parser failed
-    */
-    template<typename IterT, typename charT = typename IterT::value_type>
-    basic_object<charT> read(IterT first, IterT last, bool* ok = 0)
-    {
-        using namespace detail;
-        parser_ast<charT> ast;
-        vdf_grammar<charT, IterT> parser;
-        vdf_skipper<charT, IterT> skipper;
-        bool r = boost::spirit::qi::phrase_parse(first, last, parser, skipper, ast);
-        if (ok)
-            *ok = r;
+        /** \brief Read VDF formatted sequences defined by the range [first, last).
+        If the file is mailformatted, parser will try to read it until it can.
+        @param first begin iterator
+        @param end end iterator
+        @param ok output bool. true, if parser successed, false, if parser failed
+        */
+        template<typename IterT, typename charT = typename IterT::value_type>
+        basic_object<charT> read(IterT first, IterT last, bool* ok = 0)
+        {
+            using namespace detail;
+            parser_ast<charT> ast;
+            vdf_grammar<charT, IterT> parser;
+            vdf_skipper<charT, IterT> skipper;
+            bool r = boost::spirit::qi::phrase_parse(first, last, parser, skipper, ast);
+            if (ok)
+                *ok = r;
 
-        basic_object<charT> root;
-        for (size_t i = 0; i < ast.children.size(); ++i)
-            boost::apply_visitor(vdf_praser_ast_visitor<charT>(root), ast.children[i]);
-        root.name = ast.name;
-        return root;
-    }
+            basic_object<charT> root;
+            for (size_t i = 0; i < ast.children.size(); ++i)
+                boost::apply_visitor(vdf_praser_ast_visitor<charT>(root), ast.children[i]);
+            root.name = ast.name;
+            return root;
+        }
 
-    /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
-    */
-    template<typename iStreamT, typename charT = typename iStreamT::char_type>
-    basic_object<charT> read(iStreamT& inStream, bool *ok = 0)
-    {
-        // cache the file
-        std::basic_string<charT> str;
-        inStream.seekg(0, std::ios::end);
-        str.resize(inStream.tellg());
-        if (str.empty())
-            return basic_object<charT>();
+        /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
+        */
+        template<typename iStreamT, typename charT = typename iStreamT::char_type>
+        basic_object<charT> read(iStreamT& inStream, bool *ok = 0)
+        {
+            // cache the file
+            std::basic_string<charT> str;
+            inStream.seekg(0, std::ios::end);
+            str.resize(inStream.tellg());
+            if (str.empty())
+                return basic_object<charT>();
 
-        inStream.seekg(0, std::ios::beg);
-        inStream.read(&str[0], str.size());
-        inStream.close();
+            inStream.seekg(0, std::ios::beg);
+            inStream.read(&str[0], str.size());
+            inStream.close();
 
-        // parse it
-        return read(str.begin(), str.end(), ok);
-    }
+            // parse it
+            return read(str.begin(), str.end(), ok);
+        }
 
+    } // end namespace vdf
 } // end namespace tyti
 #ifndef TYTI_NO_L_UNDEF
 #undef TYTI_L
 #endif
 
 BOOST_FUSION_ADAPT_STRUCT(
-    vdf::detail::parser_ast<char>,
+    tyti::vdf::detail::parser_ast<char>,
     (std::string, name)
-    (std::vector< vdf::detail::variant<char>::parser_node >, children)
+    (std::vector< tyti::vdf::detail::variant<char>::parser_node >, children)
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
-    vdf::detail::parser_ast<wchar_t>,
+    tyti::vdf::detail::parser_ast<wchar_t>,
     (std::wstring, name)
-    (std::vector< vdf::detail::variant<wchar_t>::parser_node >, children)
+    (std::vector< tyti::vdf::detail::variant<wchar_t>::parser_node >, children)
 )
 
 
