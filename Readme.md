@@ -19,8 +19,9 @@ The parser is based on [Boost Spirit](www.boost.org).
 
 ##Requirements
 - [Boost Spirit](www.boost.org)
+- C++98
 
-#How-To Use
+##How-To Use
 First, you have to include the main file `vdf-Parser.h`.
 This file provides several functions and data-structures which are
 in the namespace `tyti::vdf`.
@@ -40,6 +41,14 @@ You can also define a sequence of character defined by a range.
 std::string blob;
 ...
 tyti::vdf::object root = tyti::vdf::read(std::cbegin(blob), std::cend(blob));
+
+//given .vdf below, following holds
+//root.name == "name";
+//tyti::vdf::object child = root.childs[0];
+//child.name == "child0";
+//key_value k = root.attribs[0];
+//k.first == "attrib0"
+//k.second == "value"
 ```
 
 The `tyti::vdf::object` is a tree like data structure.
