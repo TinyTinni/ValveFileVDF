@@ -5,7 +5,7 @@ This header-only file provides a parser and writer to load and save the given da
 
 The parser is based on [Boost Spirit](www.boost.org).
 
-#Features:
+##Features:
 - read and write vdf data in C++
 - buildt-in encodings: `char`  and `wchar_t`
 - supports custom character sets
@@ -14,10 +14,10 @@ The parser is based on [Boost Spirit](www.boost.org).
 - header-only
 - Supports C++98 (tests requires C++11)
 
-#Limitations:
+##Limitations:
 - Does not support the `#include`/`#base` keyword
 
-#Requirements
+##Requirements
 - [Boost Spirit](www.boost.org)
 
 #How-To Use
@@ -62,8 +62,19 @@ Given such an object, you can also write it into vdf files via 'tyti::vdf::write
 tyti::vdf::write(file, object);
 ```
 
-#Reference
+##Reference
 ```c++
+// classes
+  template<typename T>
+  basic_object<T>;
+  typedef basic_object<char> object;
+  typedef basic_object<wchar_t> wobject
+  
+  template<typename T>
+  basic_key_value<T>;
+  typedef basic_key_value<char> key_value;
+  typedef basic_key_value<whcar_t> wkey_value;
+
   // Reader functions
   /// reads vdf data from the given stream
   template<typename iStreamT, typename charT = typename iStreamT::char_type>
@@ -78,14 +89,10 @@ tyti::vdf::write(file, object);
   template<typename oStreamT, typename charT = typename oStreamT::char_type>
   void write(oStreamT& out, const basic_object<charT>& obj)
   
-  template<typename T>
-  basic_object<T>;
-  typedef basic_object<char> object;
-  typedef basic_object<wchar_t> wobject
-  
-  template<typename T>
-  basic_key_value<T>;
-  typedef basic_key_value<char> key_value;
-  typedef basic_key_value<whcar_t> wkey_value;
+
   
 ```
+
+## License
+
+[MIT License](./LICENSE) © Matthias Möller. Made with ♥ in Germany.
