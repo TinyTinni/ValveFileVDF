@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <utility>
+#include <fstream>
 
 #define BOOST_SPIRIT_USE_PHOENIX_V3
 #include <boost/config.hpp>
@@ -49,6 +50,9 @@ namespace tyti
         template<typename CharT>
         struct basic_key_value;
 
+        template<typename iStreamT, typename charT>
+        basic_object<charT> read(iStreamT& inStream, bool *ok);
+
         namespace detail
         {
             ///////////////////////////////////////////////////////////////////////////
@@ -61,8 +65,10 @@ namespace tyti
             struct variant
             {
                 typedef boost::variant <
-                    boost::recursive_wrapper< parser_ast<charT> >
-                    , std::pair<std::basic_string<charT>, std::basic_string<charT> > > parser_node;
+                    boost::recursive_wrapper< parser_ast<charT> > //cildren
+                    , std::pair<std::basic_string<charT>, std::basic_string<charT> > //attribute
+                    , std::basic_string<charT> //includes
+                > parser_node; 
             };
 
 
@@ -171,9 +177,13 @@ namespace tyti
                     using phoenix::construct;
                     using phoenix::val;
 
-                    quoted_string %= lexeme[TYTI_L(char_type, '"') >> +(es::char_ - TYTI_L(char_type, '"')) >> TYTI_L(char_type, '"')];
+                    quoted_string %= lexeme[TYTI_L(char_type, '"') >> 
+                        (es::char_ - TYTI_L(char_type, '"') - TYTI_L(char_type, '#')) >> 
+                        *(es::char_ - TYTI_L(char_type, '"')) >> TYTI_L(char_type, '"')];
+
+                    include %= (lit(TYTI_L(char_type,"\"#base\"")) | lit(TYTI_L(char_type,"\"#include\""))) > quoted_string;
                     text %= quoted_string > quoted_string;
-                    node %= vdf | text;
+                    node %= vdf | text | include;
 
                     vdf %=
                         quoted_string >> TYTI_L(char_type, "{")
@@ -204,6 +214,7 @@ namespace tyti
                 boost::spirit::qi::rule<Iterator, parser_node(), skipper> node;
                 boost::spirit::qi::rule<Iterator, std::pair<gr_string, gr_string>(), skipper> text;
                 boost::spirit::qi::rule<Iterator, gr_string(), skipper> quoted_string;
+                boost::spirit::qi::rule<Iterator, gr_string(), skipper> include;
             };
 
             ///////////////////////////////////////////////////////////////////////////
@@ -225,6 +236,16 @@ namespace tyti
                     k.first = in.first;
                     k.second = in.second;
                     m_currentObj.attribs.push_back(k);
+                }
+                void operator()(std::basic_string<charT> in) const
+                {
+                    std::basic_ifstream<charT> file(in);
+                    if (!file.is_open())
+                    {
+                        std::cerr << "Could not open file: " << std::string(in.begin(), in.end()) << std::endl;
+                        return;
+                    }
+                    m_currentObj.childs.push_back(tyti::vdf::read(file));
                 }
                 void operator()(const parser_ast<charT>& x) const
                 {

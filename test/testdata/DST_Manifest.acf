@@ -14,6 +14,8 @@
 	"BytesDownloaded"		"39029520"
 	"AutoUpdateBehavior"		"0"
 	"AllowOtherDownloadsWhileRunning"		"0"
+    "#include"  "includeFile1.vdf"
+    "#base"  "baseFile1.vdf"
 	"UserConfig"
 	{
 	}

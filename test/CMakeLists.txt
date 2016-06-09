@@ -23,6 +23,7 @@ add_executable(${EXECUTABLE_NAME} ${SSU_Sources})
 add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
 
 if (WIN32)
+    set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /bigobj" )
     add_definitions("-D_WIN32_WINNT=0x0501;WIN32_LEAN_AND_MEAN")
 endif()
 

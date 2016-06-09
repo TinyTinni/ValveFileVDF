@@ -10,10 +10,12 @@ using namespace tyti;
 #define BOOST_TEST_MODULE example
 #include <boost/test/included/unit_test.hpp>
 
+#include <experimental/filesystem>
+
 template<typename charT>
 void read_check_DST_file()
 {
-    auto path = std::basic_string<charT>(T_L(SOURCE_DIR))+T_L("/testdata/DST_Manifest.acf");
+    auto path = std::basic_string<charT>(T_L("DST_Manifest.acf"));
     std::basic_ifstream<charT> file(path);
     auto object = vdf::read(file);
     
@@ -25,7 +27,7 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
     BOOST_CHECK(obj.name == T_L("AppState"));
     BOOST_REQUIRE(obj.attribs.size() == 14);
-    BOOST_REQUIRE(obj.childs.size() == 2);
+    BOOST_REQUIRE(obj.childs.size() == 4);
 
     BOOST_CHECK(obj.attribs[0].first == T_L("appid"));
     BOOST_CHECK(obj.attribs[0].second == T_L("343050"));
@@ -33,13 +35,19 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
     BOOST_CHECK(obj.attribs[8].first == T_L("buildid"));
     BOOST_CHECK(obj.attribs[8].second == T_L("1101428"));
 
-    BOOST_CHECK(obj.childs[0].name == T_L("UserConfig"));
-    BOOST_CHECK(obj.childs[0].childs.empty());
+    BOOST_CHECK(obj.childs[2].name == T_L("UserConfig"));
+    BOOST_CHECK(obj.childs[2].childs.empty());
+
+    auto& inc = obj.childs[0];
+    BOOST_CHECK(inc.name == T_L("IncludedStuff"));
+    auto& base = obj.childs[1];
+    BOOST_REQUIRE(base.attribs.size() == 1);
+    BOOST_CHECK(base.attribs[0].second == T_L("Yes"));
 }
 
 BOOST_AUTO_TEST_CASE(Read_File)
 {
-    
+    std::experimental::filesystem::current_path(std::string(SOURCE_DIR)+"/testdata/");
     read_check_DST_file<char>();
     read_check_DST_file<wchar_t>();
 }

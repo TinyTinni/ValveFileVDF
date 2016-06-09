@@ -10,12 +10,10 @@ The parser is based on [Boost Spirit](www.boost.org).
 - buildt-in encodings: `char`  and `wchar_t`
 - supports custom character sets
 - supports C++ one line comments (`//`) in parsed strings
+- `#include`/`#base` keyword (note: searches for files in the current working directoy)
 - platform independent (tested only on windows yet)
 - header-only
 - Supports C++98 (tests requires C++11)
-
-##Limitations:
-- Does not support the `#include`/`#base` keyword
 
 ##Requirements
 - [Boost Spirit](www.boost.org)
@@ -58,6 +56,7 @@ and its object childs. Below you can see a vdf data structure and how it is stor
 "name"
 {
     "attrib0" "value" // saved as a pair, first -> key, second -> value
+    "#base" "includeFile.vdf" // appends object defined in the file to childs
     "child0"
     {
     ...
