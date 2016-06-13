@@ -24,6 +24,7 @@
 #define __TYTI_STEAM_VDF_PARSER_H__
 
 #include <vector>
+#include <unordered_map>
 #include <utility>
 #include <fstream>
 
@@ -46,9 +47,6 @@ namespace tyti
     {
         template<typename CharT>
         struct basic_object;
-
-        template<typename CharT>
-        struct basic_key_value;
 
         template<typename iStreamT, typename charT>
         basic_object<charT> read(iStreamT& inStream, bool *ok);
@@ -226,16 +224,13 @@ namespace tyti
             struct vdf_praser_ast_visitor : public boost::static_visitor<>
             {
                 typedef basic_object<charT> vis_object;
-                typedef basic_key_value<charT> vis_key_value;
+                typedef std::pair<std::basic_string<charT>, std::basic_string<charT> > vis_key_value;
                 vis_object& m_currentObj;
             public:
                 vdf_praser_ast_visitor(vis_object& t) : m_currentObj(t) {}
                 void operator()(std::pair<std::basic_string<charT>, std::basic_string<charT> > in) const
                 {
-                    vis_key_value k;
-                    k.first = in.first;
-                    k.second = in.second;
-                    m_currentObj.attribs.push_back(k);
+                    m_currentObj.attribs.insert(std::move(in));
                 }
                 void operator()(std::basic_string<charT> in) const
                 {
@@ -245,15 +240,16 @@ namespace tyti
                         std::cerr << "Could not open file: " << std::string(in.begin(), in.end()) << std::endl;
                         return;
                     }
-                    m_currentObj.childs.push_back(tyti::vdf::read(file));
+                    auto obj = tyti::vdf::read(file);
+                    m_currentObj.childs.emplace(obj.name, std::move(obj));
                 }
                 void operator()(const parser_ast<charT>& x) const
                 {
                     vis_object t;
                     t.name = x.name;
-                    for (size_t i = 0; i < x.children.size(); ++i)
-                        boost::apply_visitor(vdf_praser_ast_visitor<charT>(t), x.children[i]);
-                    m_currentObj.childs.push_back(t);
+                    for (auto& i : x.children)
+                        boost::apply_visitor(vdf_praser_ast_visitor<charT>(t), i);
+                    m_currentObj.childs.emplace(t.name, std::move(t));
                 }
 
             };
@@ -281,24 +277,14 @@ namespace tyti
         //  Interface
         ///////////////////////////////////////////////////////////////////////////
 
-        /// basic key_value. Used in objects to describe attributes.
-        template<typename CharT>
-        struct basic_key_value : public std::pair<std::basic_string<CharT>, std::basic_string<CharT> >
-        {
-            typedef CharT char_type;
-        };
-
-        typedef basic_key_value<char> key_value;
-        typedef basic_key_value<wchar_t> wkey_value;
-
         /// basic object node. Every object has a name and can contains attributes saved as key_value pairs or childrens
         template<typename CharT>
         struct basic_object
         {
             typedef CharT char_type;
             std::basic_string<char_type> name;
-            std::vector< basic_key_value<char_type> > attribs;
-            std::vector< basic_object<char_type> > childs;
+            std::unordered_map<std::basic_string<char_type>, std::basic_string<char_type> > attribs;
+            std::unordered_map<std::basic_string<char_type>, basic_object<char_type> > childs;
         };
 
         typedef basic_object<char> object;
@@ -312,10 +298,10 @@ namespace tyti
         {
             using namespace detail;
             s << tabs(t) << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tabs(t) << TYTI_L(charT, "{\n");
-            for (size_t i = 0; i < r.attribs.size(); ++i)
-                s << tabs(t + 1) << TYTI_L(charT, '"') << r.attribs[i].first << TYTI_L(charT, "\"\t\t\"") << r.attribs[i].second << TYTI_L(charT, "\"\n");
-            for (size_t i = 0; i < r.childs.size(); ++i)
-                write(s, r.childs[i], t + 1);
+            for (auto& i : r.attribs)
+                s << tabs(t + 1) << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
+            for (auto& i : r.childs)
+                write(s, i, t + 1);
             s << tabs(t) << TYTI_L(charT, "}\n");
         }
 
@@ -338,8 +324,8 @@ namespace tyti
                 *ok = r;
 
             basic_object<charT> root;
-            for (size_t i = 0; i < ast.children.size(); ++i)
-                boost::apply_visitor(vdf_praser_ast_visitor<charT>(root), ast.children[i]);
+                for(auto& i : ast.children)
+                boost::apply_visitor(vdf_praser_ast_visitor<charT>(root), i);
             root.name = ast.name;
             return root;
         }

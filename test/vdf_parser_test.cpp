@@ -29,20 +29,18 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
     BOOST_REQUIRE(obj.attribs.size() == 14);
     BOOST_REQUIRE(obj.childs.size() == 4);
 
-    BOOST_CHECK(obj.attribs[0].first == T_L("appid"));
-    BOOST_CHECK(obj.attribs[0].second == T_L("343050"));
+    BOOST_CHECK(obj.attribs.at(T_L("appid")) == T_L("343050"));
 
-    BOOST_CHECK(obj.attribs[8].first == T_L("buildid"));
-    BOOST_CHECK(obj.attribs[8].second == T_L("1101428"));
+    BOOST_CHECK(obj.attribs.at(T_L("buildid")) == T_L("1101428"));
 
-    BOOST_CHECK(obj.childs[2].name == T_L("UserConfig"));
-    BOOST_CHECK(obj.childs[2].childs.empty());
+    BOOST_CHECK(obj.childs.at(T_L("UserConfig")).name == T_L("UserConfig"));
+    BOOST_CHECK(obj.childs.at(T_L("UserConfig")).childs.empty());
 
-    auto& inc = obj.childs[0];
+    const auto& inc = obj.childs.at(T_L("IncludedStuff"));
     BOOST_CHECK(inc.name == T_L("IncludedStuff"));
-    auto& base = obj.childs[1];
+    const auto& base = obj.childs.at(T_L("BaseInclude"));
     BOOST_REQUIRE(base.attribs.size() == 1);
-    BOOST_CHECK(base.attribs[0].second == T_L("Yes"));
+    BOOST_CHECK(base.attribs.at(T_L("BaseAttrib")) == T_L("Yes"));
 }
 
 BOOST_AUTO_TEST_CASE(Read_File)
@@ -62,13 +60,12 @@ void read_string()
 
     BOOST_CHECK(obj.attribs.empty());
     BOOST_REQUIRE(obj.childs.size() == 1);
-    auto secondNode = obj.childs[0];
+    auto secondNode = obj.childs.at(T_L("SecondNode"));
 
     BOOST_CHECK(secondNode.name == T_L("SecondNode"));
     BOOST_REQUIRE(secondNode.attribs.size() == 1);
     BOOST_CHECK(secondNode.childs.empty());
-    BOOST_CHECK(secondNode.attribs[0].first == T_L("Key"));
-    BOOST_CHECK(secondNode.attribs[0].second == T_L("Value"));
+    BOOST_CHECK(secondNode.attribs.at(T_L("Key")) == T_L("Value"));
 }
 
 BOOST_AUTO_TEST_CASE(Read_String)

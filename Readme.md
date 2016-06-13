@@ -13,11 +13,11 @@ The parser is based on [Boost Spirit](www.boost.org).
 - `#include`/`#base` keyword (note: searches for files in the current working directoy)
 - platform independent (tested only on windows yet)
 - header-only
-- Supports C++98 (tests requires C++11)
+- Supports C++98 (Check c++98 Branch, tests require c++11)
 
 ##Requirements
 - [Boost Spirit](www.boost.org)
-- C++98
+- C++11 (C++98 supported on own branch, interface differs)
 
 ##How-To Use
 First, you have to include the main file `vdf-Parser.h`.
@@ -42,11 +42,10 @@ tyti::vdf::object root = tyti::vdf::read(std::cbegin(blob), std::cend(blob));
 
 //given .vdf below, following holds
 //root.name == "name";
-//tyti::vdf::object child = root.childs[0];
+//tyti::vdf::object child = root.childs["child0"];
 //child.name == "child0";
-//key_value k = root.attribs[0];
-//k.first == "attrib0"
-//k.second == "value"
+//std::string k = root.attribs["attrib0"];
+//k == "value"
 ```
 
 The `tyti::vdf::object` is a tree like data structure.
@@ -77,11 +76,6 @@ tyti::vdf::write(file, object);
   basic_object<T>;
   typedef basic_object<char> object;
   typedef basic_object<wchar_t> wobject
-  
-  template<typename T>
-  basic_key_value<T>;
-  typedef basic_key_value<char> key_value;
-  typedef basic_key_value<whcar_t> wkey_value;
 
   // Reader functions
   /// reads vdf data from the given stream
