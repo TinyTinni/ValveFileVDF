@@ -41,11 +41,11 @@ std::string blob;
 tyti::vdf::object root = tyti::vdf::read(std::cbegin(blob), std::cend(blob));
 
 //given .vdf below, following holds
-//root.name == "name";
-//tyti::vdf::object child = root.childs["child0"];
-//child.name == "child0";
-//std::string k = root.attribs["attrib0"];
-//k == "value"
+assert(root.name == "name");
+tyti::vdf::object child = root.childs["child0"];
+assert(child.name == "child0");
+std::string k = root.attribs["attrib0"];
+assert(k == "value");
 ```
 
 The `tyti::vdf::object` is a tree like data structure.
