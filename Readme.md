@@ -1,11 +1,11 @@
-#Valve Data Format (.vdf) Reader and Writer in C++
+# Valve Data Format (.vdf) Reader and Writer in C++
 Vavle has its own JSON-like data format: [KeyValue, also known as vdf.](https://developer.valvesoftware.com/wiki/KeyValues)
 It is used by valve e.g. in game manifests or as SteamCMD output.
 This header-only file provides a parser and writer to load and save the given data.
 
 The parser is based on [Boost Spirit](www.boost.org).
 
-##Features:
+## Features:
 - read and write vdf data in C++
 - buildt-in encodings: `char`  and `wchar_t`
 - supports custom character sets
@@ -15,11 +15,11 @@ The parser is based on [Boost Spirit](www.boost.org).
 - header-only
 - Supports C++98 (Check c++98 Branch, tests require c++11)
 
-##Requirements
+## Requirements
 - [Boost Spirit](www.boost.org)
 - C++11 (C++98 supported on own branch, interface differs)
 
-##How-To Use
+## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
 This file provides several functions and data-structures which are
 in the namespace `tyti::vdf`.
@@ -69,7 +69,7 @@ Given such an object, you can also write it into vdf files via 'tyti::vdf::write
 tyti::vdf::write(file, object);
 ```
 
-##Reference
+## Reference
 ```c++
 // classes
   template<typename T>
