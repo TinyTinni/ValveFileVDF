@@ -28,6 +28,8 @@
 #include <utility>
 #include <fstream>
 
+#include <memory>
+
 #define BOOST_SPIRIT_USE_PHOENIX_V3
 #include <boost/config.hpp>
 #include <boost/config/warning_disable.hpp>
@@ -241,7 +243,7 @@ namespace tyti
                         return;
                     }
                     auto obj = tyti::vdf::read(file);
-                    m_currentObj.childs.emplace(obj.name, std::move(obj));
+                    m_currentObj.childs.emplace(obj.name, std::make_shared<vis_object>(obj));
                 }
                 void operator()(const parser_ast<charT>& x) const
                 {
@@ -249,7 +251,7 @@ namespace tyti
                     t.name = x.name;
                     for (auto& i : x.children)
                         boost::apply_visitor(vdf_praser_ast_visitor<charT>(t), i);
-                    m_currentObj.childs.emplace(t.name, std::move(t));
+                    m_currentObj.childs.emplace(t.name, std::make_shared<vis_object>(t));
                 }
 
             };
@@ -284,7 +286,7 @@ namespace tyti
             typedef CharT char_type;
             std::basic_string<char_type> name;
             std::unordered_map<std::basic_string<char_type>, std::basic_string<char_type> > attribs;
-            std::unordered_map<std::basic_string<char_type>, basic_object<char_type> > childs;
+            std::unordered_map<std::basic_string<char_type>, std::shared_ptr< basic_object<char_type> > > childs;
         };
 
         typedef basic_object<char> object;

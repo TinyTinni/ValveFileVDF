@@ -42,8 +42,8 @@ tyti::vdf::object root = tyti::vdf::read(std::cbegin(blob), std::cend(blob));
 
 //given .vdf below, following holds
 assert(root.name == "name");
-tyti::vdf::object child = root.childs["child0"];
-assert(child.name == "child0");
+std::shared_ptr<tyti::vdf::object> child = root.childs["child0"];
+assert(child->name == "child0");
 std::string k = root.attribs["attrib0"];
 assert(k == "value");
 ```

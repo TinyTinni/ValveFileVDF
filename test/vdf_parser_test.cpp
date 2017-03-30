@@ -33,14 +33,14 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
 
     BOOST_CHECK(obj.attribs.at(T_L("buildid")) == T_L("1101428"));
 
-    BOOST_CHECK(obj.childs.at(T_L("UserConfig")).name == T_L("UserConfig"));
-    BOOST_CHECK(obj.childs.at(T_L("UserConfig")).childs.empty());
+    BOOST_CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
+    BOOST_CHECK(obj.childs.at(T_L("UserConfig"))->childs.empty());
 
-    const auto& inc = obj.childs.at(T_L("IncludedStuff"));
-    BOOST_CHECK(inc.name == T_L("IncludedStuff"));
-    const auto& base = obj.childs.at(T_L("BaseInclude"));
-    BOOST_REQUIRE(base.attribs.size() == 1);
-    BOOST_CHECK(base.attribs.at(T_L("BaseAttrib")) == T_L("Yes"));
+    const auto inc = obj.childs.at(T_L("IncludedStuff"));
+    BOOST_CHECK(inc->name == T_L("IncludedStuff"));
+    const auto base = obj.childs.at(T_L("BaseInclude"));
+    BOOST_REQUIRE(base->attribs.size() == 1);
+    BOOST_CHECK(base->attribs.at(T_L("BaseAttrib")) == T_L("Yes"));
 }
 
 BOOST_AUTO_TEST_CASE(Read_File)
@@ -62,10 +62,10 @@ void read_string()
     BOOST_REQUIRE(obj.childs.size() == 1);
     auto secondNode = obj.childs.at(T_L("SecondNode"));
 
-    BOOST_CHECK(secondNode.name == T_L("SecondNode"));
-    BOOST_REQUIRE(secondNode.attribs.size() == 1);
-    BOOST_CHECK(secondNode.childs.empty());
-    BOOST_CHECK(secondNode.attribs.at(T_L("Key")) == T_L("Value"));
+    BOOST_CHECK(secondNode->name == T_L("SecondNode"));
+    BOOST_REQUIRE(secondNode->attribs.size() == 1);
+    BOOST_CHECK(secondNode->childs.empty());
+    BOOST_CHECK(secondNode->attribs.at(T_L("Key")) == T_L("Value"));
 }
 
 BOOST_AUTO_TEST_CASE(Read_String)
