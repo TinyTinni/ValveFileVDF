@@ -178,12 +178,12 @@ namespace tyti
                     using phoenix::val;
 
                     quoted_string %= lexeme[TYTI_L(char_type, '"') >> 
-                        (es::char_ - TYTI_L(char_type, '"') - TYTI_L(char_type, '#')) >> 
+						(es::char_ - TYTI_L(char_type, '"')) >> //excludes empty strings
                         *(es::char_ - TYTI_L(char_type, '"')) >> TYTI_L(char_type, '"')];
 
                     include %= (lit(TYTI_L(char_type,"\"#base\"")) | lit(TYTI_L(char_type,"\"#include\""))) > quoted_string;
                     text %= quoted_string > quoted_string;
-                    node %= vdf | text | include;
+                    node %= vdf | include | text ;
 
                     vdf %=
                         quoted_string >> TYTI_L(char_type, "{")
