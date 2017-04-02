@@ -16,7 +16,7 @@ The parser is based on [Boost Spirit](https://www.boost.org).
 - Supports C++98 (Check c++98 Branch, tests require c++11)
 
 ## Requirements
-- [Boost Spirit](https://www.boost.org)
+- [Boost Spirit](https://www.boost.org) ([GitHub](https://github.com/boostorg/spirit))
 - C++11 (C++98 supported on own branch, interface differs)
 
 ## How-To Use
