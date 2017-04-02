@@ -3,7 +3,7 @@ Vavle has its own JSON-like data format: [KeyValue, also known as vdf.](https://
 It is used by valve e.g. in game manifests or as SteamCMD output.
 This header-only file provides a parser and writer to load and save the given data.
 
-The parser is based on [Boost Spirit](www.boost.org).
+The parser is based on [Boost Spirit](https://www.boost.org).
 
 ## Features:
 - read and write vdf data in C++
@@ -13,11 +13,9 @@ The parser is based on [Boost Spirit](www.boost.org).
 - `#include`/`#base` keyword (note: searches for files in the current working directoy)
 - platform independent (tested only on windows yet)
 - header-only
-- Supports C++98 (Check c++98 Branch, tests require c++11)
 
 ## Requirements
-- [Boost Spirit](www.boost.org)
-- C++11 (C++98 supported on own branch, interface differs)
+- [Boost Spirit](https://www.boost.org) ([GitHub](https://github.com/boostorg/spirit))
 
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
