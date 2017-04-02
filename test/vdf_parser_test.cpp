@@ -17,8 +17,11 @@ void read_check_DST_file()
 {
     auto path = std::basic_string<charT>(T_L("DST_Manifest.acf"));
     std::basic_ifstream<charT> file(path);
-    auto object = vdf::read(file);
+	bool ok;
+    auto object = vdf::read(file, &ok);
     
+	BOOST_REQUIRE(ok);
+
     check_DST_AST(object);
 }
 
@@ -26,12 +29,13 @@ template<typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
     BOOST_CHECK(obj.name == T_L("AppState"));
-    BOOST_REQUIRE(obj.attribs.size() == 14);
-    BOOST_REQUIRE(obj.childs.size() == 4);
+    BOOST_REQUIRE_EQUAL(obj.attribs.size() , 15);
+    BOOST_REQUIRE_EQUAL(obj.childs.size() , 4);
 
     BOOST_CHECK(obj.attribs.at(T_L("appid")) == T_L("343050"));
 
     BOOST_CHECK(obj.attribs.at(T_L("buildid")) == T_L("1101428"));
+	BOOST_CHECK(obj.attribs.at(T_L("#1_attrib")) == T_L("1"));
 
     BOOST_CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
     BOOST_CHECK(obj.childs.at(T_L("UserConfig"))->childs.empty());
@@ -54,7 +58,10 @@ template<typename charT>
 void read_string()
 {
     std::basic_string<charT> attribs{ T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") };
-    auto obj = vdf::read(attribs.begin(), attribs.end());
+	bool ok;
+    auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
+
+	BOOST_REQUIRE(ok);
 
     BOOST_CHECK(obj.name == T_L("firstNode"));
 
@@ -81,7 +88,7 @@ void check_fail()
     std::basic_string<charT> attribs{ T_L("\"firstNode\"\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") };
     auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
 
-    BOOST_CHECK(!ok);
+    BOOST_REQUIRE(!ok);
 }
 
 BOOST_AUTO_TEST_CASE(Error_Test)

@@ -16,7 +16,8 @@
 	"AllowOtherDownloadsWhileRunning"		"0"
     "#include"  "includeFile1.vdf"
     "#base"  "baseFile1.vdf"
-	"UserConfig"
+    "#1_attrib" "1"
+    "UserConfig"
 	{
 	}
 	"MountedDepots"
