@@ -243,7 +243,8 @@ namespace tyti
                         return;
                     }
                     auto obj = tyti::vdf::read(file);
-                    m_currentObj.childs.emplace(obj.name, std::make_shared<vis_object>(obj));
+					const std::basic_string<charT> n = obj.name;
+                    m_currentObj.childs.emplace(n, std::make_shared<vis_object>(std::move(obj)));
                 }
                 void operator()(const parser_ast<charT>& x) const
                 {
@@ -251,7 +252,7 @@ namespace tyti
                     t.name = x.name;
                     for (auto& i : x.children)
                         boost::apply_visitor(vdf_praser_ast_visitor<charT>(t), i);
-                    m_currentObj.childs.emplace(t.name, std::make_shared<vis_object>(t));
+                    m_currentObj.childs.emplace(x.name, std::make_shared<vis_object>(std::move(t)));
                 }
 
             };
