@@ -234,7 +234,7 @@ namespace tyti
                 {
                     m_currentObj.attribs.insert(std::move(in));
                 }
-                void operator()(std::basic_string<charT> in) const
+                void operator()(const std::basic_string<charT>& in) const
                 {
                     std::basic_ifstream<charT> file(in);
                     if (!file.is_open())
@@ -244,7 +244,7 @@ namespace tyti
                     }
                     auto obj = tyti::vdf::read(file);
 					const std::basic_string<charT> n = obj.name;
-                    m_currentObj.childs.emplace(n, std::make_shared<vis_object>(std::move(obj)));
+                    m_currentObj.childs.emplace(std::move(n), std::make_shared<vis_object>(std::move(obj)));
                 }
                 void operator()(const parser_ast<charT>& x) const
                 {
