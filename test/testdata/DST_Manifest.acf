@@ -1,3 +1,4 @@
+//simple check
 "AppState"
 {
 	"appid"		"343050"
@@ -17,6 +18,7 @@
     "#include"  "includeFile1.vdf"
     "#base"  "baseFile1.vdf"
     "#1_attrib" "1"
+    "emptyAttrib" ""
     "UserConfig"
 	{
 	}

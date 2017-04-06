@@ -178,7 +178,6 @@ namespace tyti
                     using phoenix::val;
 
                     quoted_string %= lexeme[TYTI_L(char_type, '"') >> 
-						(es::char_ - TYTI_L(char_type, '"')) >> //excludes empty strings
                         *(es::char_ - TYTI_L(char_type, '"')) >> TYTI_L(char_type, '"')];
 
                     include %= (lit(TYTI_L(char_type,"\"#base\"")) | lit(TYTI_L(char_type,"\"#include\""))) > quoted_string;

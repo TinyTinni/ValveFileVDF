@@ -12,6 +12,27 @@ using namespace tyti;
 
 #include <experimental/filesystem>
 
+std::ostream& operator<<(std::ostream& o, const std::basic_string<wchar_t>& w)
+{
+	for (const auto& i : w)
+		o << reinterpret_cast<const char*>(i); //hard cast to simple char, maybe not best idea
+	return o;
+}
+
+namespace boost {
+	namespace test_tools {
+		namespace tt_detail{
+		template<>
+		struct print_log_value< std::basic_string<wchar_t> > {
+			void operator()(std::ostream& os, const std::basic_string<wchar_t>& ts) const
+			{
+				::operator<<(os, ts);
+			}
+		};
+		}
+	}
+}
+
 template<typename charT>
 void read_check_DST_file()
 {
@@ -28,23 +49,24 @@ void read_check_DST_file()
 template<typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
-    BOOST_CHECK(obj.name == T_L("AppState"));
-    BOOST_REQUIRE_EQUAL(obj.attribs.size() , 15);
+    BOOST_CHECK_EQUAL(obj.name, T_L("AppState"));
+    BOOST_REQUIRE_EQUAL(obj.attribs.size() , 16);
     BOOST_REQUIRE_EQUAL(obj.childs.size() , 4);
 
-    BOOST_CHECK(obj.attribs.at(T_L("appid")) == T_L("343050"));
+    BOOST_CHECK_EQUAL(obj.attribs.at(T_L("appid")), T_L("343050"));
 
-    BOOST_CHECK(obj.attribs.at(T_L("buildid")) == T_L("1101428"));
-	BOOST_CHECK(obj.attribs.at(T_L("#1_attrib")) == T_L("1"));
+    BOOST_CHECK_EQUAL(obj.attribs.at(T_L("buildid")), T_L("1101428"));
+	BOOST_CHECK_EQUAL(obj.attribs.at(T_L("#1_attrib")), T_L("1"));
+	BOOST_CHECK_EQUAL(obj.attribs.at(T_L("emptyAttrib")), T_L(""));
 
-    BOOST_CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
+    BOOST_CHECK_EQUAL(obj.childs.at(T_L("UserConfig"))->name, T_L("UserConfig"));
     BOOST_CHECK(obj.childs.at(T_L("UserConfig"))->childs.empty());
 
     const auto inc = obj.childs.at(T_L("IncludedStuff"));
-    BOOST_CHECK(inc->name == T_L("IncludedStuff"));
+    BOOST_CHECK_EQUAL(inc->name, T_L("IncludedStuff"));
     const auto base = obj.childs.at(T_L("BaseInclude"));
-    BOOST_REQUIRE(base->attribs.size() == 1);
-    BOOST_CHECK(base->attribs.at(T_L("BaseAttrib")) == T_L("Yes"));
+    BOOST_REQUIRE_EQUAL(base->attribs.size(), 1);
+    BOOST_CHECK_EQUAL(base->attribs.at(T_L("BaseAttrib")), T_L("Yes"));
 }
 
 BOOST_AUTO_TEST_CASE(Read_File)
@@ -63,16 +85,16 @@ void read_string()
 
 	BOOST_REQUIRE(ok);
 
-    BOOST_CHECK(obj.name == T_L("firstNode"));
+    BOOST_CHECK_EQUAL(obj.name, T_L("firstNode"));
 
     BOOST_CHECK(obj.attribs.empty());
-    BOOST_REQUIRE(obj.childs.size() == 1);
+    BOOST_REQUIRE_EQUAL(obj.childs.size(), 1);
     auto secondNode = obj.childs.at(T_L("SecondNode"));
 
-    BOOST_CHECK(secondNode->name == T_L("SecondNode"));
-    BOOST_REQUIRE(secondNode->attribs.size() == 1);
+    BOOST_CHECK_EQUAL(secondNode->name, T_L("SecondNode"));
+    BOOST_REQUIRE_EQUAL(secondNode->attribs.size(), 1);
     BOOST_CHECK(secondNode->childs.empty());
-    BOOST_CHECK(secondNode->attribs.at(T_L("Key")) == T_L("Value"));
+    BOOST_CHECK_EQUAL(secondNode->attribs.at(T_L("Key")), T_L("Value"));
 }
 
 BOOST_AUTO_TEST_CASE(Read_String)
