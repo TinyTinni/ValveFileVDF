@@ -79,16 +79,16 @@ tyti::vdf::write(file, object);
   // Reader functions
   /// reads vdf data from the given stream
   template<typename iStreamT, typename charT = typename iStreamT::char_type>
-  basic_object<charT> read(iStreamT& inStream, bool *ok = 0) 
+  basic_object<charT> read(iStreamT& inStream, bool *ok = 0);
   
   /// reads vdf data within the given range
   template<typename IterT, typename charT = typename IterT::value_type>
-  basic_object<charT> read(IterT first, IterT last, bool* ok = 0)
+  basic_object<charT> read(IterT first, IterT last, bool* ok = 0);
 
   // Writer functions
   /// writes given obj into out in vdf style 
   template<typename oStreamT, typename charT = typename oStreamT::char_type>
-  void write(oStreamT& out, const basic_object<charT>& obj)
+  void write(oStreamT& out, const basic_object<charT>& obj);
   
 
   
