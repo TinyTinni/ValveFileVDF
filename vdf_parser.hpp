@@ -35,12 +35,6 @@ namespace tyti
 {
     namespace vdf
     {
-        template<typename CharT>
-        struct basic_object;
-
-        template<typename iStreamT, typename charT = typename iStreamT::char_type>
-        basic_object<charT> read(iStreamT& inStream, bool *ok = 0);
-
         namespace detail
         {
             ///////////////////////////////////////////////////////////////////////////
@@ -136,6 +130,7 @@ namespace tyti
         template<typename IterT, typename charT = typename IterT::value_type>
         basic_object<charT> read(IterT first, IterT last, bool* ok = 0)
         {
+			//todo: error handling
 			if (ok)
 				*ok = true;
 
@@ -201,8 +196,8 @@ namespace tyti
 
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
         */
-        template<typename iStreamT, typename charT>
-        basic_object<charT> read(iStreamT& inStream, bool *ok)
+        template<typename iStreamT, typename charT = iStreamT::char_type >
+        basic_object<charT> read(iStreamT& inStream, bool *ok = 0)
         {
             // cache the file
             std::basic_string<charT> str;
