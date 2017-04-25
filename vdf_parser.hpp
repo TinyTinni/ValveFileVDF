@@ -358,17 +358,11 @@ namespace tyti
 #undef TYTI_L
 #endif
 
-BOOST_FUSION_ADAPT_STRUCT(
-    tyti::vdf::detail::parser_ast<char>,
-    (std::string, name)
-    (std::vector< tyti::vdf::detail::variant<char>::parser_node >, children)
+BOOST_FUSION_ADAPT_TPL_STRUCT(
+	(charT),
+	(tyti::vdf::detail::parser_ast) (charT),
+	(std::basic_string<charT>, name),
+	(std::vector< typename tyti::vdf::detail::variant<charT>::parser_node >, children)
 )
-
-BOOST_FUSION_ADAPT_STRUCT(
-    tyti::vdf::detail::parser_ast<wchar_t>,
-    (std::wstring, name)
-    (std::vector< tyti::vdf::detail::variant<wchar_t>::parser_node >, children)
-)
-
 
 #endif //__TYTI_STEAM_VDF_PARSER_H__
