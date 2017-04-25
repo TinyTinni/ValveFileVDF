@@ -50,7 +50,7 @@ template<typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
     BOOST_CHECK_EQUAL(obj.name, T_L("AppState"));
-    BOOST_REQUIRE_EQUAL(obj.attribs.size() , 16);
+    BOOST_REQUIRE_EQUAL(obj.attribs.size() , 17);
     BOOST_REQUIRE_EQUAL(obj.childs.size() , 4);
 
     BOOST_CHECK_EQUAL(obj.attribs.at(T_L("appid")), T_L("343050"));
@@ -67,6 +67,7 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
     const auto base = obj.childs.at(T_L("BaseInclude"));
     BOOST_REQUIRE_EQUAL(base->attribs.size(), 1);
     BOOST_CHECK_EQUAL(base->attribs.at(T_L("BaseAttrib")), T_L("Yes"));
+	BOOST_CHECK_EQUAL(obj.attribs.at(T_L("another attribute with fancy space")), T_L("yay"));
 }
 
 BOOST_AUTO_TEST_CASE(Read_File)
