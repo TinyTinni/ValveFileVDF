@@ -86,14 +86,14 @@ template<typename charT>
 void check_fail()
 {
     bool ok;
-    std::basic_string<charT> attribs{ T_L("\"firstNode\"\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") };
+    std::basic_string<charT> attribs{ T_L("\"firstNode\"{\"SecondNode\"{\"Key\" //myComment\n}}") };
     auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(!ok);
 }
 //todo: error checking
-//TEST_CASE("Find Error","[read_error]")
-//{
-//    check_fail<char>();
-//    check_fail<wchar_t>();
-//}
+TEST_CASE("Find Error","[read_error]")
+{
+    check_fail<char>();
+    check_fail<wchar_t>();
+}
