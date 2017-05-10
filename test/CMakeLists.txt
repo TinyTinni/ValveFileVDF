@@ -2,29 +2,32 @@ cmake_minimum_required (VERSION 3.5.1)
 project (vdf-Parser)
 
 #set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
-set (EXECUTABLE_NAME "vdf-Parser-test")
+include(ExternalProject)
+find_package(Git REQUIRED)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+ExternalProject_Add(
+    catch
+    PREFIX ${CMAKE_BINARY_DIR}/catch
+    GIT_REPOSITORY https://github.com/philsquared/Catch.git
+    TIMEOUT 10
+    UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    LOG_DOWNLOAD ON
+   )
+ExternalProject_Get_Property(catch source_dir)
+set(CATCH_INCLUDE_DIR ${source_dir}/single_include CACHE INTERNAL "Path to include folder for Catch.")
 
+include_directories(${CATCH_INCLUDE_DIR} "../")
+enable_testing(true)  # Enables unit-testing.
 
-#if (NOT Boost_LIBRARY_DIR)
-#	message(FATAL_ERROR "Could not find Boost_LIBRARY_DIR. Please specify")
-#endif()
-link_directories(${Boost_LIBRARY_DIR})
-find_package(Boost REQUIRED)
+set(SRCS
+ "main.cpp"
+ "vdf_parser_test.cpp")
 
-set(SSU_Sources "vdf_parser_test.cpp")
-
-include_directories(${Boost_INCLUDE_DIR})
-include_directories("../")
-
-add_executable(${EXECUTABLE_NAME} ${SSU_Sources})
-
+add_executable(tests "../vdf_parser.hpp" ${SRCS})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests) #requires cmake 3.6
+add_dependencies(tests catch)
 add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
-
-if (WIN32)
-    set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /bigobj" )
-    add_definitions("-D_WIN32_WINNT=0x0501;WIN32_LEAN_AND_MEAN")
-endif()
-
 
