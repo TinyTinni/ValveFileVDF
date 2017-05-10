@@ -130,67 +130,67 @@ namespace tyti
         template<typename IterT, typename charT = typename IterT::value_type>
         basic_object<charT> read(IterT first, IterT last, bool* ok = 0)
         {
-			//todo: error handling
-			if (ok)
-				*ok = true;
+            //todo: error handling
+            if (ok)
+                *ok = true;
 
-			basic_object<charT> root;
-			basic_object<charT>* cur = &root;
-			std::stack< basic_object<charT>* > lvls;
-			//read header
-			// first, quoted name
-			auto b = std::find(first, last, TYTI_L(charT, '\"'));
-			auto bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
-			root.name = std::basic_string<charT>(b+1, bend);
-			// second, get {}
-			b = std::find(bend, last, TYTI_L(charT,'{'));
-			lvls.push(&root);
-			while (!lvls.empty() && b != last)
-			{
-				const std::basic_string<charT> startsym = TYTI_L(charT, "\"}");
+            basic_object<charT> root;
+            basic_object<charT>* cur = &root;
+            std::stack< basic_object<charT>* > lvls;
+            //read header
+            // first, quoted name
+            auto b = std::find(first, last, TYTI_L(charT, '\"'));
+            auto bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
+            root.name = std::basic_string<charT>(b + 1, bend);
+            // second, get {}
+            b = std::find(bend, last, TYTI_L(charT, '{'));
+            lvls.push(&root);
+            while (!lvls.empty() && b != last)
+            {
+                const std::basic_string<charT> startsym = TYTI_L(charT, "\"}");
 
-				//find first starting attrib/child, or ending
-				b = std::find_first_of(b, last, std::cbegin(startsym), std::cend(startsym));
-				if (*b == '\"')
-				{
-					bend = std::find(b+1, last, TYTI_L(charT, '\"'));
-					std::basic_string<charT> curName(b + 1, bend);
-					b = bend + 1;
+                //find first starting attrib/child, or ending
+                b = std::find_first_of(b, last, std::cbegin(startsym), std::cend(startsym));
+                if (*b == '\"')
+                {
+                    bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
+                    std::basic_string<charT> curName(b + 1, bend);
+                    b = bend + 1;
 
-					const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{");
-					b = std::find_first_of(b, last, std::cbegin(ecspsym), std::cend(ecspsym));
-					if (*b == '\"')
-					{
-						bend = std::find(b+1, last, TYTI_L(charT, '\"'));
-						auto value = std::basic_string<charT>(b + 1, bend);
-						b = bend + 1;
+                    const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{");
+                    b = std::find_first_of(b, last, std::cbegin(ecspsym), std::cend(ecspsym));
+                    if (*b == '\"')
+                    {
+                        bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
+                        auto value = std::basic_string<charT>(b + 1, bend);
+                        b = bend + 1;
 
-						if (curName != TYTI_L(charT, "#include") && curName != TYTI_L(charT, "#base"))
-							cur->attribs[curName] = value;
-						else
-						{
-							std::basic_ifstream<charT> i(value);
-							auto n = std::make_shared<basic_object<charT>>(read(i, ok));
-							cur->childs[n->name] = n;	
-						}
-					}
-					else if (*b == '{')
-					{
-						lvls.push(cur);
-						auto n = std::make_shared<basic_object<charT>>();
-						cur->childs[curName] = n;
-						cur = n.get();
-						cur->name = curName;
-						++b;
-					}
-				}
-				else if (*b == '}')
-				{
-					cur = lvls.top();
-					lvls.pop();
-					++b;
-				}
-			}
+                        if (curName != TYTI_L(charT, "#include") && curName != TYTI_L(charT, "#base"))
+                            cur->attribs[curName] = value;
+                        else
+                        {
+                            std::basic_ifstream<charT> i(value);
+                            auto n = std::make_shared<basic_object<charT>>(read(i, ok));
+                            cur->childs[n->name] = n;
+                        }
+                    }
+                    else if (*b == '{')
+                    {
+                        lvls.push(cur);
+                        auto n = std::make_shared<basic_object<charT>>();
+                        cur->childs[curName] = n;
+                        cur = n.get();
+                        cur->name = curName;
+                        ++b;
+                    }
+                }
+                else if (*b == '}')
+                {
+                    cur = lvls.top();
+                    lvls.pop();
+                    ++b;
+                }
+            }
             return root;
         }
 
