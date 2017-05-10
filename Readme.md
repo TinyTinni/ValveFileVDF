@@ -14,7 +14,7 @@ This header-only file provides a parser and writer to load and save the given da
 
 ## Requirements
 - C++11
-- 
+ 
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
 This file provides several functions and data-structures which are
@@ -100,7 +100,7 @@ The current version is a greedy implementation and jumps over unrecognized field
 Therefore, the error detection is very low.
 Also, it can happen that comments will corrupt the reading process if they contain { or " as symbols.
 Maybe it will get fixed in the future.
-If it is a problem, have a look at the boost branch.
+If it is a problem, have a look at the [boost branch.](https://github.com/TinyTinni/ValveFileVDF/tree/boost)
 
 ## License
 
