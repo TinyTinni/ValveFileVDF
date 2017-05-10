@@ -150,7 +150,10 @@ namespace tyti
             // second, get {}
             b = std::find(bend, last, TYTI_L(charT, '{'));
             if (b == last)
-                *ok = false;
+                if (ok)
+                    *ok = false;
+                else
+                    throw parser_error();
             else
                 lvls.push(&root);
             try {
@@ -210,9 +213,12 @@ namespace tyti
                     }
                 }
             }
-            catch (parser_error&)
+            catch (parser_error& p)
             {
-                *ok = false;
+                if (ok)
+                    *ok = false;
+                else
+                    throw p;
             }
             return root;
         }
