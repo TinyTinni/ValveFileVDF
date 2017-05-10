@@ -3,21 +3,18 @@ Vavle has its own JSON-like data format: [KeyValue, also known as vdf.](https://
 It is used by valve e.g. in game manifests or as SteamCMD output.
 This header-only file provides a parser and writer to load and save the given data.
 
-The parser is based on [Boost Spirit](https://www.boost.org). No-Boost version WIP in the no-boost branch.
-
 ## Features:
 - read and write vdf data in C++
 - build-in encodings: `char`  and `wchar_t`
 - supports custom character sets
-- supports C++ one line comments (`//`) in parsed strings
+- limited support for C++ one line comments (`//`) in parsed strings (See Remarks)
 - `#include`/`#base` keyword (note: searches for files in the current working directoy)
 - platform independent (tested only on windows yet)
 - header-only
 
 ## Requirements
-- [Boost Spirit](https://www.boost.org) ([GitHub](https://github.com/boostorg/spirit))
-For a non boost-based version check out no-boost branch. Currently, the no-boost misses error handling and python support. Also, tests still uses boost. Will change it to a Catch depedency in the future.
-
+- C++11
+- 
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
 This file provides several functions and data-structures which are
@@ -70,18 +67,22 @@ tyti::vdf::write(file, object);
 
 ## Reference
 ```c++
-// classes
+  // classes
   template<typename T>
   basic_object<T>;
   typedef basic_object<char> object;
   typedef basic_object<wchar_t> wobject
 
+  //exceptions
+  //will be thrown, if the optional parameter "ok" was not given
+  class parser_error: std::exception; _
+
   // Reader functions
-  /// reads vdf data from the given stream
+  /// reads vdf data from the given stream. throws tyti::vdf::parser_error if ok == nullptr
   template<typename iStreamT, typename charT = typename iStreamT::char_type>
   basic_object<charT> read(iStreamT& inStream, bool *ok = 0) 
   
-  /// reads vdf data within the given range
+  /// reads vdf data within the given range. throws tyti::vdf::parser_error if ok == nullptr_
   template<typename IterT, typename charT = typename IterT::value_type>
   basic_object<charT> read(IterT first, IterT last, bool* ok = 0)
 
@@ -93,6 +94,13 @@ tyti::vdf::write(file, object);
 
   
 ```
+
+## Remarks for Comments and errors
+The current version is a greedy implementation and jumps over unrecognized fields.
+Therefore, the error detection is very low.
+Also, it can happen that comments will corrupt the reading process if they contain { or " as symbols.
+Maybe it will get fixed in the future.
+If it is a problem, have a look at the boost branch.
 
 ## License
 
