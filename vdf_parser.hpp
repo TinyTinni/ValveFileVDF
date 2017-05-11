@@ -225,7 +225,7 @@ namespace tyti
 
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
         */
-        template<typename iStreamT, typename charT = iStreamT::char_type >
+        template<typename iStreamT, typename charT = typename iStreamT::char_type >
         basic_object<charT> read(iStreamT& inStream, bool *ok = 0)
         {
             // cache the file
