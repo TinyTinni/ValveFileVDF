@@ -14,3 +14,6 @@ install:
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
 script: 
     - mkdir tests/build && cd tests/build && cmake .. && cmake --build .
+after_success:
+    - cd ${TRAVIS_BUILD_DIR}
+    - tests -junit -b
