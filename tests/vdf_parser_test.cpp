@@ -12,19 +12,6 @@ using namespace tyti;
 #include <experimental/filesystem>
 
 template<typename charT>
-void read_check_DST_file()
-{
-    auto path = std::basic_string<charT>(T_L("DST_Manifest.acf"));
-    std::basic_ifstream<charT> file(path);
-    bool ok;
-    auto object = vdf::read(file, &ok);
-    
-    REQUIRE(ok);
-
-    check_DST_AST(object);
-}
-
-template<typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
     CHECK(obj.name == T_L("AppState"));
@@ -46,6 +33,19 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
     REQUIRE(base->attribs.size() == 1);
     CHECK(base->attribs.at(T_L("BaseAttrib")) == T_L("Yes"));
     CHECK(obj.attribs.at(T_L("another attribute with fancy space")) == T_L("yay"));
+}
+
+template<typename charT>
+void read_check_DST_file()
+{
+    auto path = std::basic_string<charT>(T_L("DST_Manifest.acf"));
+    std::basic_ifstream<charT> file(path);
+    bool ok;
+    auto object = vdf::read(file, &ok);
+
+    REQUIRE(ok);
+
+    check_DST_AST(object);
 }
 
 TEST_CASE("Read File", "[read]")
