@@ -15,4 +15,4 @@ install:
 script: 
     - mkdir tests/build && cd tests/build && cmake .. && cmake --build .
 after_success:
-    - $TRAVIS_BUILD_DIR/tests/build/tests -junit -b
+    - $TRAVIS_BUILD_DIR/tests/build/tests
