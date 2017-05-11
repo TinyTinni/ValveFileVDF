@@ -13,4 +13,4 @@ install:
   - sudo apt-get install -qq g++-6
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
 script: 
-    - mkdir tests/build && cd tests/build && cmake -DCMAKE_CXX_FLAGS="-lstdc++fs"   .. && cmake --build .
+    - mkdir tests/build && cd tests/build && cmake -DCMAKE_EXE_LINKER_FLAGS="-lstdc++fs"   .. && cmake --build .
