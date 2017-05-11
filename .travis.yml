@@ -1,0 +1,7 @@
+language: c++
+compiler:
+  - clang
+  - gcc
+install: true
+script: 
+    - mkdir tests/build && cd tests/build && cmake .. && cmake --build .
