@@ -38,8 +38,7 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
 template<typename charT>
 void read_check_DST_file()
 {
-    auto path = std::basic_string<charT>(T_L("DST_Manifest.acf"));
-    std::basic_ifstream<charT> file(path);
+    std::basic_ifstream<charT> file("DST_Manifest.acf");
     bool ok;
     auto object = vdf::read(file, &ok);
 

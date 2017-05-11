@@ -124,6 +124,10 @@ namespace tyti
         {
         };
 
+        //forward decl
+        template<typename iStreamT, typename charT = typename iStreamT::char_type >
+        basic_object<charT> read(iStreamT& inStream, bool *ok = 0);
+
 
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
@@ -225,8 +229,8 @@ namespace tyti
 
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
         */
-        template<typename iStreamT, typename charT = typename iStreamT::char_type >
-        basic_object<charT> read(iStreamT& inStream, bool *ok = 0)
+        template<typename iStreamT, typename charT>
+        basic_object<charT> read(iStreamT& inStream, bool *ok)
         {
             // cache the file
             std::basic_string<charT> str;
