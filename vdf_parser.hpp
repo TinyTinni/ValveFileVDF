@@ -23,12 +23,17 @@
 #ifndef __TYTI_STEAM_VDF_PARSER_H__
 #define __TYTI_STEAM_VDF_PARSER_H__
 
-#include <vector>
 #include <unordered_map>
 #include <utility>
 #include <fstream>
-
 #include <memory>
+
+//for wstring support
+#include <locale>
+#include <codecvt>
+#include <string>
+
+// internal
 #include <stack>
 
 namespace tyti
@@ -67,6 +72,18 @@ namespace tyti
                 }
             };
 #define TYTI_L(type, text) vdf::detail::literal_macro_help<type>::result(text, L##text)
+
+
+            inline std::string string_converter(std::string& w)
+            {
+                return w;
+            }
+
+            inline std::string string_converter(std::wstring& w)
+            {
+                std::wstring_convert<std::codecvt_utf8<wchar_t>> conv1; // maybe wrong econding
+                return conv1.to_bytes(w);
+            }
 
             ///////////////////////////////////////////////////////////////////////////
             //  Writer helper functions
@@ -194,7 +211,7 @@ namespace tyti
                                 cur->attribs[curName] = value;
                             else
                             {
-                                std::basic_ifstream<charT> i(value);
+                                std::basic_ifstream<charT> i(detail::string_converter(value));
                                 auto n = std::make_shared<basic_object<charT>>(read(i, ok));
                                 cur->childs[n->name] = n;
                             }
