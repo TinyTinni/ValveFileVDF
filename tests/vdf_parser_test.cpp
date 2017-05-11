@@ -9,7 +9,17 @@ using namespace tyti;
 
 #include <catch.hpp>
 
-#include <experimental/filesystem>
+const std::string testdata_dir = std::string(SOURCE_DIR) + "/testdata/";
+
+#ifdef _WIN32
+#include <direct.h>
+#define cwd _getcwd
+#define cd _chdir
+#else
+#include "unistd.h"
+#define cwd getcwd
+#define cd chdir
+#endif
 
 template<typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
@@ -49,7 +59,7 @@ void read_check_DST_file()
 
 TEST_CASE("Read File", "[read]")
 {
-    std::experimental::filesystem::current_path(std::string(SOURCE_DIR)+"/testdata/");
+    cd(testdata_dir.c_str());
     read_check_DST_file<char>();
     read_check_DST_file<wchar_t>();
 }
