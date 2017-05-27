@@ -9,8 +9,8 @@ install:
   ############################################################################
   # All external dependencies are installed in C:\projects\deps
   ############################################################################
-  - mkdir C:\projects\deps
-  - cd C:\projects\deps
+  #- mkdir C:\projects\deps
+  #- cd C:\projects\deps
 version: '{build}'
 
 environment:
