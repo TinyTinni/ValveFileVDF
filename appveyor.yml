@@ -16,7 +16,7 @@ version: '{build}'
 environment:
   matrix:
   - Toolset: v140
-  - Toolset: v120
+  #- Toolset: v120
   #- Toolset: v110
   #- Toolset: v100
 
