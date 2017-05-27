@@ -45,6 +45,8 @@ before_build:
 
 build_script:
 - ps: |
+    md tests/build -Force | Out-Null
+    cd tests/build
     cmake -G "$generator" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" ..
     if ($LastExitCode -ne 0) {
         throw "Exec: $ErrorMessage"
