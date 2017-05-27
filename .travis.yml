@@ -15,4 +15,5 @@ install:
 script: 
     - mkdir tests/build && cd tests/build && cmake .. && cmake --build .
 after_success:
-    - $TRAVIS_BUILD_DIR/tests/build/tests
+    - cd $TRAVIS_BUILD_DIR/tests/build/tests && ctest -C Debug --output-on-failure
+    
