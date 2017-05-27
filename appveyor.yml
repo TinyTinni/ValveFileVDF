@@ -1,9 +1,6 @@
 os:
   - Visual Studio 2015 Update 3
 
-build:
-  verbosity: detailed
-
 configuration:
   - Release
   - Debug
@@ -27,16 +24,8 @@ platform:
   - Win32
   - x64
 
-configuration:
-#  - Release
-  - Debug
-
 build:
   verbosity: minimal
-
-artifacts:
-  - path: '_build/Testing/Temporary/*'
-    name: test_results
 
 before_build:
 - ps: |
