@@ -16,6 +16,7 @@ This header-only file provides a parser and writer to load and save the given da
 
 ## Requirements
 - C++11
+- optional [Boost.Spirit](http://www.boost.org/) [header only] (see [boost branch.](https://github.com/TinyTinni/ValveFileVDF/tree/boost)) (currently more tested)
  
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
