@@ -59,7 +59,7 @@ void read_check_DST_file()
 
 TEST_CASE("Read File", "[read]")
 {
-    cd(testdata_dir.c_str());
+    REQUIRE(cd(testdata_dir.c_str()) == 0);
     read_check_DST_file<char>();
     read_check_DST_file<wchar_t>();
 }

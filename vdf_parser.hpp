@@ -49,11 +49,11 @@ namespace tyti
             template<typename T>
             struct literal_macro_help
             {
-                static const char* result(const char* c, const wchar_t* wc)
+                static constexpr const char* result(const char* c, const wchar_t* wc) noexcept
                 {
                     return c;
                 }
-                static const char result(char c, wchar_t wc)
+                static constexpr const char result(char c, wchar_t wc) noexcept
                 {
                     return c;
                 }
@@ -62,11 +62,11 @@ namespace tyti
             template<>
             struct literal_macro_help<wchar_t>
             {
-                static const wchar_t* result(const char* c, const wchar_t* wc)
+                static constexpr const wchar_t* result(const char* c, const wchar_t* wc) noexcept
                 {
                     return wc;
                 }
-                static const wchar_t result(char c, wchar_t wc)
+                static constexpr const wchar_t result(char c, wchar_t wc) noexcept
                 {
                     return wc;
                 }
