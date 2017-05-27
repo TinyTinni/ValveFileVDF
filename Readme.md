@@ -1,5 +1,6 @@
 # Valve Data Format (.vdf) Reader and Writer in C++
 [![Build Status](https://travis-ci.org/TinyTinni/ValveFileVDF.svg?branch=master)](https://travis-ci.org/TinyTinni/ValveFileVDF)
+[![Build status](https://ci.appveyor.com/api/projects/status/380441mkwkfvh4tj?svg=true)](https://ci.appveyor.com/project/TinyTinni/valvefilevdf)
 
 Vavle has its own JSON-like data format: [KeyValue, also known as vdf.](https://developer.valvesoftware.com/wiki/KeyValues)
 It is used by valve e.g. in game manifests or as SteamCMD output.
