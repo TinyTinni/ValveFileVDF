@@ -20,7 +20,6 @@ ExternalProject_Get_Property(catch source_dir)
 set(CATCH_INCLUDE_DIR ${source_dir}/single_include CACHE INTERNAL "Path to include folder for Catch.")
 
 include_directories(${CATCH_INCLUDE_DIR} "../")
-enable_testing(true)  # Enables unit-testing.
 
 set(SRCS
  "main.cpp"
@@ -31,3 +30,5 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT t
 add_dependencies(tests catch)
 add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
 
+enable_testing(true)
+add_test(NAME vdf_tests COMMAND tests)

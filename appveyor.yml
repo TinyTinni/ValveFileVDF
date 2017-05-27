@@ -17,8 +17,8 @@ environment:
   matrix:
   - Toolset: v140
   - Toolset: v120
-  - Toolset: v110
-  - Toolset: v100
+  #- Toolset: v110
+  #- Toolset: v100
 
 platform:
   - Win32
@@ -61,14 +61,14 @@ build_script:
         throw "Exec: $ErrorMessage"
     }
 
-#test_script:
-#- ps: |
-#    if (($env:Toolset -eq "v100") -and ($env:PLATFORM -eq "x64"))
-#    {
-#        return
-#    }
-#
-#    & ctest -C $env:CONFIGURATION --output-on-failure
-#    if ($LastExitCode -ne 0) {
-#        throw "Exec: $ErrorMessage"
-#    }
+test_script:
+- ps: |
+    if (($env:Toolset -eq "v100") -and ($env:PLATFORM -eq "x64"))
+    {
+        return
+    }
+
+    & ctest -C $env:CONFIGURATION --output-on-failure
+    if ($LastExitCode -ne 0) {
+        throw "Exec: $ErrorMessage"
+    }
