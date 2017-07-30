@@ -252,7 +252,7 @@ namespace tyti
             // cache the file
             std::basic_string<charT> str;
             inStream.seekg(0, std::ios::end);
-            str.resize(inStream.tellg());
+            str.resize(static_cast<size_t>(inStream.tellg()));
             if (str.empty())
                 return basic_object<charT>();
 
