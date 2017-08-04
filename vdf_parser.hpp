@@ -289,7 +289,7 @@ namespace tyti
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
             throws "std::bad_alloc" if file buffer could not be allocated
         */
-        template<typename iStreamT, typename charT = iStreamT::char_type >
+        template<typename iStreamT, typename charT = typename iStreamT::char_type >
         basic_object<charT> read(iStreamT& inStream, std::error_code& ec)
         {
             // cache the file
