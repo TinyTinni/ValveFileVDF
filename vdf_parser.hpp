@@ -28,6 +28,9 @@
 #include <fstream>
 #include <memory>
 
+#include <system_error>
+#include <exception>
+
 //for wstring support
 #include <locale>
 #include <codecvt>
@@ -135,30 +138,23 @@ namespace tyti
                 write(s, i, t + 1);
             s << tabs(t) << TYTI_L(charT, "}\n");
         }
-
-
-        class parser_error : public std::exception
-        {
-        };
-
-        //forward decl
-        template<typename iStreamT, typename charT = typename iStreamT::char_type >
-        basic_object<charT> read(iStreamT& inStream, bool *ok = 0);
-
-
+        
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
         @param first begin iterator
         @param end end iterator
-        @param ok output bool. true, if parser successed, false, if parser failed
+        @param ec output bool. 0 if ok, otherwise, holds an system error code
+
+        Possible error codes:
+            std::errc::protocol_error: file is mailformatted
+            std::errc::not_enough_memory: not enough space
+            std::errc::invalid_argument: iterators throws e.g. out of range
         */
 
         template<typename IterT, typename charT = typename IterT::value_type>
-        basic_object<charT> read(IterT first, IterT last, bool* ok = 0)
+        basic_object<charT> read(IterT first, IterT last, std::error_code& ec) noexcept
         {
-            //todo: error handling
-            if (ok)
-                *ok = true;
+            ec.clear();
 
             basic_object<charT> root;
             basic_object<charT>* cur = &root;
@@ -170,14 +166,15 @@ namespace tyti
             root.name = std::basic_string<charT>(b + 1, bend);
             // second, get {}
             b = std::find(bend, last, TYTI_L(charT, '{'));
-            if (b == last)
-                if (ok)
-                    *ok = false;
+            try
+            {
+                if (b == last)
+                {
+                    ec = std::make_error_code(std::errc::protocol_error);
+                    return root;
+                }
                 else
-                    throw parser_error();
-            else
-                lvls.push(&root);
-            try {
+                    lvls.push(&root);
                 while (!lvls.empty() && b != last)
                 {
                     const std::basic_string<charT> startsym = TYTI_L(charT, "\"}");
@@ -188,7 +185,10 @@ namespace tyti
                     {
                         bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
                         if (bend == last)
-                            throw parser_error(); // could not find end of name
+                        {
+                            ec = std::make_error_code(std::errc::protocol_error);// could not find end of name
+                            return root;
+                        }
 
                         std::basic_string<charT> curName(b + 1, bend);
                         b = bend + 1;
@@ -196,13 +196,19 @@ namespace tyti
                         const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{");
                         b = std::find_first_of(b, last, std::cbegin(ecspsym), std::cend(ecspsym));
                         if (b == last)
-                            throw parser_error(); //could not find 2nd part of pair
+                        {
+                            ec = std::make_error_code(std::errc::protocol_error);// could not find 2nd part of pair
+                            return root;
+                        }
 
                         if (*b == '\"')
                         {
                             bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
                             if (bend == last)
-                                throw parser_error(); //could not find end of name
+                            {
+                                ec = std::make_error_code(std::errc::protocol_error);//could not find end of name
+                                return root;
+                            }
 
                             auto value = std::basic_string<charT>(b + 1, bend);
                             b = bend + 1;
@@ -212,7 +218,8 @@ namespace tyti
                             else
                             {
                                 std::basic_ifstream<charT> i(detail::string_converter(value));
-                                auto n = std::make_shared<basic_object<charT>>(read(i, ok));
+                                auto n = std::make_shared<basic_object<charT>>(read(i, ec));
+                                if (ec) return root;
                                 cur->childs[n->name] = n;
                             }
                         }
@@ -233,21 +240,57 @@ namespace tyti
                         ++b;
                     }
                 }
+                
             }
-            catch (parser_error& p)
+            catch (std::bad_alloc& )
             {
-                if (ok)
-                    *ok = false;
-                else
-                    throw p;
+                ec = std::make_error_code(std::errc::not_enough_memory);
+            }
+            catch (...)
+            {
+                ec = std::make_error_code(std::errc::invalid_argument);
             }
             return root;
         }
 
-        /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
+
+        /** \brief Read VDF formatted sequences defined by the range [first, last).
+        If the file is mailformatted, parser will try to read it until it can.
+        @param first begin iterator
+        @param end end iterator
+        @param ok output bool. true, if parser successed, false, if parser failed
         */
-        template<typename iStreamT, typename charT>
-        basic_object<charT> read(iStreamT& inStream, bool *ok)
+        template<typename IterT, typename charT = typename IterT::value_type>
+        basic_object<charT> read(IterT first, IterT last, bool* ok) noexcept
+        {
+            std::error_code ec;
+            auto r = read(first, last, ec);
+            if (ok) *ok = !ec;
+            return r;
+        }
+
+        /** \brief Read VDF formatted sequences defined by the range [first, last).
+        If the file is mailformatted, parser will try to read it until it can.
+        @param first begin iterator
+        @param end end iterator
+        
+        throws a "std::system_error" if a parsing error occured
+        */
+        template<typename IterT, typename charT = typename IterT::value_type>
+        basic_object<charT> read(IterT first, IterT last)
+        {
+            std::error_code ec;
+            const auto r = read(first, last, ec);
+            if (!ec)
+                throw std::system_error(ec);
+            return r;
+        }
+
+        /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
+            throws "std::bad_alloc" if file buffer could not be allocated
+        */
+        template<typename iStreamT, typename charT = iStreamT::char_type >
+        basic_object<charT> read(iStreamT& inStream, std::error_code& ec)
         {
             // cache the file
             std::basic_string<charT> str;
@@ -261,7 +304,33 @@ namespace tyti
             inStream.close();
 
             // parse it
-            return read(str.begin(), str.end(), ok);
+            return read(str.begin(), str.end(), ec);
+        }
+
+        /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
+            throws "std::bad_alloc" if file buffer could not be allocated
+            ok == false, if a parsing error occured
+        */
+        template<typename iStreamT, typename charT = typename iStreamT::char_type >
+        basic_object<charT> read(iStreamT& inStream, bool* ok)
+        {
+            std::error_code ec;
+            const auto r = read(inStream, ec);
+            if (ok) *ok = !ec;
+            return r;
+        }
+
+        /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
+            throws "std::bad_alloc" if file buffer could not be allocated
+            throws "std::system_error" if a parsing error occured
+        */
+        template<typename iStreamT, typename charT = typename iStreamT::char_type >
+        basic_object<charT> read(iStreamT& inStream)
+        {
+            std::error_code ec;
+            const auto r = read(inStream, ec);
+            if (!ec) throw std::system_error(ec);
+            return r;
         }
 
     } // end namespace vdf
