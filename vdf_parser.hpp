@@ -107,6 +107,7 @@ namespace tyti
             }
         } // end namespace detail
 
+
         ///////////////////////////////////////////////////////////////////////////
         //  Interface
         ///////////////////////////////////////////////////////////////////////////
@@ -138,6 +139,11 @@ namespace tyti
                 write(s, i, t + 1);
             s << tabs(t) << TYTI_L(charT, "}\n");
         }
+
+        //forward decls
+        //forward decl
+        template<typename iStreamT, typename charT = typename iStreamT::char_type >
+        basic_object<charT> read(iStreamT& inStream, std::error_code& ec);
         
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
@@ -289,7 +295,7 @@ namespace tyti
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
             throws "std::bad_alloc" if file buffer could not be allocated
         */
-        template<typename iStreamT, typename charT = typename iStreamT::char_type >
+        template<typename iStreamT, typename charT >
         basic_object<charT> read(iStreamT& inStream, std::error_code& ec)
         {
             // cache the file
