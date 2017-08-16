@@ -129,7 +129,7 @@ namespace tyti
         Uses tabs instead of whitespaces.
         */
         template<typename oStreamT, typename charT = typename oStreamT::char_type>
-        void write(oStreamT& s, const basic_object<charT>& r, size_t t = 0)
+        void write(oStreamT& s, const basic_object<charT>& r, size_t t = 0) noexcept(noexcept(std::operator<<(oStream&, const charT*)))
         {
             using namespace detail;
             s << tabs(t) << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tabs(t) << TYTI_L(charT, "{\n");
