@@ -39,6 +39,12 @@
 // internal
 #include <stack>
 
+// Dummy out the unsupported constexpr and noexcept keywords on Visual Studio < 2015
+#if (_MSC_VER < 1900)
+#define constexpr
+#define noexcept
+#endif
+
 namespace tyti
 {
     namespace vdf
@@ -343,6 +349,11 @@ namespace tyti
 } // end namespace tyti
 #ifndef TYTI_NO_L_UNDEF
 #undef TYTI_L
+#endif
+
+#if (_MSC_VER < 1900)
+#undef constexpr
+#undef noexcept
 #endif
 
 #endif //__TYTI_STEAM_VDF_PARSER_H__
