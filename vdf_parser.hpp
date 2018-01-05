@@ -328,7 +328,7 @@ namespace tyti
         {
             std::error_code ec;
             const auto r = read(first, last, ec);
-            if (!ec)
+            if (ec)
                 throw std::system_error(ec);
             return r;
         }
@@ -349,7 +349,6 @@ namespace tyti
 
             inStream.seekg(0, std::ios::beg);
             inStream.read(&str[0], str.size());
-            inStream.close();
 
             // parse it
             return read(str.begin(), str.end(), ec);
@@ -377,7 +376,7 @@ namespace tyti
         {
             std::error_code ec;
             const auto r = read(inStream, ec);
-            if (!ec) throw std::system_error(ec);
+            if (ec) throw std::system_error(ec);
             return r;
         }
 
