@@ -157,7 +157,7 @@ namespace tyti
         typedef basic_object<wchar_t> wobject;
 
         /** \brief writes given object tree in vdf format to given stream.
-        Uses tabs instead of whitespaces.
+         Output is prettyfied, using tabs
         */
         template<typename oStreamT>
         void write(oStreamT& s, const basic_object<typename oStreamT::char_type>& r, 

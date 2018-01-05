@@ -136,8 +136,9 @@ tyti::vdf::write(file, object);
 /////////////////////////////////////////////////////////////////////////////
   // Writer functions
   /// writes given obj into out in vdf style 
-  template<typename oStreamT, typename charT = typename oStreamT::char_type>
-  void write(oStreamT& out, const basic_object<charT>& obj);
+  /// Output is prettyfied, using tabs
+  template<typename oStreamT>
+  void write(oStreamT& out, const basic_object<typename oStreamT::char_type>& obj);
   
 ```
 
