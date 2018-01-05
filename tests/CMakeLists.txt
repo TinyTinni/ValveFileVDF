@@ -36,6 +36,8 @@ endif()
 target_include_directories(tests PUBLIC ${CATCH_INCLUDE_DIR} "../")
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests) #requires cmake 3.6
 add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
+
+include(ctest)
 enable_testing(true)
 add_test(NAME vdf_tests COMMAND tests)
 

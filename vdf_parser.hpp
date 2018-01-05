@@ -39,6 +39,7 @@
 // internal
 #include <stack>
 
+
 namespace tyti
 {
     namespace vdf
@@ -56,7 +57,7 @@ namespace tyti
                 {
                     return c;
                 }
-                static constexpr const char result(char c, wchar_t wc) noexcept
+                static constexpr const char result(const char c, const wchar_t wc) noexcept
                 {
                     return c;
                 }
@@ -69,7 +70,7 @@ namespace tyti
                 {
                     return wc;
                 }
-                static constexpr const wchar_t result(char c, wchar_t wc) noexcept
+                static constexpr const wchar_t result(const char c, const wchar_t wc) noexcept
                 {
                     return wc;
                 }
@@ -77,12 +78,12 @@ namespace tyti
 #define TYTI_L(type, text) vdf::detail::literal_macro_help<type>::result(text, L##text)
 
 
-            inline std::string string_converter(std::string& w)
+            inline std::string string_converter(const std::string& w) noexcept
             {
                 return w;
             }
 
-            inline std::string string_converter(std::wstring& w)
+            inline std::string string_converter(const std::wstring& w)
             {
                 std::wstring_convert<std::codecvt_utf8<wchar_t>> conv1; // maybe wrong econding
                 return conv1.to_bytes(w);
@@ -92,17 +93,25 @@ namespace tyti
             //  Writer helper functions
             ///////////////////////////////////////////////////////////////////////////
 
-            struct tabs
+            template<typename charT>
+            class tabs
             {
                 size_t t;
-                tabs(size_t i) :t(i) {}
+            public:
+                explicit tabs(size_t i) :t{ i } {}
+                std::basic_string<charT> print() const { return std::basic_string<charT>(t, TYTI_L(charT,'\t')); }
+                tabs operator+(size_t i) const noexcept
+                {
+                    tabs r(*this);
+                    r.t += i;
+                    return r;
+                }
             };
 
             template<typename oStreamT>
-            oStreamT& operator<<(oStreamT& s, tabs t)
+            oStreamT& operator<<(oStreamT& s, const tabs<typename oStreamT::char_type> t)
             {
-                for (; t.t > 0; --t.t)
-                    s << "\t";
+                s << t.print();
                 return s;
             }
         } // end namespace detail
@@ -129,15 +138,16 @@ namespace tyti
         Uses tabs instead of whitespaces.
         */
         template<typename oStreamT, typename charT = typename oStreamT::char_type>
-        void write(oStreamT& s, const basic_object<charT>& r, size_t t = 0)
+        void write(oStreamT& s, const basic_object<charT>& r, const detail::tabs<charT> tab = detail::tabs<charT>{ 0 })
         {
             using namespace detail;
-            s << tabs(t) << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tabs(t) << TYTI_L(charT, "{\n");
-            for (auto& i : r.attribs)
-                s << tabs(t + 1) << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
-            for (auto& i : r.childs)
-                write(s, i, t + 1);
-            s << tabs(t) << TYTI_L(charT, "}\n");
+            using tabs = tabs<charT>;
+            s << tab << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tab << TYTI_L(charT, "{\n");
+            for (const auto& i : r.attribs)
+                s << tab+1 << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
+            for (const auto& i : r.childs)
+                write(s, *i.second, tab+1 );
+            s << tab << TYTI_L(charT, "}\n");
         }
 
         //forward decls
@@ -189,6 +199,8 @@ namespace tyti
                     b = std::find_first_of(b, last, std::cbegin(startsym), std::cend(startsym));
                     if (*b == '\"')
                     {
+
+                        // get key
                         bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
                         if (bend == last)
                         {
@@ -196,7 +208,7 @@ namespace tyti
                             return root;
                         }
 
-                        std::basic_string<charT> curName(b + 1, bend);
+                        std::basic_string<charT> key(b + 1, bend);
                         b = bend + 1;
 
                         const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{");
@@ -207,6 +219,7 @@ namespace tyti
                             return root;
                         }
 
+                        // get value
                         if (*b == '\"')
                         {
                             bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
@@ -219,23 +232,26 @@ namespace tyti
                             auto value = std::basic_string<charT>(b + 1, bend);
                             b = bend + 1;
 
-                            if (curName != TYTI_L(charT, "#include") && curName != TYTI_L(charT, "#base"))
-                                cur->attribs[curName] = value;
+                            // process value
+                            if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
+                            {
+                                cur->attribs[key] = std::move(value);
+                            }
                             else
                             {
-                                std::basic_ifstream<charT> i(detail::string_converter(value));
+                                std::basic_ifstream<charT> i(detail::string_converter(std::move(value)));
                                 auto n = std::make_shared<basic_object<charT>>(read(i, ec));
                                 if (ec) return root;
-                                cur->childs[n->name] = n;
+                                cur->childs[n->name] = std::move(n);
                             }
                         }
                         else if (*b == '{')
                         {
                             lvls.push(cur);
                             auto n = std::make_shared<basic_object<charT>>();
-                            cur->childs[curName] = n;
+                            cur->childs[key] = n;
                             cur = n.get();
-                            cur->name = curName;
+                            cur->name = std::move(key);
                             ++b;
                         }
                     }
@@ -267,7 +283,7 @@ namespace tyti
         @param ok output bool. true, if parser successed, false, if parser failed
         */
         template<typename IterT, typename charT = typename IterT::value_type>
-        basic_object<charT> read(IterT first, IterT last, bool* ok) noexcept
+        basic_object<charT> read(IterT first, const IterT last, bool* ok) noexcept
         {
             std::error_code ec;
             auto r = read(first, last, ec);
@@ -283,7 +299,7 @@ namespace tyti
         throws a "std::system_error" if a parsing error occured
         */
         template<typename IterT, typename charT = typename IterT::value_type>
-        basic_object<charT> read(IterT first, IterT last)
+        basic_object<charT> read(IterT first, const IterT last)
         {
             std::error_code ec;
             const auto r = read(first, last, ec);

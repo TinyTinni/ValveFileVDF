@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <cstdio>
 
 #define TYTI_NO_L_UNDEF
 #include <vdf_parser.hpp>
@@ -15,10 +16,20 @@ const std::string testdata_dir = std::string(SOURCE_DIR) + "/testdata/";
 #include <direct.h>
 #define cwd _getcwd
 #define cd _chdir
+FILE* create_tmp_file()
+{
+    FILE* tmpfile;
+    tmpfile_s(&tmpfile);
+    return tmpfile;
+}
 #else
 #include "unistd.h"
 #define cwd getcwd
 #define cd chdir
+FILE* create_tmp_file()
+{
+    return tmpfile();
+}
 #endif
 
 template<typename charT>
@@ -72,7 +83,11 @@ void read_string()
     auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(ok);
+}
 
+template<typename charT>
+void check_string(const vdf::basic_object<charT>& obj)
+{
     CHECK(obj.name == T_L("firstNode"));
 
     CHECK(obj.attribs.empty() == true);
@@ -105,4 +120,29 @@ TEST_CASE("Find Error","[read_error]")
 {
     check_fail<char>();
     check_fail<wchar_t>();
+}
+
+template<typename charT>
+void write_and_read()
+{
+    std::basic_string<charT> attribs{ T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") };
+    bool ok;
+    auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
+
+    REQUIRE(ok);
+
+    std::basic_fstream<charT> file(create_tmp_file());
+    REQUIRE(file.is_open());
+
+    vdf::write(file, obj);
+
+    file.seekp(0);
+
+    check_string(obj);
+}
+
+TEST_CASE("Write and Read", "[read_write]")
+{
+    write_and_read<char>();
+    write_and_read<wchar_t>();
 }
