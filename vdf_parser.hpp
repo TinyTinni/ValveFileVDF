@@ -389,10 +389,12 @@ namespace tyti
 
 #ifdef TYTI_UNDEF_CONSTEXPR
 #undef CONSTEXPR
+#undef TYTI_NO_L_UNDEF
 #endif
 
 #ifdef TYTI_UNDEF_NOTHROW
 #undef NOTHROW
+#undef TYTI_UNDEF_NOTHROW
 #endif
 
 #endif //__TYTI_STEAM_VDF_PARSER_H__
