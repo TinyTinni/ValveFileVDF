@@ -40,6 +40,28 @@
 #include <stack>
 
 
+//VS < 2015 has only partial C++11 support
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#ifndef CONSTEXPR
+#define CONSTEXPR
+#endif
+
+#ifndef NOEXCEPT
+#define NOEXCEPT
+#endif
+#else
+#ifndef CONSTEXPR
+#define CONSTEXPR constexpr
+#define TYTI_UNDEF_CONSTEXPR
+#endif
+
+#ifndef NOEXCEPT
+#define NOEXCEPT noexcept
+#define TYTI_UNDEF_NOEXCEPT
+#endif 
+
+#endif
+
 namespace tyti
 {
     namespace vdf
@@ -53,11 +75,11 @@ namespace tyti
             template<typename T>
             struct literal_macro_help
             {
-                static constexpr const char* result(const char* c, const wchar_t* wc) noexcept
+                static CONSTEXPR const char* result(const char* c, const wchar_t* wc) NOEXCEPT
                 {
                     return c;
                 }
-                static constexpr const char result(const char c, const wchar_t wc) noexcept
+                static CONSTEXPR const char result(const char c, const wchar_t wc) NOEXCEPT
                 {
                     return c;
                 }
@@ -66,11 +88,11 @@ namespace tyti
             template<>
             struct literal_macro_help<wchar_t>
             {
-                static constexpr const wchar_t* result(const char* c, const wchar_t* wc) noexcept
+                static CONSTEXPR const wchar_t* result(const char* c, const wchar_t* wc) NOEXCEPT
                 {
                     return wc;
                 }
-                static constexpr const wchar_t result(const char c, const wchar_t wc) noexcept
+                static CONSTEXPR const wchar_t result(const char c, const wchar_t wc) NOEXCEPT
                 {
                     return wc;
                 }
@@ -78,7 +100,7 @@ namespace tyti
 #define TYTI_L(type, text) vdf::detail::literal_macro_help<type>::result(text, L##text)
 
 
-            inline std::string string_converter(const std::string& w) noexcept
+            inline std::string string_converter(const std::string& w) NOEXCEPT
             {
                 return w;
             }
@@ -98,9 +120,9 @@ namespace tyti
             {
                 size_t t;
             public:
-                explicit tabs(size_t i) :t{ i } {}
+                explicit tabs(size_t i) :t( i ) {}
                 std::basic_string<charT> print() const { return std::basic_string<charT>(t, TYTI_L(charT,'\t')); }
-                tabs operator+(size_t i) const noexcept
+                tabs operator+(size_t i) const NOEXCEPT
                 {
                     tabs r(*this);
                     r.t += i;
@@ -137,11 +159,13 @@ namespace tyti
         /** \brief writes given object tree in vdf format to given stream.
         Uses tabs instead of whitespaces.
         */
-        template<typename oStreamT, typename charT = typename oStreamT::char_type>
-        void write(oStreamT& s, const basic_object<charT>& r, const detail::tabs<charT> tab = detail::tabs<charT>{ 0 })
+        template<typename oStreamT>
+        void write(oStreamT& s, const basic_object<typename oStreamT::char_type>& r, 
+            const detail::tabs<typename oStreamT::char_type> tab = detail::tabs<typename oStreamT::char_type>( 0 ))
         {
+            typedef typename oStreamT::char_type charT;
             using namespace detail;
-            using tabs = tabs<charT>;
+            typedef tabs<charT> tabs;
             s << tab << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tab << TYTI_L(charT, "{\n");
             for (const auto& i : r.attribs)
                 s << tab+1 << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
@@ -152,8 +176,8 @@ namespace tyti
 
         //forward decls
         //forward decl
-        template<typename iStreamT, typename charT = typename iStreamT::char_type >
-        basic_object<charT> read(iStreamT& inStream, std::error_code& ec);
+        template<typename iStreamT>
+        basic_object<typename iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec);
         
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
@@ -167,9 +191,10 @@ namespace tyti
             std::errc::invalid_argument: iterators throws e.g. out of range
         */
 
-        template<typename IterT, typename charT = typename IterT::value_type>
-        basic_object<charT> read(IterT first, IterT last, std::error_code& ec) noexcept
+        template<typename IterT>
+        basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
         {
+            typedef typename IterT::value_type charT;
             ec.clear();
 
             basic_object<charT> root;
@@ -196,7 +221,7 @@ namespace tyti
                     const std::basic_string<charT> startsym = TYTI_L(charT, "\"}");
 
                     //find first starting attrib/child, or ending
-                    b = std::find_first_of(b, last, std::cbegin(startsym), std::cend(startsym));
+                    b = std::find_first_of(b, last, std::begin(startsym), std::end(startsym));
                     if (*b == '\"')
                     {
 
@@ -212,7 +237,7 @@ namespace tyti
                         b = bend + 1;
 
                         const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{");
-                        b = std::find_first_of(b, last, std::cbegin(ecspsym), std::cend(ecspsym));
+                        b = std::find_first_of(b, last, std::begin(ecspsym), std::end(ecspsym));
                         if (b == last)
                         {
                             ec = std::make_error_code(std::errc::protocol_error);// could not find 2nd part of pair
@@ -282,8 +307,8 @@ namespace tyti
         @param end end iterator
         @param ok output bool. true, if parser successed, false, if parser failed
         */
-        template<typename IterT, typename charT = typename IterT::value_type>
-        basic_object<charT> read(IterT first, const IterT last, bool* ok) noexcept
+        template<typename IterT>
+        basic_object<typename IterT::value_type> read(IterT first, const IterT last, bool* ok) NOEXCEPT
         {
             std::error_code ec;
             auto r = read(first, last, ec);
@@ -298,8 +323,8 @@ namespace tyti
         
         throws a "std::system_error" if a parsing error occured
         */
-        template<typename IterT, typename charT = typename IterT::value_type>
-        basic_object<charT> read(IterT first, const IterT last)
+        template<typename IterT>
+        basic_object<typename IterT::value_type> read(IterT first, const IterT last)
         {
             std::error_code ec;
             const auto r = read(first, last, ec);
@@ -311,10 +336,11 @@ namespace tyti
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
             throws "std::bad_alloc" if file buffer could not be allocated
         */
-        template<typename iStreamT, typename charT >
-        basic_object<charT> read(iStreamT& inStream, std::error_code& ec)
+        template<typename iStreamT>
+        basic_object<typename iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec)
         {
             // cache the file
+            typedef typename iStreamT::char_type charT;
             std::basic_string<charT> str;
             inStream.seekg(0, std::ios::end);
             str.resize(static_cast<size_t>(inStream.tellg()));
@@ -333,8 +359,8 @@ namespace tyti
             throws "std::bad_alloc" if file buffer could not be allocated
             ok == false, if a parsing error occured
         */
-        template<typename iStreamT, typename charT = typename iStreamT::char_type >
-        basic_object<charT> read(iStreamT& inStream, bool* ok)
+        template<typename iStreamT>
+        basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok)
         {
             std::error_code ec;
             const auto r = read(inStream, ec);
@@ -346,8 +372,8 @@ namespace tyti
             throws "std::bad_alloc" if file buffer could not be allocated
             throws "std::system_error" if a parsing error occured
         */
-        template<typename iStreamT, typename charT = typename iStreamT::char_type >
-        basic_object<charT> read(iStreamT& inStream)
+        template<typename iStreamT>
+        basic_object<typename iStreamT::char_type> read(iStreamT& inStream)
         {
             std::error_code ec;
             const auto r = read(inStream, ec);
@@ -359,6 +385,14 @@ namespace tyti
 } // end namespace tyti
 #ifndef TYTI_NO_L_UNDEF
 #undef TYTI_L
+#endif
+
+#ifdef TYTI_UNDEF_CONSTEXPR
+#undef CONSTEXPR
+#endif
+
+#ifdef TYTI_UNDEF_NOTHROW
+#undef NOTHROW
 #endif
 
 #endif //__TYTI_STEAM_VDF_PARSER_H__

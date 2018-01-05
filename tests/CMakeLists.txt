@@ -16,11 +16,17 @@ find_path(
 if (NOT CATCH_INCLUDE_DIR)
     include(ExternalProject)
     find_package(Git REQUIRED)
+	
+	set(BRANCH "master")
+	if (MSVC_VERSION LESS 1900)
+		set(BRANCH "Catch1.x") #catch2 needs C++11
+	endif()
     
     ExternalProject_Add(
         catch
         PREFIX ${CMAKE_BINARY_DIR}/catch
         GIT_REPOSITORY https://github.com/philsquared/Catch.git
+		GIT_TAG ${BRANCH}
         TIMEOUT 10
         UPDATE_COMMAND ${GIT_EXECUTABLE} pull
         CONFIGURE_COMMAND ""

@@ -90,8 +90,8 @@ tyti::vdf::write(file, object);
   @param end end iterator
   @param ec output bool. 0 if ok, otherwise, holds an system error code
   */
-  template<typename IterT, typename charT = typename IterT::value_type>
-  basic_object<charT> read(IterT first, IterT last, std::error_code& ec) noexcept;
+  template<typename IterT>
+  basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) noexcept;
   
   /** \brief Read VDF formatted sequences defined by the range [first, last).
   If the file is mailformatted, parser will try to read it until it can.
@@ -99,8 +99,8 @@ tyti::vdf::write(file, object);
   @param end end iterator
   @param ok output bool. true, if parser successed, false, if parser failed
   */
-  template<typename IterT, typename charT = typename IterT::value_type>
-  basic_object<charT> read(IterT first, IterT last, bool* ok) noexcept;
+  template<typename IterT>
+  basic_object<typename IterT::value_type> read(IterT first, IterT last, bool* ok) noexcept;
   
   /** \brief Read VDF formatted sequences defined by the range [first, last).
   If the file is mailformatted, parser will try to read it until it can.
@@ -109,28 +109,28 @@ tyti::vdf::write(file, object);
   
   throws a "std::system_error" if a parsing error occured
   */
-  template<typename IterT, typename charT = typename IterT::value_type>
-  basic_object<charT> read(IterT first, IterT last);
+  template<typename IterT>
+  basic_object<typename IterT::value_type> read(IterT first, IterT last);
   
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
   */
-  template<typename iStreamT, typename charT = iStreamT::char_type >
-  basic_object<charT> read(iStreamT& inStream, std::error_code& ec);
+  template<typename iStreamT>
+  basic_object<iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec);
   
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
       ok == false, if a parsing error occured
   */
-  template<typename iStreamT, typename charT = typename iStreamT::char_type >
-  basic_object<charT> read(iStreamT& inStream, bool* ok);
+  template<typename iStreamT>
+  basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok);
   
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
       throws "std::system_error" if a parsing error occured
   */
-  template<typename iStreamT, typename charT = typename iStreamT::char_type >
-  basic_object<charT> read(iStreamT& inStream);
+  template<typename iStreamT>
+  basic_object<typename iStreamT::char_type> read(iStreamT& inStream);
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -78,7 +78,7 @@ TEST_CASE("Read File", "[read]")
 template<typename charT>
 void read_string()
 {
-    std::basic_string<charT> attribs{ T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") };
+    std::basic_string<charT> attribs( T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") );
     bool ok;
     auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
 
@@ -110,7 +110,7 @@ template<typename charT>
 void check_fail()
 {
     bool ok;
-    std::basic_string<charT> attribs{ T_L("\"firstNode\"{\"SecondNode\"{\"Key\" //myComment\n}}") };
+    std::basic_string<charT> attribs( T_L("\"firstNode\"{\"SecondNode\"{\"Key\" //myComment\n}}") );
     auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(!ok);
@@ -125,7 +125,7 @@ TEST_CASE("Find Error","[read_error]")
 template<typename charT>
 void write_and_read()
 {
-    std::basic_string<charT> attribs{ T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") };
+    std::basic_string<charT> attribs( T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") );
     bool ok;
     auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
 
