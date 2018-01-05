@@ -12,12 +12,12 @@ This header-only file provides a parser and writer to load and save the given da
 - supports custom character sets
 - limited support for C++ one line comments (`//`) in parsed strings (See [Remarks](https://github.com/TinyTinni/ValveFileVDF#remarks-for-comments-and-errors))
 - `#include`/`#base` keyword (note: searches for files in the current working directoy)
-- platform independent (tested only on windows yet)
+- platform independent
 - header-only
 
 ## Requirements
 - C++11
-- optional [Boost.Spirit](http://www.boost.org/) [header only] (see [boost branch.](https://github.com/TinyTinni/ValveFileVDF/tree/boost)) (currently more tested)
+- optional [Boost.Spirit](http://www.boost.org/) [header only] (see [boost branch.](https://github.com/TinyTinni/ValveFileVDF/tree/boost)) (for comment support)
  
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
