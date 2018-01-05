@@ -47,7 +47,7 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
 }
 
 template<typename charT>
-void read_check_DST_file()
+void read_check_DST_file_ok()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
     bool ok;
@@ -58,11 +58,36 @@ void read_check_DST_file()
     check_DST_AST(object);
 }
 
+template<typename charT>
+void read_check_DST_file_ec()
+{
+    std::basic_ifstream<charT> file("DST_Manifest.acf");
+    std::error_code ec;
+    auto object = vdf::read(file, ec);
+
+    REQUIRE(!ec);
+
+    check_DST_AST(object);
+}
+
+template<typename charT>
+void read_check_DST_file_throw()
+{
+    std::basic_ifstream<charT> file("DST_Manifest.acf");
+    auto object = vdf::read(file);
+
+    check_DST_AST(object);
+}
+
 TEST_CASE("Read File", "[read]")
 {
     REQUIRE(cd(testdata_dir.c_str()) == 0);
-    read_check_DST_file<char>();
-    read_check_DST_file<wchar_t>();
+    read_check_DST_file_ok<char>();
+    read_check_DST_file_ok<wchar_t>();
+    read_check_DST_file_ec<char>();
+    read_check_DST_file_ec<wchar_t>();
+    read_check_DST_file_throw<char>();
+    read_check_DST_file_throw<wchar_t>();
 }
 
 template<typename charT>
