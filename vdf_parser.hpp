@@ -118,15 +118,13 @@ namespace tyti
             template<typename charT>
             class tabs
             {
-                size_t t;
+                const size_t t;
             public:
-                explicit tabs(size_t i) :t( i ) {}
+                explicit CONSTEXPR tabs(size_t i) NOEXCEPT :t( i )  {}
                 std::basic_string<charT> print() const { return std::basic_string<charT>(t, TYTI_L(charT,'\t')); }
-                tabs operator+(size_t i) const NOEXCEPT
+                inline CONSTEXPR tabs operator+(size_t i) const NOEXCEPT
                 {
-                    tabs r(*this);
-                    r.t += i;
-                    return r;
+                    return tabs(i+1);
                 }
             };
 
@@ -170,7 +168,7 @@ namespace tyti
             for (const auto& i : r.attribs)
                 s << tab+1 << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
             for (const auto& i : r.childs)
-                write(s, *i.second, tab+1 );
+                if (i.second) write(s, *i.second, tab+1 );
             s << tab << TYTI_L(charT, "}\n");
         }
 
@@ -203,6 +201,11 @@ namespace tyti
             //read header
             // first, quoted name
             auto b = std::find(first, last, TYTI_L(charT, '\"'));
+            if (b == last)
+            {
+                ec = std::make_error_code(std::errc::protocol_error);
+                return root;
+            }
             auto bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
             root.name = std::basic_string<charT>(b + 1, bend);
             // second, get {}

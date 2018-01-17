@@ -10,7 +10,9 @@ using namespace tyti;
 
 #include <catch.hpp>
 
-const std::string testdata_dir = std::string(SOURCE_DIR) + "/testdata/";
+#define CONCAT(x, y) x ## y
+
+const std::string testdata_dir = CONCAT(SOURCE_DIR, "/testdata/");
 
 #ifdef _WIN32
 #include <direct.h>
