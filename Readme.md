@@ -10,7 +10,7 @@ This header-only file provides a parser and writer to load and save the given da
 - read and write vdf data in C++
 - build-in encodings: `char`  and `wchar_t`
 - supports custom character sets
-- limited support for C++ one line comments (`//`) in parsed strings (See [Remarks](https://github.com/TinyTinni/ValveFileVDF#remarks-for-comments-and-errors))
+- support for C++ (//) and C (/**/) comments
 - `#include`/`#base` keyword (note: searches for files in the current working directoy)
 - platform independent
 - header-only
@@ -142,12 +142,9 @@ tyti::vdf::write(file, object);
   
 ```
 
-## Remarks for Comments and Errors
+## Remarks for Errors
 The current version is a greedy implementation and jumps over unrecognized fields.
-Therefore, the error detection is very low.
-Also, it can happen that comments will corrupt the reading process if they contain { or " as symbols.
-Maybe it will get fixed in the future.
-If it is a problem, have a look at the [boost branch.](https://github.com/TinyTinni/ValveFileVDF/tree/boost)
+Therefore, the error detection is very imprecise an does not give the line, where the error occurs.
 
 ## License
 

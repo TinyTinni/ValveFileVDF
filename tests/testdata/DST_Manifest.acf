@@ -19,12 +19,23 @@
     "#base"  "baseFile1.vdf"
     "#1_attrib" "1"
     "emptyAttrib" ""
+    "commentInValue" "no//comment"
+    
+    // inline comment
     "UserConfig"
 	{
 	}
+    
+    // comment with a "quote"
 	"MountedDepots"
 	{
 		"343051"		"8201905585059905072"
 	}
     "another attribute with fancy space" "yay"
+    
+    /*  super
+        block
+        comment
+    */
+    
 }

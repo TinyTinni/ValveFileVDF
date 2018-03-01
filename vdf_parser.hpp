@@ -120,11 +120,11 @@ namespace tyti
             {
                 const size_t t;
             public:
-                explicit CONSTEXPR tabs(size_t i) NOEXCEPT :t( i )  {}
-                std::basic_string<charT> print() const { return std::basic_string<charT>(t, TYTI_L(charT,'\t')); }
+                explicit CONSTEXPR tabs(size_t i) NOEXCEPT : t(i) {}
+                std::basic_string<charT> print() const { return std::basic_string<charT>(t, TYTI_L(charT, '\t')); }
                 inline CONSTEXPR tabs operator+(size_t i) const NOEXCEPT
                 {
-                    return tabs(i+1);
+                    return tabs(i + 1);
                 }
             };
 
@@ -158,17 +158,17 @@ namespace tyti
          Output is prettyfied, using tabs
         */
         template<typename oStreamT>
-        void write(oStreamT& s, const basic_object<typename oStreamT::char_type>& r, 
-            const detail::tabs<typename oStreamT::char_type> tab = detail::tabs<typename oStreamT::char_type>( 0 ))
+        void write(oStreamT& s, const basic_object<typename oStreamT::char_type>& r,
+            const detail::tabs<typename oStreamT::char_type> tab = detail::tabs<typename oStreamT::char_type>(0))
         {
             typedef typename oStreamT::char_type charT;
             using namespace detail;
             typedef tabs<charT> tabs;
             s << tab << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tab << TYTI_L(charT, "{\n");
             for (const auto& i : r.attribs)
-                s << tab+1 << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
+                s << tab + 1 << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
             for (const auto& i : r.childs)
-                if (i.second) write(s, *i.second, tab+1 );
+                if (i.second) write(s, *i.second, tab + 1);
             s << tab << TYTI_L(charT, "}\n");
         }
 
@@ -176,7 +176,7 @@ namespace tyti
         //forward decl
         template<typename iStreamT>
         basic_object<typename iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec);
-        
+
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
         @param first begin iterator
@@ -198,67 +198,100 @@ namespace tyti
             basic_object<charT> root;
             basic_object<charT>* cur = &root;
             std::stack< basic_object<charT>* > lvls;
+
+            // function for skipping a comment block
+            // iter: iterator poition to the position after a '/'
+            auto skip_comments = [](IterT iter, const IterT& last) -> IterT
+            {
+                if (iter != last)
+                {
+                    if (*iter == TYTI_L(charT, '/'))
+                    {
+                        // line comment, skip whole line
+                        iter = std::find(iter + 1, last, TYTI_L(charT, '\n'));
+                    }
+
+                    if (*iter == '*')
+                    {
+                        // block comment, skip until next occurance of "*\"
+                        const std::basic_string<charT> search_str = TYTI_L(charT, "*/");
+                        iter = std::search(iter + 1, last, std::begin(search_str), std::end(search_str));
+                    }
+                }
+                return iter;
+            };
+
             //read header
             // first, quoted name
-            auto b = std::find(first, last, TYTI_L(charT, '\"'));
-            if (b == last)
+            auto curIter = std::find(first, last, TYTI_L(charT, '\"'));
+            if (curIter == last)
             {
                 ec = std::make_error_code(std::errc::protocol_error);
                 return root;
             }
-            auto bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
-            root.name = std::basic_string<charT>(b + 1, bend);
-            // second, get {}
-            b = std::find(bend, last, TYTI_L(charT, '{'));
+            {
+                // extract header
+                const auto headerEnd = std::find(curIter + 1, last, TYTI_L(charT, '\"'));
+                root.name = std::basic_string<charT>(curIter + 1, headerEnd);
+                // get the object section -> {}
+                curIter = std::find(headerEnd, last, TYTI_L(charT, '{'));
+            }
             try
             {
-                if (b == last)
+                if (curIter == last)
                 {
                     ec = std::make_error_code(std::errc::protocol_error);
                     return root;
                 }
                 else
-                    lvls.push(&root);
-                while (!lvls.empty() && b != last)
                 {
-                    const std::basic_string<charT> startsym = TYTI_L(charT, "\"}");
+                    lvls.push(&root);
+                }
+                while (!lvls.empty() && curIter != last)
+                {
+                    const std::basic_string<charT> startsym = TYTI_L(charT, "\"}/");
 
                     //find first starting attrib/child, or ending
-                    b = std::find_first_of(b, last, std::begin(startsym), std::end(startsym));
-                    if (*b == '\"')
+                    curIter = std::find_first_of(curIter, last, std::begin(startsym), std::end(startsym));
+                    if (*curIter == TYTI_L(charT, '\"'))
                     {
 
                         // get key
-                        bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
-                        if (bend == last)
+                        const auto keyEnd = std::find(curIter + 1, last, TYTI_L(charT, '\"'));
+                        if (keyEnd == last)
                         {
                             ec = std::make_error_code(std::errc::protocol_error);// could not find end of name
                             return root;
                         }
 
-                        std::basic_string<charT> key(b + 1, bend);
-                        b = bend + 1;
+                        std::basic_string<charT> key(curIter + 1, keyEnd);
+                        curIter = keyEnd + 1;
 
-                        const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{");
-                        b = std::find_first_of(b, last, std::begin(ecspsym), std::end(ecspsym));
-                        if (b == last)
+                        const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{/");
+                        curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
+
+                        while (*curIter == TYTI_L(charT, '/'))
                         {
-                            ec = std::make_error_code(std::errc::protocol_error);// could not find 2nd part of pair
-                            return root;
+                            curIter = skip_comments(curIter + 1, last);
+                            curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
+                            if (curIter == last)
+                            {
+                                ec = std::make_error_code(std::errc::protocol_error);// could not find 2nd part of pair
+                                return root;
+                            }
                         }
-
                         // get value
-                        if (*b == '\"')
+                        if (*curIter == '\"')
                         {
-                            bend = std::find(b + 1, last, TYTI_L(charT, '\"'));
-                            if (bend == last)
+                            const auto valueEnd = std::find(curIter + 1, last, TYTI_L(charT, '\"'));
+                            if (valueEnd == last)
                             {
                                 ec = std::make_error_code(std::errc::protocol_error);//could not find end of name
                                 return root;
                             }
 
-                            auto value = std::basic_string<charT>(b + 1, bend);
-                            b = bend + 1;
+                            auto value = std::basic_string<charT>(curIter + 1, valueEnd);
+                            curIter = valueEnd + 1;
 
                             // process value
                             if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
@@ -273,26 +306,31 @@ namespace tyti
                                 cur->childs[n->name] = std::move(n);
                             }
                         }
-                        else if (*b == '{')
+                        else if (*curIter == '{')
                         {
                             lvls.push(cur);
                             auto n = std::make_shared<basic_object<charT>>();
                             cur->childs[key] = n;
                             cur = n.get();
                             cur->name = std::move(key);
-                            ++b;
+                            ++curIter;
                         }
                     }
-                    else if (*b == '}')
+                    //end of new object
+                    else if (*curIter == TYTI_L(charT, '}'))
                     {
                         cur = lvls.top();
                         lvls.pop();
-                        ++b;
+                        ++curIter;
                     }
+                    else if (*curIter == TYTI_L(charT, '/'))
+                    {
+                        curIter = skip_comments(curIter + 1, last);
+                    }
+
                 }
-                
             }
-            catch (std::bad_alloc& )
+            catch (std::bad_alloc&)
             {
                 ec = std::make_error_code(std::errc::not_enough_memory);
             }
@@ -300,7 +338,9 @@ namespace tyti
             {
                 ec = std::make_error_code(std::errc::invalid_argument);
             }
+
             return root;
+
         }
 
 
@@ -323,7 +363,7 @@ namespace tyti
         If the file is mailformatted, parser will try to read it until it can.
         @param first begin iterator
         @param end end iterator
-        
+
         throws a "std::system_error" if a parsing error occured
         */
         template<typename IterT>

@@ -26,7 +26,7 @@ template<typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 17);
+    REQUIRE(obj.attribs.size() == 18);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.at(T_L("appid")) == T_L("343050"));
