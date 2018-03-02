@@ -18,7 +18,7 @@ This header-only file provides a parser and writer to load and save the given da
 ## Requirements
 - C++11 
 
-(works with the C++11 features of vs110/"Visual Studio 2012" and newer)
+(works with the C++11 features of vs120/"Visual Studio 2013" and newer)
  
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.

@@ -18,8 +18,8 @@ environment:
     Toolset: v140
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     Toolset: v120
-  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    Toolset: v110
+  #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+  #  Toolset: v110
   #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
   #  Toolset: v100
 
