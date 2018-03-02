@@ -208,7 +208,8 @@ TEST_CASE("read multikey", "[read]")
 
 struct counter
 {
-    size_t num_attributes = 0;
+    size_t num_attributes;
+    counter():num_attributes{0}{}
     void add_attribute(std::string key, std::string value)
     {
         ++num_attributes;
