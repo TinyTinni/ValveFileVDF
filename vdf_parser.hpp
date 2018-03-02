@@ -236,6 +236,9 @@ namespace tyti
         template<typename OutputT, typename IterT>
         OutputT read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
         {
+            static_assert(std::is_default_constructible<OutputT>::value,
+                "Output Type must be default constructible (provide constructor without arguments)");
+
             typedef typename IterT::value_type charT;
             ec.clear();
 

@@ -99,6 +99,7 @@ void add_child(std::unique_ptr< MYCLASS > child)
 void set_name(std::basic_string<CHAR> n)
 ```
 where ```MYCLASS``` is the tpe of your class and ```CHAR``` the type of your character set.
+Also, the type has to be [default constructible](http://en.cppreference.com/w/cpp/types/is_default_constructible).
 
 This also allows you, to inspect the file without storing it in a datastructure.
 Lets say, for example, you want to count all attributes of a file without storing it.
