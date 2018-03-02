@@ -17,7 +17,6 @@ This header-only file provides a parser and writer to load and save the given da
 
 ## Requirements
 - C++11
-- optional [Boost.Spirit](http://www.boost.org/) [header only] (see [boost branch.](https://github.com/TinyTinni/ValveFileVDF/tree/boost)) (for comment support)
  
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
@@ -42,9 +41,9 @@ tyti::vdf::object root = tyti::vdf::read(std::cbegin(blob), std::cend(blob));
 
 //given .vdf below, following holds
 assert(root.name == "name");
-std::shared_ptr<tyti::vdf::object> child = root.childs["child0"];
+const std::shared_ptr<tyti::vdf::object> child = root.childs["child0"];
 assert(child->name == "child0");
-std::string k = root.attribs["attrib0"];
+const std::string& k = root.attribs["attrib0"];
 assert(k == "value");
 ```
 
@@ -64,18 +63,90 @@ and its object childs. Below you can see a vdf data structure and how it is stor
 }
 ```
 
-Given such an object, you can also write it into vdf files via 'tyti::vdf::write':
+Given such an object, you can also write it into vdf files via:
 ```c++
 tyti::vdf::write(file, object);
+```
+
+## Multi-Key and Custom Output Format
+
+It is also possible to customize your output dataformat.
+Per default, the parser stores all items in a std::unordered_map, which, per definition,
+doesn't allow different entries with the same key.
+
+However, the Valve vdf format supports multiple keys. Therefore, the output data format
+has to store all items in e.g. a std::unordered_multimap.
+
+You can change the output format by passing the output type via template argument to
+the read function
+```c++
+namespace tyti;
+vdf::basic_object no_multi_key  = vdf::read(std::cbegin(blob), std::cend(blob));
+vdf::multikey_object multi_key = vdf::read<vdf::multikey_object>(std::cbegin(blob), std::cend(blob));
+```
+
+__Note__: The interface of [std::unordered_map](http://en.cppreference.com/w/cpp/container/unordered_map) and [std::unordered_multimap](http://en.cppreference.com/w/cpp/container/unordered_multimap)
+are different when you access the elements.
+
+It is also possible to create your own data structure which is used by the parser.
+Your output class needs to define 3 functions with the following signature:
+
+```c++
+void add_attribute(std::basic_string<CHAR> key, std::basic_string<CHAR> value)
+void add_child(std::unique_ptr< MYCLASS > child)
+void set_name(std::basic_string<CHAR> n)
+```
+where ```MYCLASS``` is the tpe of your class and ```CHAR``` the type of your character set.
+
+This also allows you, to inspect the file without storing it in a datastructure.
+Lets say, for example, you want to count all attributes of a file without storing it.
+You can do this by using this class
+
+```c++
+struct counter
+{
+    size_t num_attributes = 0;
+    void add_attribute(std::string key, std::string value)
+    {
+        ++num_attributes;
+    }
+    void add_child(std::unique_ptr< counter > child)
+    {
+        num_attributes += child->num_attributes;
+    }
+    void set_name(std::string n)
+    {}
+};
+```
+
+and then call the read function
+```c++
+counter num = tyti::vdf::read<counter>(file);
 ```
 
 ## Reference
 ```c++
   // classes
+
+  // default output object
   template<typename T>
-  basic_object<T>;
+  basic_object<T>
+  {
+    std::basic_string<char_type> name;
+    std::unordered_map<std::basic_string<char_type>, std::basic_string<char_type> > attribs;
+    std::unordered_map<std::basic_string<char_type>, std::shared_ptr< basic_object<char_type> > > childs;
+  };
   typedef basic_object<char> object;
   typedef basic_object<wchar_t> wobject
+
+  // output object with multikey support
+  template<typename T>
+  basic_multikey_object<T>
+  {
+    std::basic_string<char_type> name;
+    std::unordered_multimap<std::basic_string<char_type>, std::basic_string<char_type> > attribs;
+    std::unordered_multimap<std::basic_string<char_type>, std::shared_ptr< basic_object<char_type> > > childs;
+  };
 
 /*
   Possible error codes:

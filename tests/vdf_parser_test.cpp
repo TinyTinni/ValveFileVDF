@@ -38,12 +38,39 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
     CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
     CHECK(obj.childs.at(T_L("UserConfig"))->childs.empty());
 
-    const auto inc = obj.childs.at(T_L("IncludedStuff"));
+    const auto& inc = obj.childs.at(T_L("IncludedStuff"));
     CHECK(inc->name == T_L("IncludedStuff"));
-    const auto base = obj.childs.at(T_L("BaseInclude"));
+    const auto& base = obj.childs.at(T_L("BaseInclude"));
     REQUIRE(base->attribs.size() == 1);
     CHECK(base->attribs.at(T_L("BaseAttrib")) == T_L("Yes"));
     CHECK(obj.attribs.at(T_L("another attribute with fancy space")) == T_L("yay"));
+}
+
+
+template<typename charT>
+void check_DST_AST_multikey(const vdf::basic_multikey_object<charT>& obj)
+{
+    CHECK(obj.name == T_L("AppState"));
+    REQUIRE(obj.attribs.size() == 19);
+    REQUIRE(obj.childs.size() == 4);
+
+    CHECK(obj.attribs.find(T_L("appid"))->second == T_L("343050"));
+
+    CHECK(obj.attribs.find(T_L("buildid"))->second == T_L("1101428"));
+    CHECK(obj.attribs.find(T_L("#1_attrib"))->second == T_L("1"));
+    CHECK(obj.attribs.find(T_L("emptyAttrib"))->second == T_L(""));
+
+    CHECK(obj.attribs.count(T_L("UpdateResult")) == 2);
+
+    CHECK(obj.childs.find(T_L("UserConfig"))->second->name == T_L("UserConfig"));
+    CHECK(obj.childs.find(T_L("UserConfig"))->second->childs.empty());
+
+    const auto& inc = obj.childs.find(T_L("IncludedStuff"))->second;
+    CHECK(inc->name == T_L("IncludedStuff"));
+    const auto& base = obj.childs.find(T_L("BaseInclude"))->second;
+    REQUIRE(base->attribs.size() == 1);
+    CHECK(base->attribs.find(T_L("BaseAttrib"))->second == T_L("Yes"));
+    CHECK(obj.attribs.find(T_L("another attribute with fancy space"))->second == T_L("yay"));
 }
 
 template<typename charT>
@@ -79,6 +106,15 @@ void read_check_DST_file_throw()
     check_DST_AST(object);
 }
 
+template<typename charT>
+void read_check_DST_file_multikey_throw()
+{
+    std::basic_ifstream<charT> file("DST_Manifest.acf");
+    auto object = vdf::read<vdf::basic_multikey_object<charT>>(file);
+
+    check_DST_AST_multikey(object);
+}
+
 TEST_CASE("Read File", "[read]")
 {
     REQUIRE(cd(testdata_dir.c_str()) == 0);
@@ -107,7 +143,7 @@ void check_string(const vdf::basic_object<charT>& obj)
 
     CHECK(obj.attribs.empty() == true);
     REQUIRE(obj.childs.size() == 1);
-    auto secondNode = obj.childs.at(T_L("SecondNode"));
+    const auto& secondNode = obj.childs.at(T_L("SecondNode"));
 
     CHECK(secondNode->name == T_L("SecondNode"));
     REQUIRE(secondNode->attribs.size() == 1);
@@ -157,4 +193,37 @@ TEST_CASE("Write and Read", "[read_write]")
 {
     write_and_read<char>();
     write_and_read<wchar_t>();
+}
+
+TEST_CASE("read multikey", "[read]")
+{
+    read_check_DST_file_multikey_throw<char>();
+    read_check_DST_file_multikey_throw<wchar_t>();
+}
+
+
+/////////////////////////////////////////////////////////////
+// readme test
+/////////////////////////////////////////////////////////////
+
+struct counter
+{
+    size_t num_attributes = 0;
+    void add_attribute(std::string key, std::string value)
+    {
+        ++num_attributes;
+    }
+    void add_child(std::unique_ptr< counter > child)
+    {
+        num_attributes += child->num_attributes;
+    }
+    void set_name(std::string n)
+    {}
+};
+
+TEST_CASE("counter test", "[counter]")
+{
+    std::ifstream file("DST_Manifest.acf");
+    counter num = tyti::vdf::read<counter>(file);
+    CHECK(num.num_attributes == 21);
 }

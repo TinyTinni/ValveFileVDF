@@ -141,6 +141,14 @@ namespace tyti
         //  Interface
         ///////////////////////////////////////////////////////////////////////////
 
+        //forward decls
+        //forward decl
+        template<typename OutputT, typename iStreamT >
+        OutputT read(iStreamT& inStream, std::error_code& ec);
+
+
+        /// custom objects and their corresponding write functions
+
         /// basic object node. Every object has a name and can contains attributes saved as key_value pairs or childrens
         template<typename CharT>
         struct basic_object
@@ -149,16 +157,55 @@ namespace tyti
             std::basic_string<char_type> name;
             std::unordered_map<std::basic_string<char_type>, std::basic_string<char_type> > attribs;
             std::unordered_map<std::basic_string<char_type>, std::shared_ptr< basic_object<char_type> > > childs;
+
+            void add_attribute(std::basic_string<char_type> key, std::basic_string<char_type> value)
+            {
+                attribs.emplace(std::move(key), std::move(value));
+            }
+            void add_child(std::unique_ptr< basic_object<char_type> > child)
+            {
+                std::shared_ptr< basic_object<char_type> > obj{ child.release() };
+                childs.emplace(obj->name, obj);
+            }
+            void set_name(std::basic_string<char_type> n)
+            {
+                name = std::move(n);
+            }
+        };
+
+        template<typename CharT>
+        struct basic_multikey_object
+        {
+            typedef CharT char_type;
+            std::basic_string<char_type> name;
+            std::unordered_multimap<std::basic_string<char_type>, std::basic_string<char_type> > attribs;
+            std::unordered_multimap<std::basic_string<char_type>, std::shared_ptr< basic_multikey_object<char_type> > > childs;
+
+            void add_attribute(std::basic_string<char_type> key, std::basic_string<char_type> value)
+            {
+                attribs.emplace(std::move(key), std::move(value));
+            }
+            void add_child(std::unique_ptr< basic_multikey_object<char_type> > child)
+            {
+                std::shared_ptr< basic_multikey_object<char_type> > obj{ child.release() };
+                childs.emplace(obj->name, obj);
+            }
+            void set_name(std::basic_string<char_type> n)
+            {
+                name = std::move(n);
+            }
         };
 
         typedef basic_object<char> object;
         typedef basic_object<wchar_t> wobject;
+        typedef basic_multikey_object<char> multikey_object;
+        typedef basic_multikey_object<wchar_t> wmultikey_object;
 
         /** \brief writes given object tree in vdf format to given stream.
-         Output is prettyfied, using tabs
+        Output is prettyfied, using tabs
         */
-        template<typename oStreamT>
-        void write(oStreamT& s, const basic_object<typename oStreamT::char_type>& r,
+        template<typename oStreamT, typename T>
+        void write(oStreamT& s, const T& r,
             const detail::tabs<typename oStreamT::char_type> tab = detail::tabs<typename oStreamT::char_type>(0))
         {
             typedef typename oStreamT::char_type charT;
@@ -172,10 +219,7 @@ namespace tyti
             s << tab << TYTI_L(charT, "}\n");
         }
 
-        //forward decls
-        //forward decl
-        template<typename iStreamT>
-        basic_object<typename iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec);
+
 
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
@@ -189,15 +233,16 @@ namespace tyti
             std::errc::invalid_argument: iterators throws e.g. out of range
         */
 
-        template<typename IterT>
-        basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+        template<typename OutputT, typename IterT>
+        OutputT read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
         {
             typedef typename IterT::value_type charT;
             ec.clear();
 
-            basic_object<charT> root;
-            basic_object<charT>* cur = &root;
-            std::stack< basic_object<charT>* > lvls;
+            OutputT root;
+            OutputT* cur = &root;
+            std::unique_ptr<OutputT> cur_guard = nullptr; //if cur_guard == nullptr, use root, otherwise there is an heap allocated object
+            std::stack< std::unique_ptr<OutputT> > lvls;
 
             // function for skipping a comment block
             // iter: iterator poition to the position after a '/'
@@ -232,9 +277,10 @@ namespace tyti
             {
                 // extract header
                 const auto headerEnd = std::find(curIter + 1, last, TYTI_L(charT, '\"'));
-                root.name = std::basic_string<charT>(curIter + 1, headerEnd);
+                root.set_name(std::basic_string<charT>(curIter + 1, headerEnd));
                 // get the object section -> {}
                 curIter = std::find(headerEnd, last, TYTI_L(charT, '{'));
+                ++curIter;
             }
             try
             {
@@ -243,11 +289,7 @@ namespace tyti
                     ec = std::make_error_code(std::errc::protocol_error);
                     return root;
                 }
-                else
-                {
-                    lvls.push(&root);
-                }
-                while (!lvls.empty() && curIter != last)
+                while (cur != nullptr && curIter != last)
                 {
                     const std::basic_string<charT> startsym = TYTI_L(charT, "\"}/");
 
@@ -296,31 +338,42 @@ namespace tyti
                             // process value
                             if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
                             {
-                                cur->attribs[key] = std::move(value);
+                                cur->add_attribute(std::move(key), std::move(value));
                             }
                             else
                             {
                                 std::basic_ifstream<charT> i(detail::string_converter(std::move(value)));
-                                auto n = std::make_shared<basic_object<charT>>(read(i, ec));
+                                auto n = std::make_unique<OutputT>(read<OutputT>(i, ec));
                                 if (ec) return root;
-                                cur->childs[n->name] = std::move(n);
+                                cur->add_child(std::move(n));
                             }
                         }
                         else if (*curIter == '{')
                         {
-                            lvls.push(cur);
-                            auto n = std::make_shared<basic_object<charT>>();
-                            cur->childs[key] = n;
-                            cur = n.get();
-                            cur->name = std::move(key);
+                            lvls.push(std::move(cur_guard));
+                            cur_guard = std::make_unique<OutputT>();
+                            cur = cur_guard.get();
+                            cur->set_name(std::move(key));
                             ++curIter;
                         }
                     }
                     //end of new object
                     else if (*curIter == TYTI_L(charT, '}'))
                     {
-                        cur = lvls.top();
-                        lvls.pop();
+                        if (!lvls.empty())
+                        {
+                            //get object before
+                            std::unique_ptr<OutputT> prev{ lvls.top().release() };
+                            lvls.pop();
+
+                            // add finished obj to obj before and release it from processing
+                            cur = (prev == nullptr) ? &root : prev.get();
+                            cur->add_child(std::move(cur_guard));
+                            cur_guard = std::move(prev);
+                            
+                        }
+                        else
+                            cur = nullptr; // stops parsing
                         ++curIter;
                     }
                     else if (*curIter == TYTI_L(charT, '/'))
@@ -343,6 +396,11 @@ namespace tyti
 
         }
 
+        template< typename IterT >
+        inline basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+        {
+            return read< basic_object<typename IterT::value_type> >(first, last, ec);
+        }
 
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
@@ -350,13 +408,19 @@ namespace tyti
         @param end end iterator
         @param ok output bool. true, if parser successed, false, if parser failed
         */
-        template<typename IterT>
-        basic_object<typename IterT::value_type> read(IterT first, const IterT last, bool* ok) NOEXCEPT
+        template<typename OutputT, typename IterT >
+        OutputT read(IterT first, const IterT last, bool* ok) NOEXCEPT
         {
             std::error_code ec;
-            auto r = read(first, last, ec);
+            auto r = read<OutputT>(first, last, ec);
             if (ok) *ok = !ec;
             return r;
+        }
+
+        template<typename IterT>
+        inline basic_object<typename IterT::value_type> read(IterT first, const IterT last, bool* ok) NOEXCEPT
+        {
+            return read< basic_object<typename IterT::value_type> >(first, last, ok);
         }
 
         /** \brief Read VDF formatted sequences defined by the range [first, last).
@@ -366,21 +430,27 @@ namespace tyti
 
         throws a "std::system_error" if a parsing error occured
         */
-        template<typename IterT>
-        basic_object<typename IterT::value_type> read(IterT first, const IterT last)
+        template<typename OutputT, typename IterT >
+        OutputT read(IterT first, const IterT last)
         {
             std::error_code ec;
-            const auto r = read(first, last, ec);
+            const auto r = read<OutputT>(first, last, ec);
             if (ec)
                 throw std::system_error(ec);
             return r;
         }
 
+        template<typename IterT>
+        inline basic_object<typename IterT::value_type> read(IterT first, const IterT last)
+        {
+            return read< basic_object<typename IterT::value_type> >(first, last);
+        }
+
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
             throws "std::bad_alloc" if file buffer could not be allocated
         */
-        template<typename iStreamT>
-        basic_object<typename iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec)
+        template<typename OutputT, typename iStreamT>
+        OutputT read(iStreamT& inStream, std::error_code& ec)
         {
             // cache the file
             typedef typename iStreamT::char_type charT;
@@ -388,39 +458,57 @@ namespace tyti
             inStream.seekg(0, std::ios::end);
             str.resize(static_cast<size_t>(inStream.tellg()));
             if (str.empty())
-                return basic_object<charT>();
+                return OutputT();
 
             inStream.seekg(0, std::ios::beg);
             inStream.read(&str[0], str.size());
 
             // parse it
-            return read(str.begin(), str.end(), ec);
+            return read<OutputT>(str.begin(), str.end(), ec);
+        }
+
+        template<typename iStreamT>
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec)
+        {
+            return read<basic_object<typename iStreamT::char_type> >(inStream, ec);
         }
 
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
             throws "std::bad_alloc" if file buffer could not be allocated
             ok == false, if a parsing error occured
         */
-        template<typename iStreamT>
-        basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok)
+        template<typename OutputT, typename iStreamT>
+        OutputT read(iStreamT& inStream, bool* ok)
         {
             std::error_code ec;
-            const auto r = read(inStream, ec);
+            const auto r = read<OutputT>(inStream, ec);
             if (ok) *ok = !ec;
             return r;
         }
+
+        template<typename iStreamT>
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok)
+        {
+            return read< basic_object<typename iStreamT::char_type> >(inStream, ok);
+        }        
 
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
             throws "std::bad_alloc" if file buffer could not be allocated
             throws "std::system_error" if a parsing error occured
         */
-        template<typename iStreamT>
-        basic_object<typename iStreamT::char_type> read(iStreamT& inStream)
+        template<typename OutputT, typename iStreamT>
+        OutputT read(iStreamT& inStream)
         {
             std::error_code ec;
-            const auto r = read(inStream, ec);
+            const auto r = read<OutputT>(inStream, ec);
             if (ec) throw std::system_error(ec);
             return r;
+        }
+
+        template<typename iStreamT>
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream)
+        {
+            return read<basic_object<typename iStreamT::char_type>>(inStream);
         }
 
     } // end namespace vdf
