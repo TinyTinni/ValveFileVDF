@@ -129,8 +129,9 @@ counter num = tyti::vdf::read<counter>(file);
 
 ## Reference
 ```c++
-  // classes
-
+/////////////////////////////////////////////////////////////
+// pre-defined output classes
+/////////////////////////////////////////////////////////////
   // default output object
   template<typename T>
   basic_object<T>
@@ -153,6 +154,9 @@ counter num = tyti::vdf::read<counter>(file);
   typedef basic_multikey_object<char> multikey_object;
   typedef basic_multikey_object<wchar_t> wmultikey_object
 
+/////////////////////////////////////////////////////////////
+// error codes
+/////////////////////////////////////////////////////////////
 /*
   Possible error codes:
     std::errc::protocol_error: file is mailformatted
@@ -160,24 +164,43 @@ counter num = tyti::vdf::read<counter>(file);
     std::errc::invalid_argument: iterators throws e.g. out of range
 */
 
-/** \brief Read VDF formatted sequences defined by the range [first, last).
-  If the file is mailformatted, parser will try to read it until it can.
-  @param first begin iterator
-  @param end end iterator
-  @param ec output bool. 0 if ok, otherwise, holds an system error code
+/////////////////////////////////////////////////////////////
+// read from stream
+/////////////////////////////////////////////////////////////
+
+  /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
+      throws "std::bad_alloc" if file buffer could not be allocated
+      throws "std::system_error" if a parsing error occured
   */
-  template<typename IterT>
-  basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) noexcept;
-  
-  /** \brief Read VDF formatted sequences defined by the range [first, last).
-  If the file is mailformatted, parser will try to read it until it can.
-  @param first begin iterator
-  @param end end iterator
-  @param ok output bool. true, if parser successed, false, if parser failed
+  template<ytpename OutputT, typename iStreamT>
+  OutputT read(iStreamT& inStream);
+
+  template<typename iStreamT>
+  basic_object<typename iStreamT::char_type> read(iStreamT& inStream);
+
+  /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
+      throws "std::bad_alloc" if file buffer could not be allocated
+      ok == false, if a parsing error occured
   */
-  template<typename IterT>
-  basic_object<typename IterT::value_type> read(IterT first, IterT last, bool* ok) noexcept;
+  template<typename OutputT, typename iStreamT>
+  OutputT read(iStreamT& inStream, bool* ok);
+
+  template<typename iStreamT>
+  basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok);
   
+  /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
+      throws "std::bad_alloc" if file buffer could not be allocated
+  */
+  template<typename OutputT, typename iStreamT>
+  OutputT read(iStreamT& inStream, std::error_code& ec);
+
+  template<typename iStreamT>
+  basic_object<iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec);
+
+/////////////////////////////////////////////////////////////
+// read from memory
+/////////////////////////////////////////////////////////////
+
   /** \brief Read VDF formatted sequences defined by the range [first, last).
   If the file is mailformatted, parser will try to read it until it can.
   @param first begin iterator
@@ -185,36 +208,45 @@ counter num = tyti::vdf::read<counter>(file);
   
   throws a "std::system_error" if a parsing error occured
   */
+  template<typename OutputT, typename IterT>
+  OutputT read(IterT first, IterT last);
+
   template<typename IterT>
   basic_object<typename IterT::value_type> read(IterT first, IterT last);
-  
-  /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
-      throws "std::bad_alloc" if file buffer could not be allocated
+ 
+  /** \brief Read VDF formatted sequences defined by the range [first, last).
+  If the file is mailformatted, parser will try to read it until it can.
+  @param first begin iterator
+  @param end end iterator
+  @param ok output bool. true, if parser successed, false, if parser failed
   */
-  template<typename iStreamT>
-  basic_object<iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec);
+  template<typename OutputT, typename IterT>
+  OutputT read(IterT first, IterT last, bool* ok) noexcept;
   
-  /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
-      throws "std::bad_alloc" if file buffer could not be allocated
-      ok == false, if a parsing error occured
-  */
-  template<typename iStreamT>
-  basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok);
+  template<typename IterT>
+  basic_object<typename IterT::value_type> read(IterT first, IterT last, bool* ok) noexcept;
   
-  /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
-      throws "std::bad_alloc" if file buffer could not be allocated
-      throws "std::system_error" if a parsing error occured
-  */
-  template<typename iStreamT>
-  basic_object<typename iStreamT::char_type> read(iStreamT& inStream);
 
+
+  /** \brief Read VDF formatted sequences defined by the range [first, last).
+  If the file is mailformatted, parser will try to read it until it can.
+  @param first begin iterator
+  @param end end iterator
+  @param ec output bool. 0 if ok, otherwise, holds an system error code
+  */
+  template<typename OutputT, typename IterT>
+  OutputT read(IterT first, IterT last, std::error_code& ec) noexcept;
+  
+  template<typename IterT>
+  basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) noexcept;
+  
 
 /////////////////////////////////////////////////////////////////////////////
   // Writer functions
   /// writes given obj into out in vdf style 
   /// Output is prettyfied, using tabs
-  template<typename oStreamT>
-  void write(oStreamT& out, const basic_object<typename oStreamT::char_type>& obj);
+  template<typename oStreamT, typename T>
+  void write(oStreamT& out, const T& obj);
   
 ```
 
