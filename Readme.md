@@ -94,9 +94,9 @@ It is also possible to create your own data structure which is used by the parse
 Your output class needs to define 3 functions with the following signature:
 
 ```c++
-void add_attribute(std::basic_string<CHAR> key, std::basic_string<CHAR> value)
-void add_child(std::unique_ptr< MYCLASS > child)
-void set_name(std::basic_string<CHAR> n)
+void add_attribute(std::basic_string<CHAR> key, std::basic_string<CHAR> value);
+void add_child(std::unique_ptr< MYCLASS > child);
+void set_name(std::basic_string<CHAR> n);
 ```
 where ```MYCLASS``` is the tpe of your class and ```CHAR``` the type of your character set.
 Also, the type has to be [default constructible](http://en.cppreference.com/w/cpp/types/is_default_constructible).
