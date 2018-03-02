@@ -70,7 +70,7 @@ Given such an object, you can also write it into vdf files via:
 tyti::vdf::write(file, object);
 ```
 
-## Multi-Key and Custom Output Format
+## Multi-Key and Custom Output Type
 
 It is also possible to customize your output dataformat.
 Per default, the parser stores all items in a std::unordered_map, which, per definition,
