@@ -147,6 +147,8 @@ counter num = tyti::vdf::read<counter>(file);
     std::unordered_multimap<std::basic_string<char_type>, std::basic_string<char_type> > attribs;
     std::unordered_multimap<std::basic_string<char_type>, std::shared_ptr< basic_object<char_type> > > childs;
   };
+  typedef basic_multikey_object<char> multikey_object;
+  typedef basic_multikey_object<wchar_t> wmultikey_object
 
 /*
   Possible error codes:
