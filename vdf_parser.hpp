@@ -238,6 +238,8 @@ namespace tyti
         {
             static_assert(std::is_default_constructible<OutputT>::value,
                 "Output Type must be default constructible (provide constructor without arguments)");
+            static_assert(std::is_move_constructible<OutputT>::value,
+                "Output Type must be move constructible");
 
             typedef typename IterT::value_type charT;
             ec.clear();
