@@ -83,8 +83,8 @@ You can change the output format by passing the output type via template argumen
 the read function
 ```c++
 namespace tyti;
-vdf::object       no_multi_key = vdf::read(std::cbegin(blob), std::cend(blob));
-vdf::multikey_object multi_key = vdf::read<vdf::multikey_object>(std::cbegin(blob), std::cend(blob));
+vdf::object       no_multi_key = vdf::read(file);
+vdf::multikey_object multi_key = vdf::read<vdf::multikey_object>(file);
 ```
 
 __Note__: The interface of [std::unordered_map](http://en.cppreference.com/w/cpp/container/unordered_map) and [std::unordered_multimap](http://en.cppreference.com/w/cpp/container/unordered_multimap)
