@@ -83,8 +83,8 @@ You can change the output format by passing the output type via template argumen
 the read function
 ```c++
 namespace tyti;
-vdf::object       no_multi_key = vdf::read(std::cbegin(blob), std::cend(blob));
-vdf::multikey_object multi_key = vdf::read<vdf::multikey_object>(std::cbegin(blob), std::cend(blob));
+vdf::object       no_multi_key = vdf::read(file);
+vdf::multikey_object multi_key = vdf::read<vdf::multikey_object>(file);
 ```
 
 __Note__: The interface of [std::unordered_map](http://en.cppreference.com/w/cpp/container/unordered_map) and [std::unordered_multimap](http://en.cppreference.com/w/cpp/container/unordered_multimap)
@@ -99,7 +99,8 @@ void add_child(std::unique_ptr< MYCLASS > child);
 void set_name(std::basic_string<CHAR> n);
 ```
 where ```MYCLASS``` is the tpe of your class and ```CHAR``` the type of your character set.
-Also, the type has to be [default constructible](http://en.cppreference.com/w/cpp/types/is_default_constructible).
+Also, the type has to be [default constructible](http://en.cppreference.com/w/cpp/types/is_default_constructible)
+and [move constructible](http://en.cppreference.com/w/cpp/types/is_move_constructible).
 
 This also allows you, to inspect the file without storing it in a datastructure.
 Lets say, for example, you want to count all attributes of a file without storing it.
