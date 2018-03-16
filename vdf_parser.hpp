@@ -210,7 +210,6 @@ namespace tyti
         {
             typedef typename oStreamT::char_type charT;
             using namespace detail;
-            typedef tabs<charT> tabs;
             s << tab << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tab << TYTI_L(charT, "{\n");
             for (const auto& i : r.attribs)
                 s << tab + 1 << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
