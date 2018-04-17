@@ -108,11 +108,11 @@ namespace tyti
 
             inline std::string string_converter(const std::wstring& w)
             {
-				#if WIN32
-				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv1;
-				#else
+                #if WIN32
+                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv1;
+                #else
                 std::wstring_convert<std::codecvt_utf8<wchar_t>> conv1;
-				#endif
+                #endif
                 return conv1.to_bytes(w);
             }
 

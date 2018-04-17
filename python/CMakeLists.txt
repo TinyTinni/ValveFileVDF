@@ -1,13 +1,15 @@
-cmake_minimum_required (VERSION 3.5.1)
+cmake_minimum_required (VERSION 3.11.2018)
 project (vdf-Python)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 	
 find_package(Git REQUIRED)
+find_package(Python COMPONENTS Interpreter Development)
+
 option(DOWNLOAD_PYBIND11 "Download PyBind11. (Requires Git)" ${Git_FOUND})
 
-set(PYBIND11_PATH "${CMAKE_CURRENT_SOURCE_DIR}/pybind11" CACHE FILEPATH "Path to pybind11")
+set(PYBIND11_PATH "${CMAKE_BINARY_DIR}/pybind11" CACHE FILEPATH "Path to pybind11")
 if (${DOWNLOAD_PYBIND11})	
 	#include(ExternalProject)
     set (_GIT_CMD "clone")
@@ -23,9 +25,6 @@ if (${DOWNLOAD_PYBIND11})
 endif()
 
 find_package(PythonLibs REQUIRED)
-find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIR})
-
 set(PYTHON_MODULE_EXTENSION ".pyd")
 
 if (NOT EXISTS ${PYBIND11_PATH}/CMakeLists.txt)
@@ -33,7 +32,19 @@ if (NOT EXISTS ${PYBIND11_PATH}/CMakeLists.txt)
 endif()
 
 add_subdirectory(${PYBIND11_PATH})
-pybind11_add_module(vdf "../vdf_parser.hpp;vdf_python_bindings.cpp")
+pybind11_add_module(vdf "../vdf_parser.hpp;vdf_python_bindings.cpp;Readme.md")
+target_link_libraries(vdf PRIVATE Python::Python)
 
-
-add_definitions("-D_WIN32_WINNT=0x0501;WIN32_LEAN_AND_MEAN")
+include(CTest)
+if (BUILD_TESTING)
+    if (MSVC)
+        SET(CTEST_OUTPUT_ON_FAILURE ON)
+    ##todo: add python project
+    endif()
+    add_test(NAME vdf_python_test COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test.py WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../tests/testdata")
+    set(ppath $ENV{PYTHONPATH})
+    LIST(APPEND ppath  "$<TARGET_FILE_DIR:vdf>")
+    #LIST(APPEND ppath "C:/Users/Matthias/Documents/Git-Sources/ValveFileVDF/python/build/Release")
+    message(${ppath})
+    set_tests_properties(vdf_python_test PROPERTIES ENVIRONMENT "PYTHONPATH=${ppath}" DEPENDS vdf)
+endif()

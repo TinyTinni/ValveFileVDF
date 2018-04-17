@@ -44,6 +44,6 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT t
 add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
 
 include(CTest)
-enable_testing(true)
-add_test(NAME vdf_tests COMMAND tests)
-
+if (BUILD_TESTING)
+    add_test(NAME vdf_tests COMMAND tests)
+endif()
