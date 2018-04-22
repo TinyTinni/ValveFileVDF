@@ -24,9 +24,6 @@ if (${DOWNLOAD_PYBIND11})
 	endif()
 endif()
 
-find_package(PythonLibs REQUIRED)
-set(PYTHON_MODULE_EXTENSION ".pyd")
-
 if (NOT EXISTS ${PYBIND11_PATH}/CMakeLists.txt)
     message(FATAL_ERROR "Could not found pybind11.\n Please specify PYBIND11_PATH or check DOWNLOAD_PYBIND11")
 endif()
@@ -35,16 +32,12 @@ add_subdirectory(${PYBIND11_PATH})
 pybind11_add_module(vdf "../vdf_parser.hpp;vdf_python_bindings.cpp;Readme.md")
 target_link_libraries(vdf PRIVATE Python::Python)
 
+
+## add tests
 include(CTest)
 if (BUILD_TESTING)
-    if (MSVC)
-        SET(CTEST_OUTPUT_ON_FAILURE ON)
-    ##todo: add python project
-    endif()
     add_test(NAME vdf_python_test COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test.py WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../tests/testdata")
     set(ppath $ENV{PYTHONPATH})
     LIST(APPEND ppath  "$<TARGET_FILE_DIR:vdf>")
-    #LIST(APPEND ppath "C:/Users/Matthias/Documents/Git-Sources/ValveFileVDF/python/build/Release")
-    message(${ppath})
     set_tests_properties(vdf_python_test PROPERTIES ENVIRONMENT "PYTHONPATH=${ppath}" DEPENDS vdf)
 endif()
