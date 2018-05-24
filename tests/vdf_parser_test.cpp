@@ -35,10 +35,14 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
     CHECK(obj.attribs.at(T_L("#1_attrib")) == T_L("1"));
     CHECK(obj.attribs.at(T_L("emptyAttrib")) == T_L(""));
     CHECK(obj.attribs.at(T_L("escape_quote")) == T_L(R"("quote")"));
+// "C2017 can occur when the stringize operator is used with strings that include escape sequences."
+// https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2013/29t70y03(v=vs.120)
+#if !defined(_MSC_VER) || (_MSC_VER > 1800)
     CHECK(obj.attribs.at(T_L("escape_quote_backslash")) == T_L("quote_with_other_escapes\\\"\\"));
     CHECK(obj.attribs.at(T_L("tab_escape")) == T_L("new\\ttab"));
     CHECK(obj.attribs.at(T_L("new_line_escape")) == T_L("new\\nline"));
-
+#endif
+    
     CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
     CHECK(obj.childs.at(T_L("UserConfig"))->childs.empty());
 
