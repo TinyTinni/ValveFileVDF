@@ -417,27 +417,6 @@ namespace tyti
         If the file is mailformatted, parser will try to read it until it can.
         @param first begin iterator
         @param end end iterator
-        @param ok output bool. true, if parser successed, false, if parser failed
-        */
-        template<typename OutputT, typename IterT >
-        OutputT read(IterT first, const IterT last, bool* ok) NOEXCEPT
-        {
-            std::error_code ec;
-            auto r = read<OutputT>(first, last, ec);
-            if (ok) *ok = !ec;
-            return r;
-        }
-
-        template<typename IterT>
-        inline basic_object<typename IterT::value_type> read(IterT first, const IterT last, bool* ok) NOEXCEPT
-        {
-            return read< basic_object<typename IterT::value_type> >(first, last, ok);
-        }
-
-        /** \brief Read VDF formatted sequences defined by the range [first, last).
-        If the file is mailformatted, parser will try to read it until it can.
-        @param first begin iterator
-        @param end end iterator
         @param ec output bool. 0 if ok, otherwise, holds an system error code
 
         Possible error codes:
@@ -470,6 +449,26 @@ namespace tyti
             return r;
         }
 
+        /** \brief Read VDF formatted sequences defined by the range [first, last).
+        If the file is mailformatted, parser will try to read it until it can.
+        @param first begin iterator
+        @param end end iterator
+        @param ok output bool. true, if parser successed, false, if parser failed
+        */
+        template<typename OutputT, typename IterT >
+        OutputT read(IterT first, const IterT last, bool* ok) NOEXCEPT
+        {
+            std::error_code ec;
+            auto r = read<OutputT>(first, last, ec);
+            if (ok) *ok = !ec;
+            return r;
+        }
+
+        template<typename IterT>
+        inline basic_object<typename IterT::value_type> read(IterT first, const IterT last, bool* ok) NOEXCEPT
+        {
+            return read< basic_object<typename IterT::value_type> >(first, last, ok);
+        }
 
         template< typename IterT >
         inline basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
