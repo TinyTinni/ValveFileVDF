@@ -23,6 +23,8 @@
     "commentInValue" "no//comment"
     "escape_quote" "\"quote\""
     "escape_quote_backslash" "quote_with_other_escapes\\\"\\"
+    "tab_escape" "new\ttab"
+    "new_line_escape" "new\nline"
     
     // inline comment
     "UserConfig"

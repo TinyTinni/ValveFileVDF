@@ -26,7 +26,7 @@ template<typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 20);
+    REQUIRE(obj.attribs.size() == 22);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.at(T_L("appid")) == T_L("343050"));
@@ -36,6 +36,8 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
     CHECK(obj.attribs.at(T_L("emptyAttrib")) == T_L(""));
     CHECK(obj.attribs.at(T_L("escape_quote")) == T_L(R"("quote")"));
     CHECK(obj.attribs.at(T_L("escape_quote_backslash")) == T_L("quote_with_other_escapes\\\"\\"));
+    CHECK(obj.attribs.at(T_L("tab_escape")) == T_L("new\\ttab"));
+    CHECK(obj.attribs.at(T_L("new_line_escape")) == T_L("new\\nline"));
 
     CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
     CHECK(obj.childs.at(T_L("UserConfig"))->childs.empty());
@@ -53,7 +55,7 @@ template<typename charT>
 void check_DST_AST_multikey(const vdf::basic_multikey_object<charT>& obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 21);
+    REQUIRE(obj.attribs.size() == 23);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.find(T_L("appid"))->second == T_L("343050"));
@@ -228,5 +230,5 @@ TEST_CASE("counter test", "[counter]")
 {
     std::ifstream file("DST_Manifest.acf");
     counter num = tyti::vdf::read<counter>(file);
-    CHECK(num.num_attributes == 23);
+    CHECK(num.num_attributes == 25);
 }
