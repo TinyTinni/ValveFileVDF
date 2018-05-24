@@ -149,7 +149,7 @@ namespace tyti
         //forward decls
         //forward decl
         template<typename OutputT, typename iStreamT >
-        OutputT read(iStreamT& inStream, std::error_code& ec);
+        OutputT read(iStreamT& inStream);
 
 
         /// custom objects and their corresponding write functions
@@ -413,12 +413,6 @@ namespace tyti
 
         }
 
-        template< typename IterT >
-        inline basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
-        {
-            return read< basic_object<typename IterT::value_type> >(first, last, ec);
-        }
-
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
         @param first begin iterator
@@ -474,6 +468,13 @@ namespace tyti
                 ec = std::make_error_code(std::errc::invalid_argument);
             }
             return r;
+        }
+
+
+        template< typename IterT >
+        inline basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+        {
+            return read< basic_object<typename IterT::value_type> >(first, last, ec);
         }
 
         template<typename IterT>
