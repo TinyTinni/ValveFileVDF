@@ -274,11 +274,20 @@ namespace tyti
 
             auto end_quote = [](IterT iter, const IterT& last) -> IterT
             {
+                const auto begin = iter;
+                auto last_esc = iter;
                 do 
                 {
                     ++iter;
                     iter = std::find(iter, last, TYTI_L(charT, '\"'));
-                } while (*std::prev(iter) == TYTI_L(charT, '\\') && iter != last);
+                    if (iter == last)
+                        break;
+
+                    last_esc = std::prev(iter);
+                    while (last_esc != begin && *last_esc == '\\')
+                        --last_esc;
+                    auto dist = std::distance(last_esc, iter);
+                } while ( !(std::distance(last_esc, iter) % 2));
                 if (iter == last)
                     throw std::runtime_error{"quote was opened but not closed."};
                 return iter;
@@ -286,12 +295,19 @@ namespace tyti
 
             auto strip_escape_symbols = [](std::basic_string<charT> s)
             {
-                auto searcher = [&s]() {return s.find(TYTI_L(charT, "\\\"")); };
-                auto p = searcher();
+                auto quote_searcher = [&s](size_t pos) {return s.find(TYTI_L(charT, "\\\""), pos); };
+                auto p = quote_searcher(0);
                 while (p != s.npos)
                 {
-                    s.replace(p, 1, TYTI_L(charT,""));
-                    p = searcher();
+                    s.replace(p, 2, TYTI_L(charT,"\""));
+                    p = quote_searcher(p);
+                }
+                auto searcher = [&s](size_t pos) {return s.find(TYTI_L(charT, "\\\\"), pos); };
+                p = searcher(0);
+                while (p != s.npos)
+                {
+                    s.replace(p, 2, TYTI_L(charT, "\\"));
+                    p = searcher(p);
                 }
                 return s;
             };

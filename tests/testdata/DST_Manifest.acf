@@ -22,6 +22,7 @@
     "emptyAttrib" ""
     "commentInValue" "no//comment"
     "escape_quote" "\"quote\""
+    "escape_quote_backslash" "quote_with_other_escapes\\\"\\"
     
     // inline comment
     "UserConfig"
