@@ -171,7 +171,7 @@ counter num = tyti::vdf::read<counter>(file);
 
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
-      throws "std::system_error" if a parsing error occured
+      throws "std::runtime_error" if a parsing error occured
   */
   template<ytpename OutputT, typename iStreamT>
   OutputT read(iStreamT& inStream);
@@ -207,7 +207,8 @@ counter num = tyti::vdf::read<counter>(file);
   @param first begin iterator
   @param end end iterator
   
-  throws a "std::system_error" if a parsing error occured
+  throws "std::runtime_error" if a parsing error occured
+  throws "std::bad_alloc" if not enough memory could be allocated
   */
   template<typename OutputT, typename IterT>
   OutputT read(IterT first, IterT last);

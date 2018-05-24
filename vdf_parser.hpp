@@ -225,20 +225,18 @@ namespace tyti
 
 
 
+        
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
         @param first begin iterator
         @param end end iterator
-        @param ec output bool. 0 if ok, otherwise, holds an system error code
 
-        Possible error codes:
-            std::errc::protocol_error: file is mailformatted
-            std::errc::not_enough_memory: not enough space
-            std::errc::invalid_argument: iterators throws e.g. out of range
+        can thow:
+                - "std::runtime_error" if a parsing error occured
+                - "std::bad_alloc" if not enough memory coup be allocated
         */
-
         template<typename OutputT, typename IterT>
-        OutputT read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+        OutputT read(IterT first, const IterT last)
         {
             static_assert(std::is_default_constructible<OutputT>::value,
                 "Output Type must be default constructible (provide constructor without arguments)");
@@ -246,7 +244,6 @@ namespace tyti
                 "Output Type must be move constructible");
 
             typedef typename IterT::value_type charT;
-            ec.clear();
 
             OutputT root;
             OutputT* cur = &root;
@@ -283,7 +280,7 @@ namespace tyti
                     iter = std::find(iter, last, TYTI_L(charT, '\"'));
                 } while (*std::prev(iter) == TYTI_L(charT, '\\') && iter != last);
                 if (iter == last)
-                    throw std::runtime_error{"quote still open."};
+                    throw std::runtime_error{"quote was opened but not closed."};
                 return iter;
             };
 
@@ -303,10 +300,7 @@ namespace tyti
             // first, quoted name
             auto curIter = std::find(first, last, TYTI_L(charT, '\"'));
             if (curIter == last)
-            {
-                ec = std::make_error_code(std::errc::protocol_error);
-                return root;
-            }
+                throw std::runtime_error("Could not find VDF-Header.");
             {
                 // extract header
                 const auto headerEnd = end_quote(curIter, last);
@@ -315,112 +309,90 @@ namespace tyti
                 curIter = std::find(headerEnd, last, TYTI_L(charT, '{'));
                 ++curIter;
             }
-            try
+            if (curIter == last)
+                throw std::runtime_error{ "object was opened but not closed." };
+
+            while (cur != nullptr && curIter != last)
             {
-                if (curIter == last)
+                const std::basic_string<charT> startsym = TYTI_L(charT, "\"}/");
+
+                //find first starting attrib/child, or ending
+                curIter = std::find_first_of(curIter, last, std::begin(startsym), std::end(startsym));
+                if (*curIter == TYTI_L(charT, '\"'))
                 {
-                    ec = std::make_error_code(std::errc::protocol_error);
-                    return root;
-                }
-                while (cur != nullptr && curIter != last)
-                {
-                    const std::basic_string<charT> startsym = TYTI_L(charT, "\"}/");
 
-                    //find first starting attrib/child, or ending
-                    curIter = std::find_first_of(curIter, last, std::begin(startsym), std::end(startsym));
-                    if (*curIter == TYTI_L(charT, '\"'))
-                    {
+                    // get key
+                    const auto keyEnd = end_quote(curIter, last);
 
-                        // get key
-                        const auto keyEnd = end_quote(curIter, last);
+                    std::basic_string<charT> key(curIter + 1, keyEnd);
+                    key = strip_escape_symbols(key);
+                    curIter = keyEnd + 1;
 
-                        std::basic_string<charT> key(curIter + 1, keyEnd);
-                        key = strip_escape_symbols(key);
-                        curIter = keyEnd + 1;
+                    const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{/");
+                    curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
 
-                        const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{/");
-                        curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
-
-                        while (*curIter == TYTI_L(charT, '/'))
-                        {
-                            curIter = skip_comments(curIter + 1, last);
-                            curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
-                            if (curIter == last)
-                            {
-                                ec = std::make_error_code(std::errc::protocol_error);// could not find 2nd part of pair
-                                return root;
-                            }
-                        }
-                        // get value
-                        if (*curIter == '\"')
-                        {
-                            const auto valueEnd = end_quote(curIter, last);
-
-                            auto value = std::basic_string<charT>(curIter + 1, valueEnd);
-                            value = strip_escape_symbols(value);
-                            curIter = valueEnd + 1;
-
-                            // process value
-                            if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
-                            {
-                                cur->add_attribute(std::move(key), std::move(value));
-                            }
-                            else
-                            {
-                                std::basic_ifstream<charT> i(detail::string_converter(std::move(value)));
-                                auto n = std::make_unique<OutputT>(read<OutputT>(i, ec));
-                                if (ec) return root;
-                                cur->add_child(std::move(n));
-                            }
-                        }
-                        else if (*curIter == '{')
-                        {
-                            lvls.push(std::move(cur_guard));
-                            cur_guard = std::make_unique<OutputT>();
-                            cur = cur_guard.get();
-                            cur->set_name(std::move(key));
-                            ++curIter;
-                        }
-                    }
-                    //end of new object
-                    else if (*curIter == TYTI_L(charT, '}'))
-                    {
-                        if (!lvls.empty())
-                        {
-                            //get object before
-                            std::unique_ptr<OutputT> prev{ lvls.top().release() };
-                            lvls.pop();
-
-                            // add finished obj to obj before and release it from processing
-                            cur = (prev == nullptr) ? &root : prev.get();
-                            cur->add_child(std::move(cur_guard));
-                            cur_guard = std::move(prev);
-                            
-                        }
-                        else
-                            cur = nullptr; // stops parsing
-                        ++curIter;
-                    }
-                    else if (*curIter == TYTI_L(charT, '/'))
+                    while (*curIter == TYTI_L(charT, '/'))
                     {
                         curIter = skip_comments(curIter + 1, last);
+                        curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
+                        if (curIter == last)
+                            throw std::runtime_error{ "key declared, but no value" };
                     }
+                    // get value
+                    if (*curIter == '\"')
+                    {
+                        const auto valueEnd = end_quote(curIter, last);
 
+                        auto value = std::basic_string<charT>(curIter + 1, valueEnd);
+                        value = strip_escape_symbols(value);
+                        curIter = valueEnd + 1;
+
+                        // process value
+                        if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
+                        {
+                            cur->add_attribute(std::move(key), std::move(value));
+                        }
+                        else
+                        {
+                            std::basic_ifstream<charT> i(detail::string_converter(std::move(value)));
+                            auto n = std::make_unique<OutputT>(read<OutputT>(i));
+                            cur->add_child(std::move(n));
+                        }
+                    }
+                    else if (*curIter == '{')
+                    {
+                        lvls.push(std::move(cur_guard));
+                        cur_guard = std::make_unique<OutputT>();
+                        cur = cur_guard.get();
+                        cur->set_name(std::move(key));
+                        ++curIter;
+                    }
                 }
-            }
-            catch (std::runtime_error&)
-            {
-                ec = std::make_error_code(std::errc::protocol_error);
-            }
-            catch (std::bad_alloc&)
-            {
-                ec = std::make_error_code(std::errc::not_enough_memory);
-            }
-            catch (...)
-            {
-                ec = std::make_error_code(std::errc::invalid_argument);
-            }
+                //end of new object
+                else if (*curIter == TYTI_L(charT, '}'))
+                {
+                    if (!lvls.empty())
+                    {
+                        //get object before
+                        std::unique_ptr<OutputT> prev{ lvls.top().release() };
+                        lvls.pop();
 
+                        // add finished obj to obj before and release it from processing
+                        cur = (prev == nullptr) ? &root : prev.get();
+                        cur->add_child(std::move(cur_guard));
+                        cur_guard = std::move(prev);
+
+                    }
+                    else
+                        cur = nullptr; // stops parsing
+                    ++curIter;
+                }
+                else if (*curIter == TYTI_L(charT, '/'))
+                {
+                    curIter = skip_comments(curIter + 1, last);
+                }
+
+            }
             return root;
 
         }
@@ -456,16 +428,35 @@ namespace tyti
         If the file is mailformatted, parser will try to read it until it can.
         @param first begin iterator
         @param end end iterator
+        @param ec output bool. 0 if ok, otherwise, holds an system error code
 
-        throws a "std::system_error" if a parsing error occured
+        Possible error codes:
+        std::errc::protocol_error: file is mailformatted
+        std::errc::not_enough_memory: not enough space
+        std::errc::invalid_argument: iterators throws e.g. out of range
         */
         template<typename OutputT, typename IterT >
-        OutputT read(IterT first, const IterT last)
+        OutputT read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+
         {
-            std::error_code ec;
-            const auto r = read<OutputT>(first, last, ec);
-            if (ec)
-                throw std::system_error(ec);
+            ec.clear();
+            OutputT r{};
+            try
+            {
+                r = read<OutputT>(first, last);
+            }
+            catch (std::runtime_error&)
+            {
+                ec = std::make_error_code(std::errc::protocol_error);
+            }
+            catch (std::bad_alloc&)
+            {
+                ec = std::make_error_code(std::errc::not_enough_memory);
+            }
+            catch (...)
+            {
+                ec = std::make_error_code(std::errc::invalid_argument);
+            }
             return r;
         }
 
@@ -523,15 +514,25 @@ namespace tyti
 
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
             throws "std::bad_alloc" if file buffer could not be allocated
-            throws "std::system_error" if a parsing error occured
+            throws "std::runtime_error" if a parsing error occured
         */
         template<typename OutputT, typename iStreamT>
         OutputT read(iStreamT& inStream)
         {
-            std::error_code ec;
-            const auto r = read<OutputT>(inStream, ec);
-            if (ec) throw std::system_error(ec);
-            return r;
+
+            // cache the file
+            typedef typename iStreamT::char_type charT;
+            std::basic_string<charT> str;
+            inStream.seekg(0, std::ios::end);
+            str.resize(static_cast<size_t>(inStream.tellg()));
+            if (str.empty())
+                return OutputT();
+
+            inStream.seekg(0, std::ios::beg);
+            inStream.read(&str[0], str.size());
+
+            // parse it
+            return read<OutputT>(str.begin(), str.end());
         }
 
         template<typename iStreamT>
