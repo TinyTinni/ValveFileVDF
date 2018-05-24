@@ -275,6 +275,30 @@ namespace tyti
                 return iter;
             };
 
+            auto end_quote = [](IterT iter, const IterT& last) -> IterT
+            {
+                do 
+                {
+                    ++iter;
+                    iter = std::find(iter, last, TYTI_L(charT, '\"'));
+                } while (*std::prev(iter) == TYTI_L(charT, '\\') && iter != last);
+                if (iter == last)
+                    throw std::runtime_error{"quote still open."};
+                return iter;
+            };
+
+            auto strip_escape_symbols = [](std::basic_string<charT> s)
+            {
+                auto searcher = [&s]() {return s.find(TYTI_L(charT, "\\\"")); };
+                auto p = searcher();
+                while (p != s.npos)
+                {
+                    s.replace(p, 1, TYTI_L(charT,""));
+                    p = searcher();
+                }
+                return s;
+            };
+
             //read header
             // first, quoted name
             auto curIter = std::find(first, last, TYTI_L(charT, '\"'));
@@ -285,8 +309,8 @@ namespace tyti
             }
             {
                 // extract header
-                const auto headerEnd = std::find(curIter + 1, last, TYTI_L(charT, '\"'));
-                root.set_name(std::basic_string<charT>(curIter + 1, headerEnd));
+                const auto headerEnd = end_quote(curIter, last);
+                root.set_name(strip_escape_symbols(std::basic_string<charT>(curIter + 1, headerEnd)));
                 // get the object section -> {}
                 curIter = std::find(headerEnd, last, TYTI_L(charT, '{'));
                 ++curIter;
@@ -308,14 +332,10 @@ namespace tyti
                     {
 
                         // get key
-                        const auto keyEnd = std::find(curIter + 1, last, TYTI_L(charT, '\"'));
-                        if (keyEnd == last)
-                        {
-                            ec = std::make_error_code(std::errc::protocol_error);// could not find end of name
-                            return root;
-                        }
+                        const auto keyEnd = end_quote(curIter, last);
 
                         std::basic_string<charT> key(curIter + 1, keyEnd);
+                        key = strip_escape_symbols(key);
                         curIter = keyEnd + 1;
 
                         const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{/");
@@ -334,14 +354,10 @@ namespace tyti
                         // get value
                         if (*curIter == '\"')
                         {
-                            const auto valueEnd = std::find(curIter + 1, last, TYTI_L(charT, '\"'));
-                            if (valueEnd == last)
-                            {
-                                ec = std::make_error_code(std::errc::protocol_error);//could not find end of name
-                                return root;
-                            }
+                            const auto valueEnd = end_quote(curIter, last);
 
                             auto value = std::basic_string<charT>(curIter + 1, valueEnd);
+                            value = strip_escape_symbols(value);
                             curIter = valueEnd + 1;
 
                             // process value
@@ -391,6 +407,10 @@ namespace tyti
                     }
 
                 }
+            }
+            catch (std::runtime_error&)
+            {
+                ec = std::make_error_code(std::errc::protocol_error);
             }
             catch (std::bad_alloc&)
             {

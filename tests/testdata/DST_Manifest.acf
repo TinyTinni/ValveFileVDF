@@ -21,6 +21,7 @@
     "#1_attrib" "1"
     "emptyAttrib" ""
     "commentInValue" "no//comment"
+    "escape_quote" "\"quote\""
     
     // inline comment
     "UserConfig"
