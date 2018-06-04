@@ -286,7 +286,6 @@ namespace tyti
                     last_esc = std::prev(iter);
                     while (last_esc != begin && *last_esc == '\\')
                         --last_esc;
-                    auto dist = std::distance(last_esc, iter);
                 } while ( !(std::distance(last_esc, iter) % 2));
                 if (iter == last)
                     throw std::runtime_error{"quote was opened but not closed."};
