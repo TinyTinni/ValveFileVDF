@@ -4,7 +4,7 @@
 #include <sstream>
 
 #define TYTI_NO_L_UNDEF
-#include <vdf_parser.hpp>
+#include "../vdf_parser.hpp"
 #define T_L(x) TYTI_L(charT,x)
 using namespace tyti;
 

@@ -1,19 +1,8 @@
 cmake_minimum_required (VERSION 2.8.7)
 project (vdf-Parser)
 
-set(SRCS
- "main.cpp"
- "vdf_parser_test.cpp"
- "../Readme.md")
-
-add_executable(tests "../vdf_parser.hpp" ${SRCS})
-
-find_path(
-    CATCH_INCLUDE_DIR 
-    NAMES catch.hpp
-    DOC "Catch include dir"
-)
-if (NOT CATCH_INCLUDE_DIR)
+find_package(Catch2 QUIET)
+if (NOT TARGET Catch2::Catch)
     include(ExternalProject)
     find_package(Git REQUIRED)
 	
@@ -35,11 +24,20 @@ if (NOT CATCH_INCLUDE_DIR)
         LOG_DOWNLOAD ON
     )
     ExternalProject_Get_Property(catch source_dir)
-    set(CATCH_INCLUDE_DIR ${source_dir}/single_include CACHE INTERNAL "Path to include folder for Catch.")
-    add_dependencies(tests catch)
+    
+    add_library(Catch INTERFACE)
+    target_include_directories(Catch INTERFACE "${source_dir}/single_include")
+    add_dependencies(Catch catch)
+    add_library(Catch2::Catch ALIAS Catch)
 endif()
 
-target_include_directories(tests PUBLIC ${CATCH_INCLUDE_DIR} "../")
+set(SRCS
+ "main.cpp"
+ "vdf_parser_test.cpp"
+ "../Readme.md")
+
+add_executable(tests "../vdf_parser.hpp" ${SRCS})
+target_link_libraries(tests PRIVATE Catch2::Catch)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests) #requires cmake 3.6
 add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
 
