@@ -26,7 +26,7 @@ if (NOT TARGET Catch2::Catch)
     ExternalProject_Get_Property(catch source_dir)
     
     add_library(Catch INTERFACE)
-    target_include_directories(Catch INTERFACE "${source_dir}/single_include")
+    target_include_directories(Catch INTERFACE "${source_dir}/single_include/catch2")
     add_dependencies(Catch catch)
     add_library(Catch2::Catch ALIAS Catch)
 endif()
