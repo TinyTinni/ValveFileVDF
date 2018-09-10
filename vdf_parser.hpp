@@ -28,6 +28,7 @@
 #include <utility>
 #include <fstream>
 #include <memory>
+#include <unordered_set>
 
 #include <system_error>
 #include <exception>
@@ -223,9 +224,213 @@ namespace tyti
             s << tab << TYTI_L(charT, "}\n");
         }
 
+        namespace detail
+        {
+            template<typename iStreamT>
+            std::basic_string<typename iStreamT::char_type> read_file(iStreamT& inStream)
+            {
+                // cache the file
+                typedef typename iStreamT::char_type charT;
+                std::basic_string<charT> str;
+                inStream.seekg(0, std::ios::end);
+                str.resize(static_cast<size_t>(inStream.tellg()));
+                if (str.empty())
+                    return str;
 
+                inStream.seekg(0, std::ios::beg);
+                inStream.read(&str[0], str.size());
+                return str;
+            }
 
-        
+            /** \brief Read VDF formatted sequences defined by the range [first, last).
+        If the file is mailformatted, parser will try to read it until it can.
+        @param first            begin iterator
+        @param end              end iterator
+        @param exclude_files    list of files which cant be included anymore.
+                                prevents circular includes
+
+        can thow:
+                - "std::runtime_error" if a parsing error occured
+                - "std::bad_alloc" if not enough memory coup be allocated
+        */
+            template <typename OutputT, typename IterT>
+            OutputT read(IterT first, const IterT last, std::unordered_set< std::basic_string<typename IterT::value_type> > &exclude_files)
+            {
+                static_assert(std::is_default_constructible<OutputT>::value,
+                              "Output Type must be default constructible (provide constructor without arguments)");
+                static_assert(std::is_move_constructible<OutputT>::value,
+                              "Output Type must be move constructible");
+
+                typedef typename IterT::value_type charT;
+
+                OutputT root;
+                OutputT *cur = &root;
+                std::unique_ptr<OutputT> cur_guard = nullptr; //if cur_guard == nullptr, use root, otherwise there is an heap allocated object
+                std::stack<std::unique_ptr<OutputT>> lvls;
+
+                // function for skipping a comment block
+                // iter: iterator poition to the position after a '/'
+                auto skip_comments = [](IterT iter, const IterT &last) -> IterT {
+                    if (iter != last)
+                    {
+                        if (*iter == TYTI_L(charT, '/'))
+                        {
+                            // line comment, skip whole line
+                            iter = std::find(iter + 1, last, TYTI_L(charT, '\n'));
+                        }
+
+                        if (*iter == '*')
+                        {
+                            // block comment, skip until next occurance of "*\"
+                            const std::basic_string<charT> search_str = TYTI_L(charT, "*/");
+                            iter = std::search(iter + 1, last, std::begin(search_str), std::end(search_str));
+                        }
+                    }
+                    return iter;
+                };
+
+                auto end_quote = [](IterT iter, const IterT &last) -> IterT {
+                    const auto begin = iter;
+                    auto last_esc = iter;
+                    do
+                    {
+                        ++iter;
+                        iter = std::find(iter, last, TYTI_L(charT, '\"'));
+                        if (iter == last)
+                            break;
+
+                        last_esc = std::prev(iter);
+                        while (last_esc != begin && *last_esc == '\\')
+                            --last_esc;
+                    } while (!(std::distance(last_esc, iter) % 2));
+                    if (iter == last)
+                        throw std::runtime_error{"quote was opened but not closed."};
+                    return iter;
+                };
+
+                auto strip_escape_symbols = [](std::basic_string<charT> s) {
+                    auto quote_searcher = [&s](size_t pos) { return s.find(TYTI_L(charT, "\\\""), pos); };
+                    auto p = quote_searcher(0);
+                    while (p != s.npos)
+                    {
+                        s.replace(p, 2, TYTI_L(charT, "\""));
+                        p = quote_searcher(p);
+                    }
+                    auto searcher = [&s](size_t pos) { return s.find(TYTI_L(charT, "\\\\"), pos); };
+                    p = searcher(0);
+                    while (p != s.npos)
+                    {
+                        s.replace(p, 2, TYTI_L(charT, "\\"));
+                        p = searcher(p);
+                    }
+                    return s;
+                };
+
+                //read header
+                // first, quoted name
+                auto curIter = std::find(first, last, TYTI_L(charT, '\"'));
+                if (curIter == last)
+                    throw std::runtime_error("Could not find VDF-Header.");
+                {
+                    // extract header
+                    const auto headerEnd = end_quote(curIter, last);
+                    root.set_name(strip_escape_symbols(std::basic_string<charT>(curIter + 1, headerEnd)));
+                    // get the object section -> {}
+                    curIter = std::find(headerEnd, last, TYTI_L(charT, '{'));
+                    ++curIter;
+                }
+                if (curIter == last)
+                    throw std::runtime_error{"object was opened but not closed."};
+
+                while (cur != nullptr && curIter != last)
+                {
+                    const std::basic_string<charT> startsym = TYTI_L(charT, "\"}/");
+
+                    //find first starting attrib/child, or ending
+                    curIter = std::find_first_of(curIter, last, std::begin(startsym), std::end(startsym));
+                    if (*curIter == TYTI_L(charT, '\"'))
+                    {
+
+                        // get key
+                        const auto keyEnd = end_quote(curIter, last);
+
+                        std::basic_string<charT> key(curIter + 1, keyEnd);
+                        key = strip_escape_symbols(key);
+                        curIter = keyEnd + 1;
+
+                        const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{/");
+                        curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
+
+                        while (*curIter == TYTI_L(charT, '/'))
+                        {
+                            curIter = skip_comments(curIter + 1, last);
+                            curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
+                            if (curIter == last)
+                                throw std::runtime_error{"key declared, but no value"};
+                        }
+                        // get value
+                        if (*curIter == '\"')
+                        {
+                            const auto valueEnd = end_quote(curIter, last);
+
+                            auto value = std::basic_string<charT>(curIter + 1, valueEnd);
+                            value = strip_escape_symbols(value);
+                            curIter = valueEnd + 1;
+
+                            // process value
+                            if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
+                            {
+                                cur->add_attribute(std::move(key), std::move(value));
+                            }
+                            else
+                            {
+                                if (exclude_files.find(value) == exclude_files.end())
+                                {
+                                    exclude_files.insert(value);
+                                    std::basic_ifstream<charT> i(detail::string_converter(value));
+                                    auto str = read_file(i);
+                                    auto n = std::make_unique<OutputT>(read<OutputT>(str.begin(), str.end(), exclude_files));
+                                    cur->add_child(std::move(n));
+                                    exclude_files.erase(value);
+                                }
+                            }
+                        }
+                        else if (*curIter == '{')
+                        {
+                            lvls.push(std::move(cur_guard));
+                            cur_guard = std::make_unique<OutputT>();
+                            cur = cur_guard.get();
+                            cur->set_name(std::move(key));
+                            ++curIter;
+                        }
+                    }
+                    //end of new object
+                    else if (*curIter == TYTI_L(charT, '}'))
+                    {
+                        if (!lvls.empty())
+                        {
+                            //get object before
+                            std::unique_ptr<OutputT> prev{lvls.top().release()};
+                            lvls.pop();
+
+                            // add finished obj to obj before and release it from processing
+                            cur = (prev == nullptr) ? &root : prev.get();
+                            cur->add_child(std::move(cur_guard));
+                            cur_guard = std::move(prev);
+                        }
+                        else
+                            cur = nullptr; // stops parsing
+                        ++curIter;
+                    }
+                    else if (*curIter == TYTI_L(charT, '/'))
+                    {
+                        curIter = skip_comments(curIter + 1, last);
+                    }
+                }
+                return root;
+            }
+        } // namespace detail
+
         /** \brief Read VDF formatted sequences defined by the range [first, last).
         If the file is mailformatted, parser will try to read it until it can.
         @param first begin iterator
@@ -238,178 +443,8 @@ namespace tyti
         template<typename OutputT, typename IterT>
         OutputT read(IterT first, const IterT last)
         {
-            static_assert(std::is_default_constructible<OutputT>::value,
-                "Output Type must be default constructible (provide constructor without arguments)");
-            static_assert(std::is_move_constructible<OutputT>::value,
-                "Output Type must be move constructible");
-
-            typedef typename IterT::value_type charT;
-
-            OutputT root;
-            OutputT* cur = &root;
-            std::unique_ptr<OutputT> cur_guard = nullptr; //if cur_guard == nullptr, use root, otherwise there is an heap allocated object
-            std::stack< std::unique_ptr<OutputT> > lvls;
-
-            // function for skipping a comment block
-            // iter: iterator poition to the position after a '/'
-            auto skip_comments = [](IterT iter, const IterT& last) -> IterT
-            {
-                if (iter != last)
-                {
-                    if (*iter == TYTI_L(charT, '/'))
-                    {
-                        // line comment, skip whole line
-                        iter = std::find(iter + 1, last, TYTI_L(charT, '\n'));
-                    }
-
-                    if (*iter == '*')
-                    {
-                        // block comment, skip until next occurance of "*\"
-                        const std::basic_string<charT> search_str = TYTI_L(charT, "*/");
-                        iter = std::search(iter + 1, last, std::begin(search_str), std::end(search_str));
-                    }
-                }
-                return iter;
-            };
-
-            auto end_quote = [](IterT iter, const IterT& last) -> IterT
-            {
-                const auto begin = iter;
-                auto last_esc = iter;
-                do 
-                {
-                    ++iter;
-                    iter = std::find(iter, last, TYTI_L(charT, '\"'));
-                    if (iter == last)
-                        break;
-
-                    last_esc = std::prev(iter);
-                    while (last_esc != begin && *last_esc == '\\')
-                        --last_esc;
-                } while ( !(std::distance(last_esc, iter) % 2));
-                if (iter == last)
-                    throw std::runtime_error{"quote was opened but not closed."};
-                return iter;
-            };
-
-            auto strip_escape_symbols = [](std::basic_string<charT> s)
-            {
-                auto quote_searcher = [&s](size_t pos) {return s.find(TYTI_L(charT, "\\\""), pos); };
-                auto p = quote_searcher(0);
-                while (p != s.npos)
-                {
-                    s.replace(p, 2, TYTI_L(charT,"\""));
-                    p = quote_searcher(p);
-                }
-                auto searcher = [&s](size_t pos) {return s.find(TYTI_L(charT, "\\\\"), pos); };
-                p = searcher(0);
-                while (p != s.npos)
-                {
-                    s.replace(p, 2, TYTI_L(charT, "\\"));
-                    p = searcher(p);
-                }
-                return s;
-            };
-
-            //read header
-            // first, quoted name
-            auto curIter = std::find(first, last, TYTI_L(charT, '\"'));
-            if (curIter == last)
-                throw std::runtime_error("Could not find VDF-Header.");
-            {
-                // extract header
-                const auto headerEnd = end_quote(curIter, last);
-                root.set_name(strip_escape_symbols(std::basic_string<charT>(curIter + 1, headerEnd)));
-                // get the object section -> {}
-                curIter = std::find(headerEnd, last, TYTI_L(charT, '{'));
-                ++curIter;
-            }
-            if (curIter == last)
-                throw std::runtime_error{ "object was opened but not closed." };
-
-            while (cur != nullptr && curIter != last)
-            {
-                const std::basic_string<charT> startsym = TYTI_L(charT, "\"}/");
-
-                //find first starting attrib/child, or ending
-                curIter = std::find_first_of(curIter, last, std::begin(startsym), std::end(startsym));
-                if (*curIter == TYTI_L(charT, '\"'))
-                {
-
-                    // get key
-                    const auto keyEnd = end_quote(curIter, last);
-
-                    std::basic_string<charT> key(curIter + 1, keyEnd);
-                    key = strip_escape_symbols(key);
-                    curIter = keyEnd + 1;
-
-                    const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{/");
-                    curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
-
-                    while (*curIter == TYTI_L(charT, '/'))
-                    {
-                        curIter = skip_comments(curIter + 1, last);
-                        curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
-                        if (curIter == last)
-                            throw std::runtime_error{ "key declared, but no value" };
-                    }
-                    // get value
-                    if (*curIter == '\"')
-                    {
-                        const auto valueEnd = end_quote(curIter, last);
-
-                        auto value = std::basic_string<charT>(curIter + 1, valueEnd);
-                        value = strip_escape_symbols(value);
-                        curIter = valueEnd + 1;
-
-                        // process value
-                        if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
-                        {
-                            cur->add_attribute(std::move(key), std::move(value));
-                        }
-                        else
-                        {
-                            std::basic_ifstream<charT> i(detail::string_converter(std::move(value)));
-                            auto n = std::make_unique<OutputT>(read<OutputT>(i));
-                            cur->add_child(std::move(n));
-                        }
-                    }
-                    else if (*curIter == '{')
-                    {
-                        lvls.push(std::move(cur_guard));
-                        cur_guard = std::make_unique<OutputT>();
-                        cur = cur_guard.get();
-                        cur->set_name(std::move(key));
-                        ++curIter;
-                    }
-                }
-                //end of new object
-                else if (*curIter == TYTI_L(charT, '}'))
-                {
-                    if (!lvls.empty())
-                    {
-                        //get object before
-                        std::unique_ptr<OutputT> prev{ lvls.top().release() };
-                        lvls.pop();
-
-                        // add finished obj to obj before and release it from processing
-                        cur = (prev == nullptr) ? &root : prev.get();
-                        cur->add_child(std::move(cur_guard));
-                        cur_guard = std::move(prev);
-
-                    }
-                    else
-                        cur = nullptr; // stops parsing
-                    ++curIter;
-                }
-                else if (*curIter == TYTI_L(charT, '/'))
-                {
-                    curIter = skip_comments(curIter + 1, last);
-                }
-
-            }
-            return root;
-
+            auto exclude_files = std::unordered_set< std::basic_string<typename IterT::value_type> >{};
+            return detail::read<OutputT>(first, last, exclude_files);
         }
 
         /** \brief Read VDF formatted sequences defined by the range [first, last).
@@ -489,14 +524,7 @@ namespace tyti
         {
             // cache the file
             typedef typename iStreamT::char_type charT;
-            std::basic_string<charT> str;
-            inStream.seekg(0, std::ios::end);
-            str.resize(static_cast<size_t>(inStream.tellg()));
-            if (str.empty())
-                return OutputT();
-
-            inStream.seekg(0, std::ios::beg);
-            inStream.read(&str[0], str.size());
+            std::basic_string<charT> str = detail::read_file(inStream);
 
             // parse it
             return read<OutputT>(str.begin(), str.end(), ec);
@@ -537,15 +565,7 @@ namespace tyti
 
             // cache the file
             typedef typename iStreamT::char_type charT;
-            std::basic_string<charT> str;
-            inStream.seekg(0, std::ios::end);
-            str.resize(static_cast<size_t>(inStream.tellg()));
-            if (str.empty())
-                return OutputT();
-
-            inStream.seekg(0, std::ios::beg);
-            inStream.read(&str[0], str.size());
-
+            std::basic_string<charT> str = detail::read_file(inStream);
             // parse it
             return read<OutputT>(str.begin(), str.end());
         }

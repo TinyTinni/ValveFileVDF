@@ -234,5 +234,5 @@ TEST_CASE("counter test", "[counter]")
 {
     std::ifstream file("DST_Manifest.acf");
     counter num = tyti::vdf::read<counter>(file);
-    CHECK(num.num_attributes == 25);
+    CHECK(num.num_attributes == 26);
 }
