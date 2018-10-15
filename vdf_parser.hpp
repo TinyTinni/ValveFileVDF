@@ -35,7 +35,6 @@
 
 //for wstring support
 #include <locale>
-#include <codecvt>
 #include <string>
 
 // internal
@@ -109,11 +108,7 @@ namespace tyti
 
             inline std::string string_converter(const std::wstring& w)
             {
-                #if WIN32
-                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv1;
-                #else
-                std::wstring_convert<std::codecvt_utf8<wchar_t>> conv1;
-                #endif
+                std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>> conv1;
                 return conv1.to_bytes(w);
             }
 
