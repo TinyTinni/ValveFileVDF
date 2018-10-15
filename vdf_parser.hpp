@@ -106,9 +106,19 @@ namespace tyti
                 return w;
             }
 
-            inline std::string string_converter(const std::wstring& w)
+            // utility wrapper to adapt locale-bound facets for wstring/wbuffer convert
+            // from cppreference
+            template<class Facet>
+            struct deletable_facet : Facet
             {
-                std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>> conv1;
+                template<class ...Args>
+                deletable_facet(Args&& ...args) : Facet(std::forward<Args>(args)...) {}
+                ~deletable_facet() {}
+            };
+
+            inline std::string string_converter(const std::wstring& w) //todo: use us-locale
+            {
+                std::wstring_convert< deletable_facet<std::codecvt<wchar_t, char, std::mbstate_t>> > conv1;
                 return conv1.to_bytes(w);
             }
 
