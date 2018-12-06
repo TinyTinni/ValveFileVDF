@@ -29,6 +29,7 @@
 #include <fstream>
 #include <memory>
 #include <unordered_set>
+#include <algorithm>
 
 #include <system_error>
 #include <exception>
