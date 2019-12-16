@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8.7)
 project (vdf-Parser)
 
+set (CMAKE_CXX_STANDARD 14)
+
 find_package(Catch2 QUIET)
 if (NOT TARGET Catch2::Catch)
     include(ExternalProject)
