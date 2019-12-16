@@ -9,6 +9,7 @@
 	"LastUpdated"		"1462118047"
 	"UpdateResult"		"0"
     "UpdateResult"		"1"
+    no_quoted_attrib_support yes
 	"SizeOnDisk"		"663289971"
 	"buildid"		"1101428"
 	"LastOwner"		"76561198937928833"

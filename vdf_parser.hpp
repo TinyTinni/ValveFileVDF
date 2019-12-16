@@ -277,6 +277,7 @@ namespace tyti
                 // function for skipping a comment block
                 // iter: iterator poition to the position after a '/'
                 auto skip_comments = [](IterT iter, const IterT &last) -> IterT {
+					++iter;
                     if (iter != last)
                     {
                         if (*iter == TYTI_L(charT, '/'))
@@ -290,6 +291,7 @@ namespace tyti
                             // block comment, skip until next occurance of "*\"
                             const std::basic_string<charT> search_str = TYTI_L(charT, "*/");
                             iter = std::search(iter + 1, last, std::begin(search_str), std::end(search_str));
+							iter += 2;
                         }
                     }
                     return iter;
@@ -314,6 +316,36 @@ namespace tyti
                     return iter;
                 };
 
+				auto end_word = [](IterT iter, const IterT& last)->IterT {
+					const auto begin = iter;
+					auto last_esc = iter;
+					do
+					{
+						++iter;
+						const std::basic_string<charT> symbols = TYTI_L(charT, " \n\v\f\r\t");
+						iter = std::find_first_of(iter, last, symbols.begin(), symbols.end());
+						if (iter == last)
+							break;
+
+						last_esc = std::prev(iter);
+						while (last_esc != begin && *last_esc == '\\')
+							--last_esc;
+					} while (!(std::distance(last_esc, iter) % 2));
+					//if (iter == last)
+					//	throw std::runtime_error{ "word wasnt properly ended" };
+					return iter;
+				};
+
+				auto skip_whitespaces = [](IterT iter, const IterT& last)->IterT {
+					iter = std::find_if_not(iter, last, [](charT c)
+						{
+							// return true if whitespace
+							const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
+							return std::any_of(whitespaces.begin(), whitespaces.end(), [c](charT pc) {return pc == c; });
+						});
+					return iter;
+				};
+
                 auto strip_escape_symbols = [](std::basic_string<charT> s) {
                     auto quote_searcher = [&s](size_t pos) { return s.find(TYTI_L(charT, "\\\""), pos); };
                     auto p = quote_searcher(0);
@@ -331,6 +363,7 @@ namespace tyti
                     }
                     return s;
                 };
+				
 
                 //read header
                 // first, quoted name
@@ -348,40 +381,46 @@ namespace tyti
                 if (curIter == last)
                     throw std::runtime_error{"object was opened but not closed."};
 
-                while (cur != nullptr && curIter != last)
+                while (cur != nullptr && curIter != last && *curIter != '\0')
                 {
-                    const std::basic_string<charT> startsym = TYTI_L(charT, "\"}/");
-
                     //find first starting attrib/child, or ending
-                    curIter = std::find_first_of(curIter, last, std::begin(startsym), std::end(startsym));
-                    if (*curIter == TYTI_L(charT, '\"'))
+					curIter = skip_whitespaces(curIter, last);
+					if (*curIter == TYTI_L(charT, '/'))
+					{
+						curIter = skip_comments(curIter, last);
+					}
+                    else if (*curIter != TYTI_L(charT, '}') )
                     {
 
                         // get key
-                        const auto keyEnd = end_quote(curIter, last);
-
-                        std::basic_string<charT> key(curIter + 1, keyEnd);
+                        const auto keyEnd = (*curIter == TYTI_L(charT, '\"')) ? end_quote(curIter, last) : end_word(curIter, last);
+						if (*curIter == TYTI_L(charT, '\"'))
+							++curIter;
+                        std::basic_string<charT> key(curIter, keyEnd);
                         key = strip_escape_symbols(key);
-                        curIter = keyEnd + 1;
+                        curIter = keyEnd + ((*keyEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
-                        const std::basic_string<charT> ecspsym = TYTI_L(charT, "\"{/");
-                        curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
-
+						curIter = skip_whitespaces(curIter, last);
                         while (*curIter == TYTI_L(charT, '/'))
                         {
-                            curIter = skip_comments(curIter + 1, last);
-                            curIter = std::find_first_of(curIter, last, std::begin(ecspsym), std::end(ecspsym));
-                            if (curIter == last)
+							
+                            curIter = skip_comments(curIter, last);
+                            if (curIter == last || *curIter == '}')
                                 throw std::runtime_error{"key declared, but no value"};
+							curIter = skip_whitespaces(curIter, last);
+							if (curIter == last || *curIter == '}')
+								throw std::runtime_error{ "key declared, but no value" };
                         }
                         // get value
-                        if (*curIter == '\"')
+                        if (*curIter != '{')
                         {
-                            const auto valueEnd = end_quote(curIter, last);
+                            const auto valueEnd = (*curIter == TYTI_L(charT, '\"')) ? end_quote(curIter, last) : end_word(curIter, last);
+							if (*curIter == TYTI_L(charT, '\"'))
+								++curIter;
 
-                            auto value = std::basic_string<charT>(curIter + 1, valueEnd);
+                            auto value = std::basic_string<charT>(curIter, valueEnd);
                             value = strip_escape_symbols(value);
-                            curIter = valueEnd + 1;
+                            curIter = valueEnd + ((*valueEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
                             // process value
                             if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
@@ -416,7 +455,7 @@ namespace tyti
                         if (!lvls.empty())
                         {
                             //get object before
-                            std::unique_ptr<OutputT> prev{lvls.top().release()};
+                            std::unique_ptr<OutputT> prev{std::move(lvls.top())};
                             lvls.pop();
 
                             // add finished obj to obj before and release it from processing
@@ -427,10 +466,6 @@ namespace tyti
                         else
                             cur = nullptr; // stops parsing
                         ++curIter;
-                    }
-                    else if (*curIter == TYTI_L(charT, '/'))
-                    {
-                        curIter = skip_comments(curIter + 1, last);
                     }
                 }
                 return root;

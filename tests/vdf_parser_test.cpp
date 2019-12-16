@@ -26,7 +26,7 @@ template<typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 22);
+    REQUIRE(obj.attribs.size() == 23);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.at(T_L("appid")) == T_L("343050"));
@@ -35,6 +35,7 @@ void check_DST_AST(const vdf::basic_object<charT>& obj)
     CHECK(obj.attribs.at(T_L("#1_attrib")) == T_L("1"));
     CHECK(obj.attribs.at(T_L("emptyAttrib")) == T_L(""));
     CHECK(obj.attribs.at(T_L("escape_quote")) == T_L(R"("quote")"));
+	CHECK(obj.attribs.at(T_L("no_quoted_attrib_support")) == T_L("yes"));
 // "C2017 can occur when the stringize operator is used with strings that include escape sequences."
 // https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2013/29t70y03(v=vs.120)
 #if !defined(_MSC_VER) || (_MSC_VER > 1800)
@@ -59,7 +60,7 @@ template<typename charT>
 void check_DST_AST_multikey(const vdf::basic_multikey_object<charT>& obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 23);
+    REQUIRE(obj.attribs.size() == 24);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.find(T_L("appid"))->second == T_L("343050"));
@@ -67,6 +68,7 @@ void check_DST_AST_multikey(const vdf::basic_multikey_object<charT>& obj)
     CHECK(obj.attribs.find(T_L("buildid"))->second == T_L("1101428"));
     CHECK(obj.attribs.find(T_L("#1_attrib"))->second == T_L("1"));
     CHECK(obj.attribs.find(T_L("emptyAttrib"))->second == T_L(""));
+	CHECK(obj.attribs.find(T_L("no_quoted_attrib_support"))->second == T_L("yes"));
 
     CHECK(obj.attribs.count(T_L("UpdateResult")) == 2);
 
@@ -234,5 +236,5 @@ TEST_CASE("counter test", "[counter]")
 {
     std::ifstream file("DST_Manifest.acf");
     counter num = tyti::vdf::read<counter>(file);
-    CHECK(num.num_attributes == 26);
+    CHECK(num.num_attributes == 27);
 }
