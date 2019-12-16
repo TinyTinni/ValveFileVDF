@@ -88,11 +88,11 @@ void read_check_DST_file_ok()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
     bool ok;
-    auto object = vdf::read(file, &ok);
+    auto objects = vdf::read(file, &ok);
 
     REQUIRE(ok);
-
-    check_DST_AST(object);
+	CHECK(objects.size() == 2);
+	check_DST_AST(objects[1]);
 }
 
 template<typename charT>
@@ -100,29 +100,30 @@ void read_check_DST_file_ec()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
     std::error_code ec;
-    auto object = vdf::read(file, ec);
+    auto objects = vdf::read(file, ec);
 
     REQUIRE(!ec);
+	CHECK(objects.size() == 2);
+	check_DST_AST(objects[1]);
 
-    check_DST_AST(object);
 }
 
 template<typename charT>
 void read_check_DST_file_throw()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
-    auto object = vdf::read(file);
-
-    check_DST_AST(object);
+    auto objects = vdf::read(file);
+	CHECK(objects.size() == 2);
+    check_DST_AST(objects[1]);
 }
 
 template<typename charT>
 void read_check_DST_file_multikey_throw()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
-    auto object = vdf::read<vdf::basic_multikey_object<charT>>(file);
-
-    check_DST_AST_multikey(object);
+    auto objects = vdf::read<vdf::basic_multikey_object<charT>>(file);
+	CHECK(objects.size() == 2);
+	check_DST_AST_multikey(objects[1]);
 }
 
 TEST_CASE("Read File", "[read]")
@@ -172,7 +173,7 @@ void check_fail()
 {
     bool ok;
     std::basic_string<charT> attribs( T_L("\"firstNode\"{\"SecondNode\"{\"Key\" //myComment\n}}") );
-    auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
+    auto objs = vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(!ok);
 }
@@ -188,15 +189,18 @@ void write_and_read()
 {
     std::basic_string<charT> attribs( T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") );
     bool ok;
-    auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
+    auto objs = vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(ok);
+	CHECK(!objs.empty());
 
     std::basic_stringstream<charT> output;
-    vdf::write(output, obj);
-    obj = vdf::read(output);
+    vdf::write(output, objs[0]);
+    objs = vdf::read(output);
 
-    check_string(obj);
+	CHECK(!objs.empty());
+
+    check_string(objs[0]);
 }
 
 TEST_CASE("Write and Read", "[read_write]")
@@ -235,6 +239,7 @@ struct counter
 TEST_CASE("counter test", "[counter]")
 {
     std::ifstream file("DST_Manifest.acf");
-    counter num = tyti::vdf::read<counter>(file);
-    CHECK(num.num_attributes == 27);
+    std::vector<counter> num = tyti::vdf::read<counter>(file);
+	CHECK(num.size() == 2);
+    CHECK(num[1].num_attributes == 27);
 }

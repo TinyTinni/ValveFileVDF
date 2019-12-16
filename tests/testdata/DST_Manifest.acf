@@ -1,3 +1,5 @@
+"#base"  "baseFile1.vdf"
+
 //simple check
 "AppState"
 {
