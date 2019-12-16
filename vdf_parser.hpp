@@ -24,6 +24,7 @@
 #define __TYTI_STEAM_VDF_PARSER_H__
 
 #include <map>
+#include <vector>
 #include <unordered_map>
 #include <utility>
 #include <fstream>
