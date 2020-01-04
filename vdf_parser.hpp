@@ -250,16 +250,16 @@ namespace tyti
             }
 
             /** \brief Read VDF formatted sequences defined by the range [first, last).
-If the file is mailformatted, parser will try to read it until it can.
-@param first            begin iterator
-@param end              end iterator
-@param exclude_files    list of files which cant be included anymore.
-                        prevents circular includes
-
-can thow:
-        - "std::runtime_error" if a parsing error occured
-        - "std::bad_alloc" if not enough memory coup be allocated
-*/
+            If the file is mailformatted, parser will try to read it until it can.
+            @param first            begin iterator
+            @param end              end iterator
+            @param exclude_files    list of files which cant be included anymore.
+                                    prevents circular includes
+            
+            can thow:
+                    - "std::runtime_error" if a parsing error occured
+                    - "std::bad_alloc" if not enough memory coup be allocated
+            */
             template <typename OutputT, typename IterT>
             std::vector<std::unique_ptr<OutputT>> read_internal(IterT first, const IterT last, std::unordered_set< std::basic_string<typename IterT::value_type> >& exclude_files)
             {
@@ -543,7 +543,7 @@ can thow:
         {
             std::error_code ec;
             auto r = read<OutputT>(first, last, ec);
-            if (ok)* ok = !ec;
+            if (ok)*ok = !ec;
             return r;
         }
 
@@ -594,7 +594,7 @@ can thow:
         {
             std::error_code ec;
             const auto r = read<OutputT>(inStream, ec);
-            if (ok)* ok = !ec;
+            if (ok)*ok = !ec;
             return r;
         }
 
