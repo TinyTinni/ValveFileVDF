@@ -250,18 +250,18 @@ namespace tyti
             }
 
             /** \brief Read VDF formatted sequences defined by the range [first, last).
-        If the file is mailformatted, parser will try to read it until it can.
-        @param first            begin iterator
-        @param end              end iterator
-        @param exclude_files    list of files which cant be included anymore.
-                                prevents circular includes
+If the file is mailformatted, parser will try to read it until it can.
+@param first            begin iterator
+@param end              end iterator
+@param exclude_files    list of files which cant be included anymore.
+                        prevents circular includes
 
-        can thow:
-                - "std::runtime_error" if a parsing error occured
-                - "std::bad_alloc" if not enough memory coup be allocated
-        */
+can thow:
+        - "std::runtime_error" if a parsing error occured
+        - "std::bad_alloc" if not enough memory coup be allocated
+*/
             template <typename OutputT, typename IterT>
-            OutputT read(IterT first, const IterT last, std::unordered_set< std::basic_string<typename IterT::value_type> >& exclude_files)
+            std::vector<std::unique_ptr<OutputT>> read_internal(IterT first, const IterT last, std::unordered_set< std::basic_string<typename IterT::value_type> >& exclude_files)
             {
                 static_assert(std::is_default_constructible<OutputT>::value,
                     "Output Type must be default constructible (provide constructor without arguments)");
@@ -422,11 +422,14 @@ namespace tyti
                                     exclude_files.insert(value);
                                     std::basic_ifstream<charT> i(detail::string_converter(value));
                                     auto str = read_file(i);
-                                    auto file_objs = read<OutputT>(str.begin(), str.end(), exclude_files);
-                                    if (curObj)
-                                        curObj->add_child(std::make_unique<OutputT>(std::move(file_objs)));
-                                    else
-                                        roots.push_back(std::make_unique<OutputT>(std::move(file_objs)));
+                                    auto file_objs = read_internal<OutputT>(str.begin(), str.end(), exclude_files);
+                                    for (auto& n : file_objs)
+                                    {
+                                        if (curObj)
+                                            curObj->add_child(std::move(n));
+                                        else
+                                            roots.push_back(std::move(n));
+                                    }
                                     exclude_files.erase(value);
                                 }
                             }
@@ -461,18 +464,9 @@ namespace tyti
                         ++curIter;
                     }
                 }
-
-                OutputT result;
-                if (roots.size() > 1)
-                {
-                    for (auto& i : roots)
-                        result.add_child(std::move(i));
-                }
-                else if (roots.size() == 1)
-                    result = std::move(*roots[0]);
-
-                return result;
+                return roots;
             }
+
         } // namespace detail
 
         /** \brief Read VDF formatted sequences defined by the range [first, last).
@@ -488,7 +482,18 @@ namespace tyti
         OutputT read(IterT first, const IterT last)
         {
             auto exclude_files = std::unordered_set< std::basic_string<typename IterT::value_type> >{};
-            return detail::read<OutputT>(first, last, exclude_files);
+            auto roots = detail::read_internal<OutputT>(first, last, exclude_files);
+
+            OutputT result;
+            if (roots.size() > 1)
+            {
+                for (auto& i : roots)
+                    result.add_child(std::move(i));
+            }
+            else if (roots.size() == 1)
+                result = std::move(*roots[0]);
+
+            return result;
         }
 
         /** \brief Read VDF formatted sequences defined by the range [first, last).
