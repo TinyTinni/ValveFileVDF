@@ -91,8 +91,9 @@ void read_check_DST_file_ok()
     auto objects = vdf::read(file, &ok);
 
     REQUIRE(ok);
-	CHECK(objects.size() == 2);
-	check_DST_AST(objects[1]);
+    auto it = objects.childs.find(T_L("AppState"));
+    CHECK(it != objects.childs.end());
+    check_DST_AST(*(it->second));
 }
 
 template<typename charT>
@@ -103,8 +104,9 @@ void read_check_DST_file_ec()
     auto objects = vdf::read(file, ec);
 
     REQUIRE(!ec);
-	CHECK(objects.size() == 2);
-	check_DST_AST(objects[1]);
+    auto it = objects.childs.find(T_L("AppState"));
+	CHECK(it != objects.childs.end());
+	check_DST_AST(*(it->second));
 
 }
 
@@ -113,8 +115,9 @@ void read_check_DST_file_throw()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
     auto objects = vdf::read(file);
-	CHECK(objects.size() == 2);
-    check_DST_AST(objects[1]);
+    auto it = objects.childs.find(T_L("AppState"));
+	CHECK(it != objects.childs.end());
+	check_DST_AST(*(it->second));
 }
 
 template<typename charT>
@@ -122,8 +125,9 @@ void read_check_DST_file_multikey_throw()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
     auto objects = vdf::read<vdf::basic_multikey_object<charT>>(file);
-	CHECK(objects.size() == 2);
-	check_DST_AST_multikey(objects[1]);
+    auto it = objects.childs.find(T_L("AppState"));
+    CHECK(it != objects.childs.end());
+    check_DST_AST_multikey(*(it->second));
 }
 
 TEST_CASE("Read File", "[read]")
@@ -192,15 +196,12 @@ void write_and_read()
     auto objs = vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(ok);
-	CHECK(!objs.empty());
 
     std::basic_stringstream<charT> output;
-    vdf::write(output, objs[0]);
+    vdf::write(output, objs);
     objs = vdf::read(output);
 
-	CHECK(!objs.empty());
-
-    check_string(objs[0]);
+    check_string(objs);
 }
 
 TEST_CASE("Write and Read", "[read_write]")
@@ -239,7 +240,6 @@ struct counter
 TEST_CASE("counter test", "[counter]")
 {
     std::ifstream file("DST_Manifest.acf");
-    std::vector<counter> num = tyti::vdf::read<counter>(file);
-	CHECK(num.size() == 2);
-    CHECK(num[1].num_attributes == 27);
+    counter num = tyti::vdf::read<counter>(file);
+    CHECK(num.num_attributes == 28);
 }

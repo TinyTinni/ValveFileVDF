@@ -157,7 +157,7 @@ namespace tyti
         //forward decls
         //forward decl
         template<typename OutputT, typename iStreamT >
-        std::vector<OutputT> read(iStreamT& inStream);
+        OutputT read(iStreamT& inStream);
 
 
         /// custom objects and their corresponding write functions
@@ -261,7 +261,7 @@ namespace tyti
                 - "std::bad_alloc" if not enough memory coup be allocated
         */
             template <typename OutputT, typename IterT>
-            std::vector < OutputT> read(IterT first, const IterT last, std::unordered_set< std::basic_string<typename IterT::value_type> >& exclude_files)
+            OutputT read(IterT first, const IterT last, std::unordered_set< std::basic_string<typename IterT::value_type> >& exclude_files)
             {
                 static_assert(std::is_default_constructible<OutputT>::value,
                     "Output Type must be default constructible (provide constructor without arguments)");
@@ -364,7 +364,7 @@ namespace tyti
                 //read header
                 // first, quoted name
                 std::unique_ptr<OutputT> curObj = nullptr;
-                std::vector<OutputT> roots;
+                std::vector<std::unique_ptr<OutputT>> roots;
                 std::stack<std::unique_ptr<OutputT>> lvls;
                 auto curIter = first;
 
@@ -423,13 +423,10 @@ namespace tyti
                                     std::basic_ifstream<charT> i(detail::string_converter(value));
                                     auto str = read_file(i);
                                     auto file_objs = read<OutputT>(str.begin(), str.end(), exclude_files);
-                                    for (auto& n : file_objs)
-                                    {
-                                        if (curObj)
-                                            curObj->add_child(std::make_unique<OutputT>(std::move(n)));
-                                        else
-                                            roots.push_back(std::move(n));
-                                    }
+                                    if (curObj)
+                                        curObj->add_child(std::make_unique<OutputT>(std::move(file_objs)));
+                                    else
+                                        roots.push_back(std::make_unique<OutputT>(std::move(file_objs)));
                                     exclude_files.erase(value);
                                 }
                             }
@@ -458,13 +455,23 @@ namespace tyti
                         }
                         else
                         {
-                            roots.push_back(std::move(*curObj));
+                            roots.push_back(std::move(curObj));
                             curObj.reset();
                         }
                         ++curIter;
                     }
                 }
-                return roots;
+
+                OutputT result;
+                if (roots.size() > 1)
+                {
+                    for (auto& i : roots)
+                        result.add_child(std::move(i));
+                }
+                else if (roots.size() == 1)
+                    result = std::move(*roots[0]);
+
+                return result;
             }
         } // namespace detail
 
@@ -478,7 +485,7 @@ namespace tyti
                 - "std::bad_alloc" if not enough memory coup be allocated
         */
         template<typename OutputT, typename IterT>
-        std::vector < OutputT> read(IterT first, const IterT last)
+        OutputT read(IterT first, const IterT last)
         {
             auto exclude_files = std::unordered_set< std::basic_string<typename IterT::value_type> >{};
             return detail::read<OutputT>(first, last, exclude_files);
@@ -496,11 +503,11 @@ namespace tyti
         std::errc::invalid_argument: iterators throws e.g. out of range
         */
         template<typename OutputT, typename IterT >
-        std::vector < OutputT> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+        OutputT read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
 
         {
             ec.clear();
-            std::vector<OutputT> r{};
+            OutputT r{};
             try
             {
                 r = read<OutputT>(first, last);
@@ -527,7 +534,7 @@ namespace tyti
         @param ok output bool. true, if parser successed, false, if parser failed
         */
         template<typename OutputT, typename IterT >
-        std::vector < OutputT> read(IterT first, const IterT last, bool* ok) NOEXCEPT
+        OutputT read(IterT first, const IterT last, bool* ok) NOEXCEPT
         {
             std::error_code ec;
             auto r = read<OutputT>(first, last, ec);
@@ -536,19 +543,19 @@ namespace tyti
         }
 
         template<typename IterT>
-        inline std::vector < basic_object<typename IterT::value_type>> read(IterT first, const IterT last, bool* ok) NOEXCEPT
+        inline basic_object<typename IterT::value_type> read(IterT first, const IterT last, bool* ok) NOEXCEPT
         {
             return read< basic_object<typename IterT::value_type> >(first, last, ok);
         }
 
         template< typename IterT >
-        inline std::vector < basic_object<typename IterT::value_type>> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+        inline basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
         {
             return read< basic_object<typename IterT::value_type> >(first, last, ec);
         }
 
         template<typename IterT>
-        inline std::vector < basic_object<typename IterT::value_type>> read(IterT first, const IterT last)
+        inline basic_object<typename IterT::value_type> read(IterT first, const IterT last)
         {
             return read< basic_object<typename IterT::value_type> >(first, last);
         }
@@ -557,7 +564,7 @@ namespace tyti
             throws "std::bad_alloc" if file buffer could not be allocated
         */
         template<typename OutputT, typename iStreamT>
-        std::vector < OutputT> read(iStreamT& inStream, std::error_code& ec)
+        OutputT read(iStreamT& inStream, std::error_code& ec)
         {
             // cache the file
             typedef typename iStreamT::char_type charT;
@@ -568,7 +575,7 @@ namespace tyti
         }
 
         template<typename iStreamT>
-        inline std::vector < basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, std::error_code& ec)
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec)
         {
             return read<basic_object<typename iStreamT::char_type> >(inStream, ec);
         }
@@ -578,7 +585,7 @@ namespace tyti
             ok == false, if a parsing error occured
         */
         template<typename OutputT, typename iStreamT>
-        std::vector<OutputT> read(iStreamT& inStream, bool* ok)
+        OutputT read(iStreamT& inStream, bool* ok)
         {
             std::error_code ec;
             const auto r = read<OutputT>(inStream, ec);
@@ -587,7 +594,7 @@ namespace tyti
         }
 
         template<typename iStreamT>
-        inline std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, bool* ok)
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok)
         {
             return read< basic_object<typename iStreamT::char_type> >(inStream, ok);
         }
@@ -597,7 +604,7 @@ namespace tyti
             throws "std::runtime_error" if a parsing error occured
         */
         template<typename OutputT, typename iStreamT>
-        std::vector<OutputT> read(iStreamT& inStream)
+        OutputT read(iStreamT& inStream)
         {
 
             // cache the file
@@ -608,7 +615,7 @@ namespace tyti
         }
 
         template<typename iStreamT>
-        inline std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream)
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream)
         {
             return read<basic_object<typename iStreamT::char_type>>(inStream);
         }
