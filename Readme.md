@@ -33,19 +33,19 @@ To read an file, create a stream e.g. `std::ifsteam` or `std::wifstream`
 and call the `tyti::vdf::read` function.
 ```c++
 std::ifstream file("PathToMyFile");
-tyti::vdf::object root = tyti::vdf::read(file);
+auto root = tyti::vdf::read(file);
 ```
 You can also define a sequence of character defined by a range.
 ```c++
 std::string blob;
 ...
-tyti::vdf::object root = tyti::vdf::read(std::cbegin(blob), std::cend(blob));
+auto root = tyti::vdf::read(std::cbegin(blob), std::cend(blob));
 
 //given .vdf below, following holds
 assert(root.name == "name");
 const std::shared_ptr<tyti::vdf::object> child = root.childs["child0"];
 assert(child->name == "child0");
-const std::string& k = root.attribs["attrib0"];
+const std::string& k = root[0].attribs["attrib0"];
 assert(k == "value");
 ```
 
@@ -125,7 +125,7 @@ struct counter
 
 and then call the read function
 ```c++
-counter num = tyti::vdf::read<counter>(file);
+std::vector<counter> num = tyti::vdf::read<counter>(file);
 ```
 
 ## Reference
@@ -174,29 +174,29 @@ counter num = tyti::vdf::read<counter>(file);
       throws "std::runtime_error" if a parsing error occured
   */
   template<ytpename OutputT, typename iStreamT>
-  OutputT read(iStreamT& inStream);
+  std::vector<OutputT> read(iStreamT& inStream);
 
   template<typename iStreamT>
-  basic_object<typename iStreamT::char_type> read(iStreamT& inStream);
+   std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream);
 
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
       ok == false, if a parsing error occured
   */
   template<typename OutputT, typename iStreamT>
-  OutputT read(iStreamT& inStream, bool* ok);
+  std::vector<OutputT> read(iStreamT& inStream, bool* ok);
 
   template<typename iStreamT>
-  basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok);
+   std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, bool* ok);
   
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
   */
   template<typename OutputT, typename iStreamT>
-  OutputT read(iStreamT& inStream, std::error_code& ec);
+   std::vector<OutputT> read(iStreamT& inStream, std::error_code& ec);
 
   template<typename iStreamT>
-  basic_object<iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec);
+   std::vector<basic_object<iStreamT::char_type>> read(iStreamT& inStream, std::error_code& ec);
 
 /////////////////////////////////////////////////////////////
 // read from memory
@@ -211,10 +211,10 @@ counter num = tyti::vdf::read<counter>(file);
   throws "std::bad_alloc" if not enough memory could be allocated
   */
   template<typename OutputT, typename IterT>
-  OutputT read(IterT first, IterT last);
+   std::vector<OutputT> read(IterT first, IterT last);
 
   template<typename IterT>
-  basic_object<typename IterT::value_type> read(IterT first, IterT last);
+   std::vector<basic_object<typename IterT::value_type>> read(IterT first, IterT last);
  
   /** \brief Read VDF formatted sequences defined by the range [first, last).
   If the file is mailformatted, parser will try to read it until it can.
@@ -223,10 +223,10 @@ counter num = tyti::vdf::read<counter>(file);
   @param ok output bool. true, if parser successed, false, if parser failed
   */
   template<typename OutputT, typename IterT>
-  OutputT read(IterT first, IterT last, bool* ok) noexcept;
+   std::vector<OutputT> read(IterT first, IterT last, bool* ok) noexcept;
   
   template<typename IterT>
-  basic_object<typename IterT::value_type> read(IterT first, IterT last, bool* ok) noexcept;
+   std::vector<basic_object<typename IterT::value_type>> read(IterT first, IterT last, bool* ok) noexcept;
   
 
 
@@ -237,10 +237,10 @@ counter num = tyti::vdf::read<counter>(file);
   @param ec output bool. 0 if ok, otherwise, holds an system error code
   */
   template<typename OutputT, typename IterT>
-  OutputT read(IterT first, IterT last, std::error_code& ec) noexcept;
+  std::vector<OutputT> read(IterT first, IterT last, std::error_code& ec) noexcept;
   
   template<typename IterT>
-  basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) noexcept;
+  std::vector<basic_object<typename IterT::value_type>> read(IterT first, IterT last, std::error_code& ec) noexcept;
   
 
 /////////////////////////////////////////////////////////////////////////////

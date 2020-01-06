@@ -88,11 +88,12 @@ void read_check_DST_file_ok()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
     bool ok;
-    auto object = vdf::read(file, &ok);
+    auto objects = vdf::read(file, &ok);
 
     REQUIRE(ok);
-
-    check_DST_AST(object);
+    auto it = objects.childs.find(T_L("AppState"));
+    CHECK(it != objects.childs.end());
+    check_DST_AST(*(it->second));
 }
 
 template<typename charT>
@@ -100,29 +101,33 @@ void read_check_DST_file_ec()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
     std::error_code ec;
-    auto object = vdf::read(file, ec);
+    auto objects = vdf::read(file, ec);
 
     REQUIRE(!ec);
+    auto it = objects.childs.find(T_L("AppState"));
+	CHECK(it != objects.childs.end());
+	check_DST_AST(*(it->second));
 
-    check_DST_AST(object);
 }
 
 template<typename charT>
 void read_check_DST_file_throw()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
-    auto object = vdf::read(file);
-
-    check_DST_AST(object);
+    auto objects = vdf::read(file);
+    auto it = objects.childs.find(T_L("AppState"));
+	CHECK(it != objects.childs.end());
+	check_DST_AST(*(it->second));
 }
 
 template<typename charT>
 void read_check_DST_file_multikey_throw()
 {
     std::basic_ifstream<charT> file("DST_Manifest.acf");
-    auto object = vdf::read<vdf::basic_multikey_object<charT>>(file);
-
-    check_DST_AST_multikey(object);
+    auto objects = vdf::read<vdf::basic_multikey_object<charT>>(file);
+    auto it = objects.childs.find(T_L("AppState"));
+    CHECK(it != objects.childs.end());
+    check_DST_AST_multikey(*(it->second));
 }
 
 TEST_CASE("Read File", "[read]")
@@ -172,7 +177,7 @@ void check_fail()
 {
     bool ok;
     std::basic_string<charT> attribs( T_L("\"firstNode\"{\"SecondNode\"{\"Key\" //myComment\n}}") );
-    auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
+    auto objs = vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(!ok);
 }
@@ -188,15 +193,15 @@ void write_and_read()
 {
     std::basic_string<charT> attribs( T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}") );
     bool ok;
-    auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
+    auto objs = vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(ok);
 
     std::basic_stringstream<charT> output;
-    vdf::write(output, obj);
-    obj = vdf::read(output);
+    vdf::write(output, objs);
+    objs = vdf::read(output);
 
-    check_string(obj);
+    check_string(objs);
 }
 
 TEST_CASE("Write and Read", "[read_write]")
@@ -236,5 +241,4 @@ TEST_CASE("counter test", "[counter]")
 {
     std::ifstream file("DST_Manifest.acf");
     counter num = tyti::vdf::read<counter>(file);
-    CHECK(num.num_attributes == 27);
-}
+    CHECK(num.num_attributes == 28);}
