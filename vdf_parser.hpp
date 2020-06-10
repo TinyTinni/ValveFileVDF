@@ -262,7 +262,7 @@ namespace tyti
             */
             template <typename OutputT, typename IterT>
             std::vector<std::unique_ptr<OutputT>> read_internal(IterT first, const IterT last,
-				std::unordered_set< std::basic_string<typename std::decay<decltype(*first)>::type> >& exclude_files)
+                std::unordered_set< std::basic_string<typename std::decay<decltype(*first)>::type> >& exclude_files)
             {
                 static_assert(std::is_default_constructible<OutputT>::value,
                     "Output Type must be default constructible (provide constructor without arguments)");
@@ -556,14 +556,14 @@ namespace tyti
 
         template< typename IterT >
         inline auto read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
-			-> basic_object<typename std::decay<decltype(*first)>::type>
+            -> basic_object<typename std::decay<decltype(*first)>::type>
         {
             return read< basic_object<typename std::decay<decltype(*first)>::type> >(first, last, ec);
         }
 
         template<typename IterT>
         inline auto read(IterT first, const IterT last)
-			-> basic_object<typename std::decay<decltype(*first)>::type>
+            -> basic_object<typename std::decay<decltype(*first)>::type>
         {
             return read< basic_object<typename std::decay<decltype(*first)>::type> >(first, last);
         }
