@@ -175,6 +175,10 @@ namespace tyti
             {
                 attribs.emplace(std::move(key), std::move(value));
             }
+            void add_attribute_move(std::basic_string<char_type>&& key, std::basic_string<char_type>&& value)
+            {
+                attribs.emplace(std::move(key), std::move(value));
+            }
             void add_child(std::unique_ptr< basic_object<char_type> > child)
             {
                 std::shared_ptr< basic_object<char_type> > obj{ child.release() };
@@ -195,6 +199,10 @@ namespace tyti
             std::unordered_multimap<std::basic_string<char_type>, std::shared_ptr< basic_multikey_object<char_type> > > childs;
 
             void add_attribute(std::basic_string<char_type> key, std::basic_string<char_type> value)
+            {
+                attribs.emplace(std::move(key), std::move(value));
+            }
+            void add_attribute_move(std::basic_string<char_type>&& key, std::basic_string<char_type>&& value)
             {
                 attribs.emplace(std::move(key), std::move(value));
             }
@@ -272,7 +280,8 @@ namespace tyti
 
                 // function for skipping a comment block
                 // iter: iterator poition to the position after a '/'
-                auto skip_comments = [](IterT iter, const IterT& last) -> IterT {
+                const std::basic_string<charT> comment_search_str = TYTI_L(charT, "*/");
+                auto skip_comments = [&comment_search_str](IterT iter, const IterT& last) -> IterT {
                     ++iter;
                     if (iter != last)
                     {
@@ -285,8 +294,7 @@ namespace tyti
                         if (*iter == '*')
                         {
                             // block comment, skip until next occurance of "*\"
-                            const std::basic_string<charT> search_str = TYTI_L(charT, "*/");
-                            iter = std::search(iter + 1, last, std::begin(search_str), std::end(search_str));
+                            iter = std::search(iter + 1, last, std::begin(comment_search_str), std::end(comment_search_str));
                             iter += 2;
                         }
                     }
@@ -312,14 +320,14 @@ namespace tyti
                     return iter;
                 };
 
-                auto end_word = [](IterT iter, const IterT& last)->IterT {
+                const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
+                auto end_word = [&](IterT iter, const IterT& last)->IterT {
                     const auto begin = iter;
                     auto last_esc = iter;
                     do
                     {
                         ++iter;
-                        const std::basic_string<charT> symbols = TYTI_L(charT, " \n\v\f\r\t");
-                        iter = std::find_first_of(iter, last, symbols.begin(), symbols.end());
+                        iter = std::find_first_of(iter, last, whitespaces.begin(), whitespaces.end());
                         if (iter == last)
                             break;
 
@@ -332,17 +340,16 @@ namespace tyti
                     return iter;
                 };
 
-                auto skip_whitespaces = [](IterT iter, const IterT& last)->IterT {
-                    iter = std::find_if_not(iter, last, [](charT c)
+                auto skip_whitespaces = [&whitespaces](IterT iter, const IterT& last)->IterT {
+                    iter = std::find_if_not(iter, last, [&whitespaces](charT c)
                         {
                             // return true if whitespace
-                            const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
                             return std::any_of(whitespaces.begin(), whitespaces.end(), [c](charT pc) {return pc == c; });
                         });
                     return iter;
                 };
 
-                auto strip_escape_symbols = [](std::basic_string<charT> s) {
+                auto strip_escape_symbols = [](std::basic_string<charT>& s) {
                     auto quote_searcher = [&s](size_t pos) { return s.find(TYTI_L(charT, "\\\""), pos); };
                     auto p = quote_searcher(0);
                     while (p != s.npos)
@@ -357,7 +364,6 @@ namespace tyti
                         s.replace(p, 2, TYTI_L(charT, "\\"));
                         p = searcher(p);
                     }
-                    return s;
                 };
 
 
@@ -385,7 +391,7 @@ namespace tyti
                         if (*curIter == TYTI_L(charT, '\"'))
                             ++curIter;
                         std::basic_string<charT> key(curIter, keyEnd);
-                        key = strip_escape_symbols(key);
+                        strip_escape_symbols(key);
                         curIter = keyEnd + ((*keyEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
                         curIter = skip_whitespaces(curIter, last);
@@ -407,13 +413,13 @@ namespace tyti
                                 ++curIter;
 
                             auto value = std::basic_string<charT>(curIter, valueEnd);
-                            value = strip_escape_symbols(value);
+                            strip_escape_symbols(value);
                             curIter = valueEnd + ((*valueEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
                             // process value
                             if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
                             {
-                                curObj->add_attribute(std::move(key), std::move(value));
+                                curObj->add_attribute_move(std::move(key), std::move(value));
                             }
                             else
                             {
