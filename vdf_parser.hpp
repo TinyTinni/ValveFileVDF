@@ -61,7 +61,7 @@
 #ifndef NOEXCEPT
 #define NOEXCEPT noexcept
 #define TYTI_UNDEF_NOEXCEPT
-#endif 
+#endif
 
 #endif
 
@@ -255,20 +255,21 @@ namespace tyti
             @param end              end iterator
             @param exclude_files    list of files which cant be included anymore.
                                     prevents circular includes
-            
+
             can thow:
                     - "std::runtime_error" if a parsing error occured
                     - "std::bad_alloc" if not enough memory coup be allocated
             */
             template <typename OutputT, typename IterT>
-            std::vector<std::unique_ptr<OutputT>> read_internal(IterT first, const IterT last, std::unordered_set< std::basic_string<typename IterT::value_type> >& exclude_files)
+            std::vector<std::unique_ptr<OutputT>> read_internal(IterT first, const IterT last,
+                std::unordered_set< std::basic_string<typename std::decay<decltype(*first)>::type> >& exclude_files)
             {
                 static_assert(std::is_default_constructible<OutputT>::value,
                     "Output Type must be default constructible (provide constructor without arguments)");
                 static_assert(std::is_move_constructible<OutputT>::value,
                     "Output Type must be move constructible");
 
-                typedef typename IterT::value_type charT;
+                typedef typename std::decay<decltype(*first)>::type charT;
 
                 // function for skipping a comment block
                 // iter: iterator poition to the position after a '/'
@@ -481,7 +482,7 @@ namespace tyti
         template<typename OutputT, typename IterT>
         OutputT read(IterT first, const IterT last)
         {
-            auto exclude_files = std::unordered_set< std::basic_string<typename IterT::value_type> >{};
+            auto exclude_files = std::unordered_set< std::basic_string<typename std::decay<decltype(*first)>::type> >{};
             auto roots = detail::read_internal<OutputT>(first, last, exclude_files);
 
             OutputT result;
@@ -548,21 +549,23 @@ namespace tyti
         }
 
         template<typename IterT>
-        inline basic_object<typename IterT::value_type> read(IterT first, const IterT last, bool* ok) NOEXCEPT
+        inline auto read(IterT first, const IterT last, bool* ok) NOEXCEPT -> basic_object<typename std::decay<decltype(*first)>::type>
         {
-            return read< basic_object<typename IterT::value_type> >(first, last, ok);
+            return read< basic_object<typename std::decay<decltype(*first)>::type> >(first, last, ok);
         }
 
         template< typename IterT >
-        inline basic_object<typename IterT::value_type> read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+        inline auto read(IterT first, IterT last, std::error_code& ec) NOEXCEPT
+            -> basic_object<typename std::decay<decltype(*first)>::type>
         {
-            return read< basic_object<typename IterT::value_type> >(first, last, ec);
+            return read< basic_object<typename std::decay<decltype(*first)>::type> >(first, last, ec);
         }
 
         template<typename IterT>
-        inline basic_object<typename IterT::value_type> read(IterT first, const IterT last)
+        inline auto read(IterT first, const IterT last)
+            -> basic_object<typename std::decay<decltype(*first)>::type>
         {
-            return read< basic_object<typename IterT::value_type> >(first, last);
+            return read< basic_object<typename std::decay<decltype(*first)>::type> >(first, last);
         }
 
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
