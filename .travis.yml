@@ -13,7 +13,7 @@ install:
 #  - sudo apt-get install -qq g++-6
  # - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
 script: 
-    - mkdir tests/build && cd tests/build && cmake .. && cmake --build .
+    - mkdir build && cd build && cmake .. && cmake --build .
 after_success:
-    - cd $TRAVIS_BUILD_DIR/tests/build/ && ctest -C Debug --output-on-failure
+    - cd $TRAVIS_BUILD_DIR/build/ && ctest -C Debug --output-on-failure
     
