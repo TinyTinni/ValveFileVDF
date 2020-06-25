@@ -269,9 +269,12 @@ namespace tyti
 
                 typedef typename std::decay<decltype(*first)>::type charT;
 
+                const std::basic_string<charT> comment_end_str = TYTI_L(charT, "*/");
+                const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
+
                 // function for skipping a comment block
                 // iter: iterator poition to the position after a '/'
-                auto skip_comments = [](IterT iter, const IterT &last) -> IterT {
+                auto skip_comments = [&comment_end_str](IterT iter, const IterT &last) -> IterT {
                     ++iter;
                     if (iter != last)
                     {
@@ -284,8 +287,7 @@ namespace tyti
                         if (*iter == '*')
                         {
                             // block comment, skip until next occurance of "*\"
-                            const std::basic_string<charT> search_str = TYTI_L(charT, "*/");
-                            iter = std::search(iter + 1, last, std::begin(search_str), std::end(search_str));
+                            iter = std::search(iter + 1, last, std::begin(comment_end_str), std::end(comment_end_str));
                             iter += 2;
                         }
                     }
@@ -311,14 +313,13 @@ namespace tyti
                     return iter;
                 };
 
-                auto end_word = [](IterT iter, const IterT &last) -> IterT {
+                auto end_word = [&whitespaces](IterT iter, const IterT &last) -> IterT {
                     const auto begin = iter;
                     auto last_esc = iter;
                     do
                     {
                         ++iter;
-                        const std::basic_string<charT> symbols = TYTI_L(charT, " \n\v\f\r\t");
-                        iter = std::find_first_of(iter, last, symbols.begin(), symbols.end());
+                        iter = std::find_first_of(iter, last, std::begin(whitespaces), std::end(whitespaces));
                         if (iter == last)
                             break;
 
@@ -331,16 +332,15 @@ namespace tyti
                     return iter;
                 };
 
-                auto skip_whitespaces = [](IterT iter, const IterT &last) -> IterT {
-                    iter = std::find_if_not(iter, last, [](charT c) {
+                auto skip_whitespaces = [&whitespaces](IterT iter, const IterT &last) -> IterT {
+                    iter = std::find_if_not(iter, last, [&whitespaces](charT c) {
                         // return true if whitespace
-                        const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
-                        return std::any_of(whitespaces.begin(), whitespaces.end(), [c](charT pc) { return pc == c; });
+                        return std::any_of(std::begin(whitespaces), std::end(whitespaces), [c](charT pc) { return pc == c; });
                     });
                     return iter;
                 };
 
-                auto strip_escape_symbols = [](std::basic_string<charT> s) {
+                auto strip_escape_symbols = [](std::basic_string<charT> &s) {
                     auto quote_searcher = [&s](size_t pos) { return s.find(TYTI_L(charT, "\\\""), pos); };
                     auto p = quote_searcher(0);
                     while (p != s.npos)
@@ -355,7 +355,6 @@ namespace tyti
                         s.replace(p, 2, TYTI_L(charT, "\\"));
                         p = searcher(p);
                     }
-                    return s;
                 };
 
                 //read header
@@ -383,7 +382,7 @@ namespace tyti
                         if (*curIter == TYTI_L(charT, '\"'))
                             ++curIter;
                         std::basic_string<charT> key(curIter, keyEnd);
-                        key = strip_escape_symbols(key);
+                        strip_escape_symbols(key);
                         curIter = keyEnd + ((*keyEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
                         curIter = skip_whitespaces(curIter, last);
@@ -405,7 +404,7 @@ namespace tyti
                                 ++curIter;
 
                             auto value = std::basic_string<charT>(curIter, valueEnd);
-                            value = strip_escape_symbols(value);
+                            strip_escape_symbols(value);
                             curIter = valueEnd + ((*valueEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
                             // process value
