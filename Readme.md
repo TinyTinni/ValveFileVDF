@@ -11,12 +11,15 @@ This header-only file provides a parser and writer to load and save the given da
 - build-in encodings: `char`  and `wchar_t`
 - supports custom character sets
 - support for C++ (//) and C (/**/) comments
-- `#include`/`#base` keyword (note: searches for files in the current working directoy)
+- `#include`/`#base` keyword (note: searches for files in the current working directory)
 - platform independent
 - header-only
 
 ## Requirements
 - C++11 
+
+## Test Requirements
+- C++14 (uses [catch2](https://github.com/catchorg/Catch2))
 
 (works with the C++11 features of vs120/"Visual Studio 2013" and newer)
  
@@ -25,7 +28,7 @@ First, you have to include the main file `vdf-Parser.h`.
 This file provides several functions and data-structures which are
 in the namespace `tyti::vdf`.
 
-All functions and data structures suppoers wide characters.
+All functions and data structures supports wide characters.
 The wide character data structure is indicated by the commonly known `w`-prefix.
 Functions are templates and don't need a prefix.
 
@@ -102,7 +105,7 @@ where ```MYCLASS``` is the tpe of your class and ```CHAR``` the type of your cha
 Also, the type has to be [default constructible](http://en.cppreference.com/w/cpp/types/is_default_constructible)
 and [move constructible](http://en.cppreference.com/w/cpp/types/is_move_constructible).
 
-This also allows you, to inspect the file without storing it in a datastructure.
+This also allows you, to inspect the file without storing it in a data structure.
 Lets say, for example, you want to count all attributes of a file without storing it.
 You can do this by using this class
 
