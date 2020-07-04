@@ -272,6 +272,14 @@ namespace tyti
                 const std::basic_string<charT> comment_end_str = TYTI_L(charT, "*/");
                 const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
 
+#ifdef WIN32
+                const std::basic_string<charT> platform_str = TYTI_L(charT, "$WIN32");
+#elif __APPLE__
+                const std::basic_string<charT> platform_str = TYTI_L(charT, "$MACOS");
+#else
+                const std::basic_string<charT> platform_str = TYTI_L(charT, "");
+#endif
+
                 // function for skipping a comment block
                 // iter: iterator poition to the position after a '/'
                 auto skip_comments = [&comment_end_str](IterT iter, const IterT &last) -> IterT {
@@ -357,6 +365,25 @@ namespace tyti
                     }
                 };
 
+                auto conditional_fullfilled = [&skip_whitespaces, &platform_str](IterT &iter, const IterT &last) {
+                    iter = skip_whitespaces(iter, last);
+                    if (*iter == '[')
+                    {
+                        ++iter;
+                        const auto end = std::find(iter, last, ']');
+                        const bool negate = *iter == '!';
+                        if (negate)
+                            ++iter;
+                        auto conditional = std::basic_string<charT>(iter, end);
+
+                        const bool is_platform = conditional == platform_str;
+                        iter = end + 1;
+
+                        return static_cast<bool>(is_platform ^ negate);
+                    }
+                    return true;
+                };
+
                 //read header
                 // first, quoted name
                 std::unique_ptr<OutputT> curObj = nullptr;
@@ -386,6 +413,11 @@ namespace tyti
                         curIter = keyEnd + ((*keyEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
                         curIter = skip_whitespaces(curIter, last);
+
+                        auto conditional = conditional_fullfilled(curIter, last);
+                        if (!conditional)
+                            continue;
+
                         while (*curIter == TYTI_L(charT, '/'))
                         {
 
@@ -406,6 +438,10 @@ namespace tyti
                             auto value = std::basic_string<charT>(curIter, valueEnd);
                             strip_escape_symbols(value);
                             curIter = valueEnd + ((*valueEnd == TYTI_L(charT, '\"')) ? 1 : 0);
+
+                            auto conditional = conditional_fullfilled(curIter, last);
+                            if (!conditional)
+                                continue;
 
                             // process value
                             if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
@@ -626,8 +662,8 @@ namespace tyti
             return read<basic_object<typename iStreamT::char_type>>(inStream);
         }
 
-    } // end namespace vdf
-} // end namespace tyti
+    } // namespace vdf
+} // namespace tyti
 #ifndef TYTI_NO_L_UNDEF
 #undef TYTI_L
 #endif

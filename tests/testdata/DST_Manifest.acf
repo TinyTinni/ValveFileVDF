@@ -28,6 +28,9 @@
     "escape_quote_backslash" "quote_with_other_escapes\\\"\\"
     "tab_escape" "new\ttab"
     "new_line_escape" "new\nline"
+
+	"conditional" "macos" [$OSX]
+	"conditional" "not osx" [!$OSX]
     
     // inline comment
     "UserConfig"

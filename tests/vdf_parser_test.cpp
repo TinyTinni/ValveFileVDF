@@ -26,7 +26,7 @@ template <typename charT>
 void check_DST_AST(const vdf::basic_object<charT> &obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 23);
+    REQUIRE(obj.attribs.size() == 24);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.at(T_L("appid")) == T_L("343050"));
@@ -59,7 +59,7 @@ template <typename charT>
 void check_DST_AST_multikey(const vdf::basic_multikey_object<charT> &obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 24);
+    REQUIRE(obj.attribs.size() == 25);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.find(T_L("appid"))->second == T_L("343050"));
@@ -239,5 +239,5 @@ TEST_CASE("counter test", "[counter]")
 {
     std::ifstream file("DST_Manifest.acf");
     counter num = tyti::vdf::read<counter>(file);
-    CHECK(num.num_attributes == 28);
+    CHECK(num.num_attributes == 29);
 }
