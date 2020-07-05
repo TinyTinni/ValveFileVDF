@@ -217,7 +217,7 @@ std::vector<counter> num = tyti::vdf::read<counter>(file);
    std::vector<OutputT> read(IterT first, IterT last);
 
   template<typename IterT>
-   std::vector<basic_object<typename IterT::value_type>> read(IterT first, IterT last);
+   std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last);
  
   /** \brief Read VDF formatted sequences defined by the range [first, last).
   If the file is mailformatted, parser will try to read it until it can.
@@ -229,7 +229,7 @@ std::vector<counter> num = tyti::vdf::read<counter>(file);
    std::vector<OutputT> read(IterT first, IterT last, bool* ok) noexcept;
   
   template<typename IterT>
-   std::vector<basic_object<typename IterT::value_type>> read(IterT first, IterT last, bool* ok) noexcept;
+   std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, bool* ok) noexcept;
   
 
 
@@ -243,7 +243,7 @@ std::vector<counter> num = tyti::vdf::read<counter>(file);
   std::vector<OutputT> read(IterT first, IterT last, std::error_code& ec) noexcept;
   
   template<typename IterT>
-  std::vector<basic_object<typename IterT::value_type>> read(IterT first, IterT last, std::error_code& ec) noexcept;
+  std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, std::error_code& ec) noexcept;
   
 
 /////////////////////////////////////////////////////////////////////////////

@@ -31,6 +31,7 @@
 #include <memory>
 #include <unordered_set>
 #include <algorithm>
+#include <iterator>
 
 #include <system_error>
 #include <exception>
@@ -260,14 +261,14 @@ namespace tyti
             */
             template <typename OutputT, typename IterT>
             std::vector<std::unique_ptr<OutputT>> read_internal(IterT first, const IterT last,
-                                                                std::unordered_set<std::basic_string<typename std::decay<decltype(*first)>::type>> &exclude_files)
+                                                                std::unordered_set<std::basic_string<typename std::iterator_traits<IterT>::value_type>> &exclude_files)
             {
                 static_assert(std::is_default_constructible<OutputT>::value,
                               "Output Type must be default constructible (provide constructor without arguments)");
                 static_assert(std::is_move_constructible<OutputT>::value,
                               "Output Type must be move constructible");
 
-                typedef typename std::decay<decltype(*first)>::type charT;
+                typedef typename std::iterator_traits<IterT>::value_type charT;
 
                 const std::basic_string<charT> comment_end_str = TYTI_L(charT, "*/");
                 const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
@@ -514,7 +515,7 @@ namespace tyti
         template <typename OutputT, typename IterT>
         OutputT read(IterT first, const IterT last)
         {
-            auto exclude_files = std::unordered_set<std::basic_string<typename std::decay<decltype(*first)>::type>>{};
+            auto exclude_files = std::unordered_set<std::basic_string<typename std::iterator_traits<IterT>::value_type>>{};
             auto roots = detail::read_internal<OutputT>(first, last, exclude_files);
 
             OutputT result;
@@ -582,23 +583,23 @@ namespace tyti
         }
 
         template <typename IterT>
-        inline auto read(IterT first, const IterT last, bool *ok) NOEXCEPT -> basic_object<typename std::decay<decltype(*first)>::type>
+        inline auto read(IterT first, const IterT last, bool *ok) NOEXCEPT -> basic_object<typename std::iterator_traits<IterT>::value_type>
         {
-            return read<basic_object<typename std::decay<decltype(*first)>::type>>(first, last, ok);
+            return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(first, last, ok);
         }
 
         template <typename IterT>
         inline auto read(IterT first, IterT last, std::error_code &ec) NOEXCEPT
-            -> basic_object<typename std::decay<decltype(*first)>::type>
+            -> basic_object<typename std::iterator_traits<IterT>::value_type>
         {
-            return read<basic_object<typename std::decay<decltype(*first)>::type>>(first, last, ec);
+            return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(first, last, ec);
         }
 
         template <typename IterT>
         inline auto read(IterT first, const IterT last)
-            -> basic_object<typename std::decay<decltype(*first)>::type>
+            -> basic_object<typename std::iterator_traits<IterT>::value_type>
         {
-            return read<basic_object<typename std::decay<decltype(*first)>::type>>(first, last);
+            return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(first, last);
         }
 
         /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
