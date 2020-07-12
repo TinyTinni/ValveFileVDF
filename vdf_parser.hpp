@@ -274,11 +274,24 @@ namespace tyti
                 const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
 
 #ifdef WIN32
-                const std::basic_string<charT> platform_str = TYTI_L(charT, "$WIN32");
+                auto is_platform_str = [](const std::basic_string<charT> &in) {
+                    return in == TYTI_L(charT, "$WIN32") || in == TYTI_L(charT, "$WINDOWS");
+                }
 #elif __APPLE__
-                const std::basic_string<charT> platform_str = TYTI_L(charT, "$MACOS");
+                // WIN32 stands for pc in general
+                auto is_platform_str = [](const std::basic_string<charT> &in) {
+                    return in == TYTI_L(charT, "$WIN32") || in == TYTI_L(charT, "$POSIX") || in == TYTI_L(charT, "$OSX");
+                };
+
+#elif __linux__
+                // WIN32 stands for pc in general
+                auto is_platform_str = [](const std::basic_string<charT> &in) {
+                    return in == TYTI_L(charT, "$WIN32") || in == TYTI_L(charT, "$POSIX") || in == TYTI_L(charT, "$LINUX");
+                };
 #else
-                const std::basic_string<charT> platform_str = TYTI_L(charT, "");
+                auto is_platform_str = [](const std::basic_string<charT> &in) {
+                    return false;
+                };
 #endif
 
                 // function for skipping a comment block
@@ -366,7 +379,7 @@ namespace tyti
                     }
                 };
 
-                auto conditional_fullfilled = [&skip_whitespaces, &platform_str](IterT &iter, const IterT &last) {
+                auto conditional_fullfilled = [&skip_whitespaces, &is_platform_str](IterT &iter, const IterT &last) {
                     iter = skip_whitespaces(iter, last);
                     if (*iter == '[')
                     {
@@ -377,7 +390,7 @@ namespace tyti
                             ++iter;
                         auto conditional = std::basic_string<charT>(iter, end);
 
-                        const bool is_platform = conditional == platform_str;
+                        const bool is_platform = is_platform_str(conditional);
                         iter = end + 1;
 
                         return static_cast<bool>(is_platform ^ negate);
