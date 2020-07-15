@@ -276,7 +276,7 @@ namespace tyti
 #ifdef WIN32
                 auto is_platform_str = [](const std::basic_string<charT> &in) {
                     return in == TYTI_L(charT, "$WIN32") || in == TYTI_L(charT, "$WINDOWS");
-                }
+                };
 #elif __APPLE__
                 // WIN32 stands for pc in general
                 auto is_platform_str = [](const std::basic_string<charT> &in) {
