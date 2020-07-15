@@ -137,7 +137,7 @@ namespace tyti
                 std::basic_string<charT> print() const { return std::basic_string<charT>(t, TYTI_L(charT, '\t')); }
                 inline CONSTEXPR tabs operator+(size_t i) const NOEXCEPT
                 {
-                    return tabs(i + 1);
+                    return tabs(t + i);
                 }
             };
 
