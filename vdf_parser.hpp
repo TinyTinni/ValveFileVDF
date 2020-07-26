@@ -218,7 +218,7 @@ namespace tyti
         //forward decls
         //forward decl
         template <typename OutputT, typename iStreamT>
-        OutputT read(iStreamT &inStream, const Options &opt);
+        OutputT read(iStreamT &inStream, const Options &opt = Options{});
 
         /** \brief writes given object tree in vdf format to given stream.
         Output is prettyfied, using tabs
@@ -677,7 +677,7 @@ namespace tyti
             throws "std::runtime_error" if a parsing error occured
         */
         template <typename OutputT, typename iStreamT>
-        OutputT read(iStreamT &inStream, const Options &opt = Options{})
+        OutputT read(iStreamT &inStream, const Options &opt)
         {
 
             // cache the file
