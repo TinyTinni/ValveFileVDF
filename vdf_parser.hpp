@@ -79,11 +79,11 @@ namespace tyti
             template <typename T>
             struct literal_macro_help
             {
-                static CONSTEXPR const char *result(const char *c, const wchar_t *wc) NOEXCEPT
+                static CONSTEXPR const char *result(const char *c, const wchar_t *) NOEXCEPT
                 {
                     return c;
                 }
-                static CONSTEXPR const char result(const char c, const wchar_t wc) NOEXCEPT
+                static CONSTEXPR const char result(const char c, const wchar_t ) NOEXCEPT
                 {
                     return c;
                 }
@@ -92,11 +92,11 @@ namespace tyti
             template <>
             struct literal_macro_help<wchar_t>
             {
-                static CONSTEXPR const wchar_t *result(const char *c, const wchar_t *wc) NOEXCEPT
+                static CONSTEXPR const wchar_t *result(const char *, const wchar_t *wc) NOEXCEPT
                 {
                     return wc;
                 }
-                static CONSTEXPR const wchar_t result(const char c, const wchar_t wc) NOEXCEPT
+                static CONSTEXPR const wchar_t result(const char , const wchar_t wc) NOEXCEPT
                 {
                     return wc;
                 }
@@ -304,7 +304,7 @@ namespace tyti
 #endif
 
                 if (opt.ignore_all_platform_conditionals)
-                    is_platform_str = [](const std::basic_string<charT> &in) {
+                    is_platform_str = [](const std::basic_string<charT> &) {
                         return false;
                     };
 
@@ -394,7 +394,7 @@ namespace tyti
                 };
 
                 if (!opt.strip_escape_symbols)
-                    strip_escape_symbols = [](std::basic_string<charT> &s) {};
+                    strip_escape_symbols = [](std::basic_string<charT> &) {};
 
                 auto conditional_fullfilled = [&skip_whitespaces, &is_platform_str](IterT &iter, const IterT &last) {
                     iter = skip_whitespaces(iter, last);

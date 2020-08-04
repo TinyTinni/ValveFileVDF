@@ -144,7 +144,7 @@ void read_string()
 {
     std::basic_string<charT> attribs(T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}"));
     bool ok;
-    auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
+    vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(ok);
 }
@@ -175,7 +175,7 @@ void check_fail()
 {
     bool ok;
     std::basic_string<charT> attribs(T_L("\"firstNode\"{\"SecondNode\"{\"Key\" //myComment\n}}"));
-    auto objs = vdf::read(attribs.begin(), attribs.end(), &ok);
+    vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(!ok);
 }
