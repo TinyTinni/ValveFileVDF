@@ -83,7 +83,7 @@ namespace tyti
                 {
                     return c;
                 }
-                static CONSTEXPR const char result(const char c, const wchar_t ) NOEXCEPT
+                static CONSTEXPR const char result(const char c, const wchar_t) NOEXCEPT
                 {
                     return c;
                 }
@@ -96,7 +96,7 @@ namespace tyti
                 {
                     return wc;
                 }
-                static CONSTEXPR const wchar_t result(const char , const wchar_t wc) NOEXCEPT
+                static CONSTEXPR const wchar_t result(const char, const wchar_t wc) NOEXCEPT
                 {
                     return wc;
                 }
@@ -212,7 +212,9 @@ namespace tyti
         {
             bool strip_escape_symbols;
             bool ignore_all_platform_conditionals;
-            Options() : strip_escape_symbols(true), ignore_all_platform_conditionals(false) {}
+            bool ignore_includes;
+
+            Options() : strip_escape_symbols(true), ignore_all_platform_conditionals(false), ignore_includes(false) {}
         };
 
         //forward decls
@@ -481,7 +483,7 @@ namespace tyti
                             }
                             else
                             {
-                                if (exclude_files.find(value) == exclude_files.end())
+                                if (!opt.ignore_includes && exclude_files.find(value) == exclude_files.end())
                                 {
                                     exclude_files.insert(value);
                                     std::basic_ifstream<charT> i(detail::string_converter(value));

@@ -131,6 +131,20 @@ and then call the read function
 std::vector<counter> num = tyti::vdf::read<counter>(file);
 ```
 
+## Options (experimental)
+
+You can configure the parser, the non default options are not well tested yet.
+
+```c++
+struct Options
+{
+    bool strip_escape_symbols; //default true
+    bool ignore_all_platform_conditionals; // default false
+    bool ignore_includes; //default false
+};
+
+```
+
 ## Reference
 ```c++
 /////////////////////////////////////////////////////////////
@@ -177,29 +191,29 @@ std::vector<counter> num = tyti::vdf::read<counter>(file);
       throws "std::runtime_error" if a parsing error occured
   */
   template<ytpename OutputT, typename iStreamT>
-  std::vector<OutputT> read(iStreamT& inStream);
+  std::vector<OutputT> read(iStreamT& inStream, const Options &opt = Options{});
 
   template<typename iStreamT>
-   std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream);
+   std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, const Options &opt = Options{});
 
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
       ok == false, if a parsing error occured
   */
   template<typename OutputT, typename iStreamT>
-  std::vector<OutputT> read(iStreamT& inStream, bool* ok);
+  std::vector<OutputT> read(iStreamT& inStream, bool* ok, const Options &opt = Options{});
 
   template<typename iStreamT>
-   std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, bool* ok);
+   std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, bool* ok, const Options &opt = Options{});
   
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
   */
   template<typename OutputT, typename iStreamT>
-   std::vector<OutputT> read(iStreamT& inStream, std::error_code& ec);
+   std::vector<OutputT> read(iStreamT& inStream, std::error_code& ec, const Options &opt = Options{});
 
   template<typename iStreamT>
-   std::vector<basic_object<iStreamT::char_type>> read(iStreamT& inStream, std::error_code& ec);
+   std::vector<basic_object<iStreamT::char_type>> read(iStreamT& inStream, std::error_code& ec, const Options &opt = Options{});
 
 /////////////////////////////////////////////////////////////
 // read from memory
@@ -214,10 +228,10 @@ std::vector<counter> num = tyti::vdf::read<counter>(file);
   throws "std::bad_alloc" if not enough memory could be allocated
   */
   template<typename OutputT, typename IterT>
-   std::vector<OutputT> read(IterT first, IterT last);
+   std::vector<OutputT> read(IterT first, IterT last, const Options &opt = Options{});
 
   template<typename IterT>
-   std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last);
+   std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, const Options &opt = Options{});
  
   /** \brief Read VDF formatted sequences defined by the range [first, last).
   If the file is mailformatted, parser will try to read it until it can.
@@ -226,10 +240,10 @@ std::vector<counter> num = tyti::vdf::read<counter>(file);
   @param ok output bool. true, if parser successed, false, if parser failed
   */
   template<typename OutputT, typename IterT>
-   std::vector<OutputT> read(IterT first, IterT last, bool* ok) noexcept;
+   std::vector<OutputT> read(IterT first, IterT last, bool* ok, const Options &opt = Options{}) noexcept;
   
   template<typename IterT>
-   std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, bool* ok) noexcept;
+   std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, bool* ok, const Options &opt = Options{}) noexcept;
   
 
 
@@ -240,10 +254,10 @@ std::vector<counter> num = tyti::vdf::read<counter>(file);
   @param ec output bool. 0 if ok, otherwise, holds an system error code
   */
   template<typename OutputT, typename IterT>
-  std::vector<OutputT> read(IterT first, IterT last, std::error_code& ec) noexcept;
+  std::vector<OutputT> read(IterT first, IterT last, std::error_code& ec, const Options &opt = Options{}) noexcept;
   
   template<typename IterT>
-  std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, std::error_code& ec) noexcept;
+  std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, std::error_code& ec, const Options &opt = Options{}) noexcept;
   
 
 /////////////////////////////////////////////////////////////////////////////
@@ -251,7 +265,7 @@ std::vector<counter> num = tyti::vdf::read<counter>(file);
   /// writes given obj into out in vdf style 
   /// Output is prettyfied, using tabs
   template<typename oStreamT, typename T>
-  void write(oStreamT& out, const T& obj);
+  void write(oStreamT& out, const T& obj, const Options &opt = Options{});
   
 ```
 
