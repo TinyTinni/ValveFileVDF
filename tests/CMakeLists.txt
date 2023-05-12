@@ -1,5 +1,3 @@
-include(CTest)
-
 set (CMAKE_CXX_STANDARD 14)
 
 ##find_package(Catch2 QUIET)
@@ -45,6 +43,7 @@ set(SRCS
 add_executable(tests "../vdf_parser.hpp" ${SRCS})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests) #requires cmake 3.6
 add_definitions("-DSOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
+message("add defition: -DSOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 
 if (BUILD_TESTING)
     add_test(NAME vdf_tests COMMAND tests)
