@@ -1,5 +1,3 @@
-include(CTest)
-
 set (CMAKE_CXX_STANDARD 14)
 
 ##find_package(Catch2 QUIET)
