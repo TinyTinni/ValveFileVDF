@@ -23,7 +23,7 @@ const std::string testdata_dir = SOURCE_DIR "/testdata/";
 #endif
 
 template <typename charT>
-void check_DST_AST(const vdf::basic_object<charT> &obj)
+void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
     CHECK(obj.name == T_L("AppState"));
     REQUIRE(obj.attribs.size() == 24);
@@ -36,8 +36,8 @@ void check_DST_AST(const vdf::basic_object<charT> &obj)
     CHECK(obj.attribs.at(T_L("emptyAttrib")) == T_L(""));
     CHECK(obj.attribs.at(T_L("escape_quote")) == T_L(R"("quote")"));
     CHECK(obj.attribs.at(T_L("no_quoted_attrib_support")) == T_L("yes"));
-// "C2017 can occur when the stringize operator is used with strings that include escape sequences."
-// https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2013/29t70y03(v=vs.120)
+    // "C2017 can occur when the stringize operator is used with strings that include escape sequences."
+    // https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2013/29t70y03(v=vs.120)
 #if !defined(_MSC_VER) || (_MSC_VER > 1800)
     CHECK(obj.attribs.at(T_L("escape_quote_backslash")) == T_L("quote_with_other_escapes\\\"\\"));
     CHECK(obj.attribs.at(T_L("tab_escape")) == T_L("new\\ttab"));
@@ -47,16 +47,16 @@ void check_DST_AST(const vdf::basic_object<charT> &obj)
     CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
     CHECK(obj.childs.at(T_L("UserConfig"))->childs.empty());
 
-    const auto &inc = obj.childs.at(T_L("IncludedStuff"));
+    const auto& inc = obj.childs.at(T_L("IncludedStuff"));
     CHECK(inc->name == T_L("IncludedStuff"));
-    const auto &base = obj.childs.at(T_L("BaseInclude"));
+    const auto& base = obj.childs.at(T_L("BaseInclude"));
     REQUIRE(base->attribs.size() == 1);
     CHECK(base->attribs.at(T_L("BaseAttrib")) == T_L("Yes"));
     CHECK(obj.attribs.at(T_L("another attribute with fancy space")) == T_L("yay"));
 }
 
 template <typename charT>
-void check_DST_AST_multikey(const vdf::basic_multikey_object<charT> &obj)
+void check_DST_AST_multikey(const vdf::basic_multikey_object<charT>& obj)
 {
     CHECK(obj.name == T_L("AppState"));
     REQUIRE(obj.attribs.size() == 25);
@@ -74,9 +74,9 @@ void check_DST_AST_multikey(const vdf::basic_multikey_object<charT> &obj)
     CHECK(obj.childs.find(T_L("UserConfig"))->second->name == T_L("UserConfig"));
     CHECK(obj.childs.find(T_L("UserConfig"))->second->childs.empty());
 
-    const auto &inc = obj.childs.find(T_L("IncludedStuff"))->second;
+    const auto& inc = obj.childs.find(T_L("IncludedStuff"))->second;
     CHECK(inc->name == T_L("IncludedStuff"));
-    const auto &base = obj.childs.find(T_L("BaseInclude"))->second;
+    const auto& base = obj.childs.find(T_L("BaseInclude"))->second;
     REQUIRE(base->attribs.size() == 1);
     CHECK(base->attribs.find(T_L("BaseAttrib"))->second == T_L("Yes"));
     CHECK(obj.attribs.find(T_L("another attribute with fancy space"))->second == T_L("yay"));
@@ -150,13 +150,13 @@ void read_string()
 }
 
 template <typename charT>
-void check_string(const vdf::basic_object<charT> &obj)
+void check_string(const vdf::basic_object<charT>& obj)
 {
     CHECK(obj.name == T_L("firstNode"));
 
     CHECK(obj.attribs.empty() == true);
     REQUIRE(obj.childs.size() == 1);
-    const auto &secondNode = obj.childs.at(T_L("SecondNode"));
+    const auto& secondNode = obj.childs.at(T_L("SecondNode"));
 
     CHECK(secondNode->name == T_L("SecondNode"));
     REQUIRE(secondNode->attribs.size() == 1);
@@ -214,6 +214,37 @@ TEST_CASE("read multikey", "[read]")
     read_check_DST_file_multikey_throw<wchar_t>();
 }
 
+template <typename charT>
+void read_broken_file()
+{
+    std::basic_ifstream<charT> file("broken_file.acf");
+    std::error_code ec;
+    auto objects = vdf::read(file, ec);
+    REQUIRE(ec);
+    REQUIRE(objects.name.empty());
+    REQUIRE(objects.attribs.empty());
+    REQUIRE(objects.childs.empty());
+}
+
+template <typename charT>
+void read_broken_file_throw()
+{
+    std::basic_ifstream<charT> file("broken_file.acf");
+    auto objects = vdf::read(file);
+}
+
+TEST_CASE("read broken file", "[read]")
+{
+    read_broken_file<char>();
+    read_broken_file<wchar_t>();
+}
+
+TEST_CASE("read broken file throw", "[read]")
+{
+    CHECK_THROWS(read_broken_file_throw<char>());
+    CHECK_THROWS(read_broken_file_throw<wchar_t>());
+}
+
 /////////////////////////////////////////////////////////////
 // readme test
 /////////////////////////////////////////////////////////////
@@ -241,3 +272,4 @@ TEST_CASE("counter test", "[counter]")
     counter num = tyti::vdf::read<counter>(file);
     CHECK(num.num_attributes == 29);
 }
+

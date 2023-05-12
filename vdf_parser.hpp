@@ -79,7 +79,7 @@ namespace tyti
             template <typename T>
             struct literal_macro_help
             {
-                static CONSTEXPR const char *result(const char *c, const wchar_t *) NOEXCEPT
+                static CONSTEXPR const char* result(const char* c, const wchar_t*) NOEXCEPT
                 {
                     return c;
                 }
@@ -92,7 +92,7 @@ namespace tyti
             template <>
             struct literal_macro_help<wchar_t>
             {
-                static CONSTEXPR const wchar_t *result(const char *, const wchar_t *wc) NOEXCEPT
+                static CONSTEXPR const wchar_t* result(const char*, const wchar_t* wc) NOEXCEPT
                 {
                     return wc;
                 }
@@ -103,7 +103,7 @@ namespace tyti
             };
 #define TYTI_L(type, text) vdf::detail::literal_macro_help<type>::result(text, L##text)
 
-            inline std::string string_converter(const std::string &w) NOEXCEPT
+            inline std::string string_converter(const std::string& w) NOEXCEPT
             {
                 return w;
             }
@@ -118,7 +118,7 @@ namespace tyti
                 ~deletable_facet() {}
             };
 
-            inline std::string string_converter(const std::wstring &w) //todo: use us-locale
+            inline std::string string_converter(const std::wstring& w) //todo: use us-locale
             {
                 std::wstring_convert<deletable_facet<std::codecvt<wchar_t, char, std::mbstate_t>>> conv1;
                 return conv1.to_bytes(w);
@@ -143,7 +143,7 @@ namespace tyti
             };
 
             template <typename oStreamT>
-            oStreamT &operator<<(oStreamT &s, const tabs<typename oStreamT::char_type> t)
+            oStreamT& operator<<(oStreamT& s, const tabs<typename oStreamT::char_type> t)
             {
                 s << t.print();
                 return s;
@@ -171,7 +171,7 @@ namespace tyti
             }
             void add_child(std::unique_ptr<basic_object<char_type>> child)
             {
-                std::shared_ptr<basic_object<char_type>> obj{child.release()};
+                std::shared_ptr<basic_object<char_type>> obj{ child.release() };
                 childs.emplace(obj->name, obj);
             }
             void set_name(std::basic_string<char_type> n)
@@ -194,7 +194,7 @@ namespace tyti
             }
             void add_child(std::unique_ptr<basic_multikey_object<char_type>> child)
             {
-                std::shared_ptr<basic_multikey_object<char_type>> obj{child.release()};
+                std::shared_ptr<basic_multikey_object<char_type>> obj{ child.release() };
                 childs.emplace(obj->name, obj);
             }
             void set_name(std::basic_string<char_type> n)
@@ -220,21 +220,21 @@ namespace tyti
         //forward decls
         //forward decl
         template <typename OutputT, typename iStreamT>
-        OutputT read(iStreamT &inStream, const Options &opt = Options{});
+        OutputT read(iStreamT& inStream, const Options& opt = Options{});
 
         /** \brief writes given object tree in vdf format to given stream.
         Output is prettyfied, using tabs
         */
         template <typename oStreamT, typename T>
-        void write(oStreamT &s, const T &r,
-                   const detail::tabs<typename oStreamT::char_type> tab = detail::tabs<typename oStreamT::char_type>(0))
+        void write(oStreamT& s, const T& r,
+            const detail::tabs<typename oStreamT::char_type> tab = detail::tabs<typename oStreamT::char_type>(0))
         {
             typedef typename oStreamT::char_type charT;
             using namespace detail;
             s << tab << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tab << TYTI_L(charT, "{\n");
-            for (const auto &i : r.attribs)
+            for (const auto& i : r.attribs)
                 s << tab + 1 << TYTI_L(charT, '"') << i.first << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
-            for (const auto &i : r.childs)
+            for (const auto& i : r.childs)
                 if (i.second)
                     write(s, *i.second, tab + 1);
             s << tab << TYTI_L(charT, "}\n");
@@ -243,7 +243,7 @@ namespace tyti
         namespace detail
         {
             template <typename iStreamT>
-            std::basic_string<typename iStreamT::char_type> read_file(iStreamT &inStream)
+            std::basic_string<typename iStreamT::char_type> read_file(iStreamT& inStream)
             {
                 // cache the file
                 typedef typename iStreamT::char_type charT;
@@ -271,13 +271,13 @@ namespace tyti
             */
             template <typename OutputT, typename IterT>
             std::vector<std::unique_ptr<OutputT>> read_internal(IterT first, const IterT last,
-                                                                std::unordered_set<std::basic_string<typename std::iterator_traits<IterT>::value_type>> &exclude_files,
-                                                                const Options &opt)
+                std::unordered_set<std::basic_string<typename std::iterator_traits<IterT>::value_type>>& exclude_files,
+                const Options& opt)
             {
                 static_assert(std::is_default_constructible<OutputT>::value,
-                              "Output Type must be default constructible (provide constructor without arguments)");
+                    "Output Type must be default constructible (provide constructor without arguments)");
                 static_assert(std::is_move_constructible<OutputT>::value,
-                              "Output Type must be move constructible");
+                    "Output Type must be move constructible");
 
                 typedef typename std::iterator_traits<IterT>::value_type charT;
 
@@ -285,34 +285,34 @@ namespace tyti
                 const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
 
 #ifdef WIN32
-                std::function<bool(const std::basic_string<charT> &)> is_platform_str = [](const std::basic_string<charT> &in) {
+                std::function<bool(const std::basic_string<charT>&)> is_platform_str = [](const std::basic_string<charT>& in) {
                     return in == TYTI_L(charT, "$WIN32") || in == TYTI_L(charT, "$WINDOWS");
                 };
 #elif __APPLE__
                 // WIN32 stands for pc in general
-                std::function<bool(const std::basic_string<charT> &)> is_platform_str = [](const std::basic_string<charT> &in) {
+                std::function<bool(const std::basic_string<charT>&)> is_platform_str = [](const std::basic_string<charT>& in) {
                     return in == TYTI_L(charT, "$WIN32") || in == TYTI_L(charT, "$POSIX") || in == TYTI_L(charT, "$OSX");
                 };
 
 #elif __linux__
                 // WIN32 stands for pc in general
-                std::function<bool(const std::basic_string<charT> &)> is_platform_str = [](const std::basic_string<charT> &in) {
+                std::function<bool(const std::basic_string<charT>&)> is_platform_str = [](const std::basic_string<charT>& in) {
                     return in == TYTI_L(charT, "$WIN32") || in == TYTI_L(charT, "$POSIX") || in == TYTI_L(charT, "$LINUX");
                 };
 #else
-                std::function<bool(const std::basic_string<charT> &)> is_platform_str = [](const std::basic_string<charT> &in) {
+                std::function<bool(const std::basic_string<charT>&)> is_platform_str = [](const std::basic_string<charT>& in) {
                     return false;
                 };
 #endif
 
                 if (opt.ignore_all_platform_conditionals)
-                    is_platform_str = [](const std::basic_string<charT> &) {
-                        return false;
-                    };
+                    is_platform_str = [](const std::basic_string<charT>&) {
+                    return false;
+                };
 
                 // function for skipping a comment block
                 // iter: iterator poition to the position after a '/'
-                auto skip_comments = [&comment_end_str](IterT iter, const IterT &last) -> IterT {
+                auto skip_comments = [&comment_end_str](IterT iter, const IterT& last) -> IterT {
                     ++iter;
                     if (iter != last)
                     {
@@ -332,7 +332,7 @@ namespace tyti
                     return iter;
                 };
 
-                auto end_quote = [](IterT iter, const IterT &last) -> IterT {
+                auto end_quote = [](IterT iter, const IterT& last) -> IterT {
                     const auto begin = iter;
                     auto last_esc = iter;
                     do
@@ -347,11 +347,11 @@ namespace tyti
                             --last_esc;
                     } while (!(std::distance(last_esc, iter) % 2));
                     if (iter == last)
-                        throw std::runtime_error{"quote was opened but not closed."};
+                        throw std::runtime_error{ "quote was opened but not closed." };
                     return iter;
                 };
 
-                auto end_word = [&whitespaces](IterT iter, const IterT &last) -> IterT {
+                auto end_word = [&whitespaces](IterT iter, const IterT& last) -> IterT {
                     const auto begin = iter;
                     auto last_esc = iter;
                     do
@@ -370,15 +370,15 @@ namespace tyti
                     return iter;
                 };
 
-                auto skip_whitespaces = [&whitespaces](IterT iter, const IterT &last) -> IterT {
+                auto skip_whitespaces = [&whitespaces](IterT iter, const IterT& last) -> IterT {
                     iter = std::find_if_not(iter, last, [&whitespaces](charT c) {
                         // return true if whitespace
                         return std::any_of(std::begin(whitespaces), std::end(whitespaces), [c](charT pc) { return pc == c; });
-                    });
+                        });
                     return iter;
                 };
 
-                std::function<void(std::basic_string<charT> &)> strip_escape_symbols = [](std::basic_string<charT> &s) {
+                std::function<void(std::basic_string<charT>&)> strip_escape_symbols = [](std::basic_string<charT>& s) {
                     auto quote_searcher = [&s](size_t pos) { return s.find(TYTI_L(charT, "\\\""), pos); };
                     auto p = quote_searcher(0);
                     while (p != s.npos)
@@ -396,9 +396,9 @@ namespace tyti
                 };
 
                 if (!opt.strip_escape_symbols)
-                    strip_escape_symbols = [](std::basic_string<charT> &) {};
+                    strip_escape_symbols = [](std::basic_string<charT>&) {};
 
-                auto conditional_fullfilled = [&skip_whitespaces, &is_platform_str](IterT &iter, const IterT &last) {
+                auto conditional_fullfilled = [&skip_whitespaces, &is_platform_str](IterT& iter, const IterT& last) {
                     iter = skip_whitespaces(iter, last);
                     if (*iter == '[')
                     {
@@ -456,10 +456,10 @@ namespace tyti
 
                             curIter = skip_comments(curIter, last);
                             if (curIter == last || *curIter == '}')
-                                throw std::runtime_error{"key declared, but no value"};
+                                throw std::runtime_error{ "key declared, but no value" };
                             curIter = skip_whitespaces(curIter, last);
                             if (curIter == last || *curIter == '}')
-                                throw std::runtime_error{"key declared, but no value"};
+                                throw std::runtime_error{ "key declared, but no value" };
                         }
                         // get value
                         if (*curIter != '{')
@@ -479,7 +479,14 @@ namespace tyti
                             // process value
                             if (key != TYTI_L(charT, "#include") && key != TYTI_L(charT, "#base"))
                             {
-                                curObj->add_attribute(std::move(key), std::move(value));
+                                if (curObj)
+                                {
+                                    curObj->add_attribute(std::move(key), std::move(value));
+                                }
+                                else
+                                {
+                                    throw std::runtime_error{ "unexpected key without object" };
+                                }
                             }
                             else
                             {
@@ -489,7 +496,7 @@ namespace tyti
                                     std::basic_ifstream<charT> i(detail::string_converter(value));
                                     auto str = read_file(i);
                                     auto file_objs = read_internal<OutputT>(str.begin(), str.end(), exclude_files, opt);
-                                    for (auto &n : file_objs)
+                                    for (auto& n : file_objs)
                                     {
                                         if (curObj)
                                             curObj->add_child(std::move(n));
@@ -510,12 +517,12 @@ namespace tyti
                         }
                     }
                     //end of new object
-                    else if (*curIter == TYTI_L(charT, '}'))
+                    else if (curObj && *curIter == TYTI_L(charT, '}'))
                     {
                         if (!lvls.empty())
                         {
                             //get object before
-                            std::unique_ptr<OutputT> prev{std::move(lvls.top())};
+                            std::unique_ptr<OutputT> prev{ std::move(lvls.top()) };
                             lvls.pop();
 
                             // add finished obj to obj before and release it from processing
@@ -528,6 +535,10 @@ namespace tyti
                             curObj.reset();
                         }
                         ++curIter;
+                    }
+                    else
+                    {
+                        throw std::runtime_error{ "unexpected '}'" };
                     }
                 }
                 return roots;
@@ -545,7 +556,7 @@ namespace tyti
                 - "std::bad_alloc" if not enough memory coup be allocated
         */
         template <typename OutputT, typename IterT>
-        OutputT read(IterT first, const IterT last, const Options &opt = Options{})
+        OutputT read(IterT first, const IterT last, const Options& opt = Options{})
         {
             auto exclude_files = std::unordered_set<std::basic_string<typename std::iterator_traits<IterT>::value_type>>{};
             auto roots = detail::read_internal<OutputT>(first, last, exclude_files, opt);
@@ -553,7 +564,7 @@ namespace tyti
             OutputT result;
             if (roots.size() > 1)
             {
-                for (auto &i : roots)
+                for (auto& i : roots)
                     result.add_child(std::move(i));
             }
             else if (roots.size() == 1)
@@ -574,7 +585,7 @@ namespace tyti
         std::errc::invalid_argument: iterators throws e.g. out of range
         */
         template <typename OutputT, typename IterT>
-        OutputT read(IterT first, IterT last, std::error_code &ec, const Options &opt = Options{}) NOEXCEPT
+        OutputT read(IterT first, IterT last, std::error_code& ec, const Options& opt = Options{}) NOEXCEPT
 
         {
             ec.clear();
@@ -583,11 +594,11 @@ namespace tyti
             {
                 r = read<OutputT>(first, last, opt);
             }
-            catch (std::runtime_error &)
+            catch (std::runtime_error&)
             {
                 ec = std::make_error_code(std::errc::protocol_error);
             }
-            catch (std::bad_alloc &)
+            catch (std::bad_alloc&)
             {
                 ec = std::make_error_code(std::errc::not_enough_memory);
             }
@@ -605,7 +616,7 @@ namespace tyti
         @param ok output bool. true, if parser successed, false, if parser failed
         */
         template <typename OutputT, typename IterT>
-        OutputT read(IterT first, const IterT last, bool *ok, const Options &opt = Options{}) NOEXCEPT
+        OutputT read(IterT first, const IterT last, bool* ok, const Options& opt = Options{}) NOEXCEPT
         {
             std::error_code ec;
             auto r = read<OutputT>(first, last, ec, opt);
@@ -615,20 +626,20 @@ namespace tyti
         }
 
         template <typename IterT>
-        inline auto read(IterT first, const IterT last, bool *ok, const Options &opt = Options{}) NOEXCEPT -> basic_object<typename std::iterator_traits<IterT>::value_type>
+        inline auto read(IterT first, const IterT last, bool* ok, const Options& opt = Options{}) NOEXCEPT -> basic_object<typename std::iterator_traits<IterT>::value_type>
         {
             return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(first, last, ok, opt);
         }
 
         template <typename IterT>
-        inline auto read(IterT first, IterT last, std::error_code &ec, const Options &opt = Options{}) NOEXCEPT
+        inline auto read(IterT first, IterT last, std::error_code& ec, const Options& opt = Options{}) NOEXCEPT
             -> basic_object<typename std::iterator_traits<IterT>::value_type>
         {
             return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(first, last, ec, opt);
         }
 
         template <typename IterT>
-        inline auto read(IterT first, const IterT last, const Options &opt = Options{})
+        inline auto read(IterT first, const IterT last, const Options& opt = Options{})
             -> basic_object<typename std::iterator_traits<IterT>::value_type>
         {
             return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(first, last, opt);
@@ -638,7 +649,7 @@ namespace tyti
             throws "std::bad_alloc" if file buffer could not be allocated
         */
         template <typename OutputT, typename iStreamT>
-        OutputT read(iStreamT &inStream, std::error_code &ec, const Options &opt = Options{})
+        OutputT read(iStreamT& inStream, std::error_code& ec, const Options& opt = Options{})
         {
             // cache the file
             typedef typename iStreamT::char_type charT;
@@ -649,7 +660,7 @@ namespace tyti
         }
 
         template <typename iStreamT>
-        inline basic_object<typename iStreamT::char_type> read(iStreamT &inStream, std::error_code &ec, const Options &opt = Options{})
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream, std::error_code& ec, const Options& opt = Options{})
         {
             return read<basic_object<typename iStreamT::char_type>>(inStream, ec, opt);
         }
@@ -659,7 +670,7 @@ namespace tyti
             ok == false, if a parsing error occured
         */
         template <typename OutputT, typename iStreamT>
-        OutputT read(iStreamT &inStream, bool *ok, const Options &opt = Options{})
+        OutputT read(iStreamT& inStream, bool* ok, const Options& opt = Options{})
         {
             std::error_code ec;
             const auto r = read<OutputT>(inStream, ec, opt);
@@ -669,7 +680,7 @@ namespace tyti
         }
 
         template <typename iStreamT>
-        inline basic_object<typename iStreamT::char_type> read(iStreamT &inStream, bool *ok, const Options &opt = Options{})
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream, bool* ok, const Options& opt = Options{})
         {
             return read<basic_object<typename iStreamT::char_type>>(inStream, ok, opt);
         }
@@ -679,7 +690,7 @@ namespace tyti
             throws "std::runtime_error" if a parsing error occured
         */
         template <typename OutputT, typename iStreamT>
-        OutputT read(iStreamT &inStream, const Options &opt)
+        OutputT read(iStreamT& inStream, const Options& opt)
         {
 
             // cache the file
@@ -690,7 +701,7 @@ namespace tyti
         }
 
         template <typename iStreamT>
-        inline basic_object<typename iStreamT::char_type> read(iStreamT &inStream, const Options &opt = Options{})
+        inline basic_object<typename iStreamT::char_type> read(iStreamT& inStream, const Options& opt = Options{})
         {
             return read<basic_object<typename iStreamT::char_type>>(inStream, opt);
         }
