@@ -39,6 +39,7 @@ set (CMAKE_CXX_STANDARD 14)
 set(SRCS
  "main.cpp"
  "vdf_parser_test.cpp"
+ "catch.cpp"
  "../Readme.md")
 
 add_executable(tests "../vdf_parser.hpp" ${SRCS})
