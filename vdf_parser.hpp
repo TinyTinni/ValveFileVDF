@@ -541,6 +541,9 @@ namespace tyti
                         throw std::runtime_error{ "unexpected '}'" };
                     }
                 }
+                if (curObj != nullptr || !lvls.empty())
+                    throw std::runtime_error{ "object is not closed with '}'" };
+
                 return roots;
             }
 

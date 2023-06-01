@@ -9,19 +9,6 @@
 using namespace tyti;
 
 #include "catch.hpp"
-
-const std::string testdata_dir = SOURCE_DIR "/testdata/";
-
-#ifdef _WIN32
-#include <direct.h>
-#define cwd _getcwd
-#define cd _chdir
-#else
-#include "unistd.h"
-#define cwd getcwd
-#define cd chdir
-#endif
-
 template <typename charT>
 void check_DST_AST(const vdf::basic_object<charT>& obj)
 {
@@ -130,7 +117,6 @@ void read_check_DST_file_multikey_throw()
 
 TEST_CASE("Read File", "[read]")
 {
-    REQUIRE(cd(testdata_dir.c_str()) == 0);
     read_check_DST_file_ok<char>();
     read_check_DST_file_ok<wchar_t>();
     read_check_DST_file_ec<char>();
@@ -247,6 +233,12 @@ TEST_CASE("read broken file throw", "[read]")
 #ifdef WIN32
     CHECK_THROWS(read_broken_file_throw<wchar_t>());
 #endif
+}
+
+TEST_CASE("issue14", "[read]")
+{
+    std::ifstream input_file("issue14.vdf", std::ios::in);
+    CHECK_THROWS(tyti::vdf::read(input_file));
 }
 
 /////////////////////////////////////////////////////////////

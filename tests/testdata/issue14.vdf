@@ -1,0 +1,249 @@
+"InstallConfigStore"
+{
+"SDL_GamepadBind" "03000000de280000ff11000001000000,Steam Virtual Gamepad,a:b0,b:b1,back:b6,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b4,leftstick:b8,lefttrigger:+a2,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b9,righttrigger:-a2,rightx:a3,righty:a4,start:b7,x:b2,y:b3,platform:Windows\n03000000de280000ff11000000000000,Steam Virtual Gamepad,a:b0,b:b1,back:b6,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b4,leftstick:b8,lefttrigger:+a2,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b9,righttrigger:-a2,rightx:a3,righty:a4,start:b7,x:b2,y:b3,platform:Windows\n03000000de280000ff11000000007701,Steam Virtual Gamepad,a:b0,b:b1,x:b2,y:b3,back:b6,start:b7,leftstick:b8,rightstick:b9,leftshoulder:b4,rightshoulder:b5,dpup:b10,dpdown:b12,dpleft:b13,dpright:b11,leftx:a1,lefty:a0~,rightx:a3,righty:a2~,lefttrigger:a4,righttrigger:a5,"
+"Software"
+{
+"Valve"
+{
+"Steam"
+{
+"MTBF" "917051485"
+"AutoUpdateWindowEnabled" "0"
+"SurveyDateType" "3"
+"ipv6check_http_state" "bad"
+"RecentWebSocketNon443Failures" ""
+"ipv6check_udp_state" "bad"
+"RecentWebSocket443Failures" "1685436844,1685577986,1685578002,1685578049,1685578301"
+"RecentTCPFailures" ""
+"RecentUDPFailures" ""
+"CellIDServerOverride" "159"
+"SurveyDate" "2018-01-31"
+"cip" "02000000c3566e9d751d6cc90000b0e47803"
+"SurveyDateVersion" "3972811748885790880"
+"Rate" "10000"
+"RecentDownloadRate" "37459893"
+"Perf"
+{
+"GameProfiles"
+{
+"Global"
+{
+"0"
+{
+"0" ""
+}
+}
+"App"
+{
+"769"
+{
+"0"
+{
+"0" ""
+}
+}
+}
+}
+}
+"ConnectCache"
+{
+"3ff7c4de1" "02000000e5612ff4115500bebac017645b06a4ebb83298f6785562b389066712606bca0249a631118b1e2532426086a8dba72489fa63341526aa1606e2e9df214a06f9538817aaf57a553d22dd1638650dcc2ab62de0a60b10c3b04e8f774829194960cd1165ed8be5450da966830e49d840da6980da1a08615a0b9bfca43287460be4fecd37d3f4362ba675eb342fee5a341cb9b700113cb9c199e085a7ba9d3c3072e59f4f0700959fb31870637f54dba060916431a5b911d172c7f78464035e41761edc038218ab7ab07aac52d6fe1bea5f3decce506de9164d090d86c46452bfc947a714142afbad0add32be88ff800355d244d6794a173db5248c255b487f9f418ad21c42955e54a69a2c7d96cf39acef319cd862b67cc255967e5e7a9c978e99e3c64cebdb34dc12f1689f2d63a6f3a737100f521fd31b59c495e790f72d2148808bf2aeee5222af3f143e5410b5a17665e1b308bc3e86af4a0fb1d113c66cc44f625368255c5410104586fac9f3f2a4bf788526e48dfeb186b123b1500ff47f71bd798b3719c3917cecf7b4b6afac54960ca637ab78ff55009091b88891679c9476a9a98ee3461ef2ea1937bdacd4e45a62ec9067d820517925c1e4405375ad88a4b74c814368f498d24591fa87dfbc153ef84c0cfaf72dc8c3f243e7f6529e2f296dfd35839ecd0d427700b7f31fb3"
+}
+"ShaderCacheManager"
+{
+"CurrentBucketDriver" ""
+"CurrentBucketGPU" ""
+"HasCurrentBucket" "1"
+"EnableShaderBackgroundProcessing" "0"
+}
+"CMWebSocket"
+{
+"ext4-ord.steamserver.net:443"
+{
+"LastPingTimestamp" "1685578300"
+"LastLoadValue" "0"
+"LastPingValue" "100000"
+}
+"ext6-iad1.steamserver.net.:443"
+{
+"LastPingTimestamp" "0"
+}
+"ext2-ord.steamserver.net:27021"
+{
+"LastPingTimestamp" "1685578048"
+"LastPingValue" "100000"
+"LastLoadValue" "0"
+}
+"ext2-lax1.steamserver.net:443"
+{
+"LastPingTimestamp" "0"
+}
+"ext1-lax1.steamserver.net:443"
+{
+"LastPingTimestamp" "0"
+}
+"ext3-ord.steamserver.net:27021"
+{
+"LastPingTimestamp" "0"
+}
+"ext6-iad1.steamserver.net.:27021"
+{
+"LastPingTimestamp" "0"
+}
+"ext4-ord.steamserver.net:27021"
+{
+"LastPingTimestamp" "0"
+}
+"ext2-ord.steamserver.net:443"
+{
+"LastPingTimestamp" "0"
+}
+"ext1-ord.steamserver.net:443"
+{
+"LastPingTimestamp" "1685578002"
+"LastPingValue" "100000"
+"LastLoadValue" "0"
+}
+"ext2-lax1.steamserver.net:27021"
+{
+"LastPingTimestamp" "1685578301"
+"LastLoadValue" "25"
+"LastPingValue" "221"
+}
+"ext1-ord.steamserver.net:27021"
+{
+"LastPingTimestamp" "1685578300"
+"LastLoadValue" "0"
+"LastPingValue" "100000"
+}
+"ext1-lax1.steamserver.net:27021"
+{
+"LastPingTimestamp" "0"
+}
+"ext5-iad1.steamserver.net:27021"
+{
+"LastPingTimestamp" "1685578049"
+"LastLoadValue" "30"
+"LastPingValue" "307"
+}
+"ext5-iad1.steamserver.net:443"
+{
+"LastPingTimestamp" "0"
+}
+"ext3-ord.steamserver.net:443"
+{
+"LastPingTimestamp" "0"
+}
+}
+"Accounts"
+{
+"lixi442860990"
+{
+"SteamID" "76561198312248332"
+}
+}
+"depots"
+{
+"1426216"
+{
+"DecryptionKey" "e3bcedc8dde41929d61cf843016c562bda456120c67062bcf59fae4a11eb4b4f"
+}
+"1503452"
+{
+"DecryptionKey" "6219cf8e1233e7672147221b611f54e26c64541d48f653a3fd8c429fac86fa84"
+}
+"880941"
+{
+"DecryptionKey" "ce9aa368e895b19d481941c1bc33d93fa1b495f6046caeee282580a6eac1a99c"
+}
+"1426213"
+{
+"DecryptionKey" "f00c27168f613be65a380acbe6b2666daf9b554f4aa1183dfe34db8d972a7e22"
+}
+"1203221"
+{
+"DecryptionKey" "788b93ea9ea92552d334bdb7fa9caf5f21f98dded4a670c54926bf0a2bd1d74f"
+}
+"1426211"
+{
+"DecryptionKey" "c450c44e032e27d0308cf864259fb2af91bcfc58401a0caf33bb8efba85bb323"
+}
+"1426212"
+{
+"DecryptionKey" "99090c0728bfb9251f59c85c9f06484721d78edc05c8ae341ec5c9467a1f5a1d"
+}
+"1426214"
+{
+"DecryptionKey" "3ee79053f80ab473ad36bdd01364181fe32c56004ed1bc42571d745dd4b8a107"
+}
+"1426215"
+{
+"DecryptionKey" "eab052b3f590730d382a0d51d66cb4d410fc090cd2ca62cc11d16b63b0b2836b"
+}
+"1426217"
+{
+"DecryptionKey" "2cfd11044ff54f4000d4fa6678b2bf9f3ef01d938f1cb65f40e6302ee3ab2fa5"
+}
+"1426218"
+{
+"DecryptionKey" "eea43f33f312e1c8dd17ffe314b66a3973f90903055e1a6d67ed0fdbc9e645b3"
+}
+"1426219"
+{
+"DecryptionKey" "608b4e63ab758b67708f2d8dc51a102db4863b8072a41ca049d2df2b87f95163"
+}
+"1503450"
+{
+"DecryptionKey" "70395ff068a2b079a71aa86404c73c8eb4a0c7d0062e8ed224b0b816c99a3190"
+}
+"1503451"
+{
+"DecryptionKey" "213d830db33d439cfe41a1b95ace67a705a2ba3ebf969a43651054d36eeb578f"
+}
+"1503453"
+{
+"DecryptionKey" "ce7e4e2e59b4d9a610c74f070fc986a108f44ff1f59594b5fe19aa7997798479"
+}
+"228988"
+{
+"DecryptionKey" "1845444d5e2cfd0ae65ae4a8fedb6e2fbf776fcc5b913ab4ac461bc9a74f8358"
+}
+"228990"
+{
+"DecryptionKey" "44d8c45ce229a11c4f231a3d2a350eaf80b0d69a8af938ec7ccca720f694b0e8"
+}
+"1304931"
+{
+"DecryptionKey" "81611074b6fd0d2e108d34562aca73115d01d6bea3f08092b8d98aad42c2f0fb"
+}
+}
+}
+}
+}
+"Authentication"
+{
+"RememberedMachineID"
+{
+"3ff7c4de1" "eyAidHlwIjogIkpXVCIsICJhbGciOiAiRWREU0EiIH0.eyAiaXNzIjogInI6MEQyQV8yMjk2RTMxNV83NzFFMCIsICJzdWIiOiAiNzY1NjExOTgzMTIyNDgzMzIiLCAiYXVkIjogWyAibWFjaGluZSIgXSwgImV4cCI6IDE3MDM3NzE1NjQsICJuYmYiOiAxNjc2Nzk2ODgxLCAiaWF0IjogMTY4NTQzNjg4MSwgImp0aSI6ICIwRDMzXzIyOTZFMzE1XzM1NzkxIiwgIm9hdCI6IDE2ODU0MzY4ODEsICJydF9leHAiOiAxNzAzNzcwMTg1LCAicGVyIjogMCwgImlwX3N1YmplY3QiOiAiNTguMTcuNjEuODMiLCAiaXBfY29uZmlybWVyIjogIjU4LjE3LjYxLjgzIiB9.ga7z9QCw9t3PKBBdZzoil6UF-sFeNA-LvjziPEF-mdjxgRsFgo4AjtoAMeCg90PsdgTtXqsqToAl9LJpIyrcBw"
+}
+}
+"streaming"
+{
+"ClientID" "-2065686191053516812"
+}
+"Music"
+{
+"LocalLibrary"
+{
+"Directories"
+{
+"0" "02000000807c0fe9141d6db992de1003515788e69d14a3f66d574cb6822f6d085b70ea1f74833f19ab5d09380b2ac0e7d2ab00b3fe4f38163ab31c13ab8791111053cc44a010b3f7573b7313847f795bc4df98a1"
+"1" "02000000807c0fe9141d6db992de1003515788e39c1eb6f7507b089d822d61080f2af3532dd83f07aa4b0136575bc2e3dfb30490eb4826021ab31002ab85e7707c24da74a40a9feb66481661847f7153448d10e602e49d5c3997f57bc0330d59cc897b8f"
+}
+}
+}
+"WebStorage"
+{
+"DownloadsStoreRecentlyCompleted" "{"version":1,"data":[{"appid":228980,"total_bytes":123069936,"downloaded_bytes":123069936,"active":false,"paused":false,"completed":true,"deferred_time":0,"queue_index":-1,"update_result":0,"update_error":"","completed_time":1685578382,"buildid":11255752,"target_buildid":11255752,"launch_on_completion":false,"update_type_info":[{"has_update":true,"completed_update":true,"total_bytes":123069936,"downloaded_bytes":123069936},{"has_update":false,"completed_update":false,"total_bytes":0,"downloaded_bytes":0},{"has_update":false,"completed_update":false,"total_bytes":0,"downloaded_bytes":0}],"patch_notes_gid":""}]}"
+}
+}
