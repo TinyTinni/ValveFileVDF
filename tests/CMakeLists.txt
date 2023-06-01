@@ -42,7 +42,8 @@ set(SRCS
 
 add_executable(tests "../vdf_parser.hpp" ${SRCS})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests) #requires cmake 3.6
-add_definitions("-DSOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
+set_property(TARGET tests PROPERTY COMPILE_WARNING_AS_ERROR ON)
+add_definitions("-DSOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"" "-DCATCH_AMALGAMATED_CUSTOM_MAIN")
 
 if (BUILD_TESTING)
     add_test(NAME vdf_tests COMMAND tests)
