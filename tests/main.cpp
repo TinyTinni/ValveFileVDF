@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <iostream>
 
-constexpr char* testdata_dir = SOURCE_DIR "/testdata/";
+const char* testdata_dir = SOURCE_DIR "/testdata/";
 
 #ifdef _WIN32
 #include <direct.h>
