@@ -128,10 +128,10 @@ struct counter
 
 and then call the read function
 ```c++
-std::vector<counter> num = tyti::vdf::read<counter>(file);
+counter num = tyti::vdf::read<counter>(file);
 ```
 
-## Options (experimental)
+## Options
 
 You can configure the parser, the non default options are not well tested yet.
 
