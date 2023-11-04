@@ -352,6 +352,8 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                 // block comment, skip until next occurance of "*\"
                 iter = std::search(iter + 1, last, std::begin(comment_end_str),
                                    std::end(comment_end_str));
+                if (std::distance(iter,last) < 2)
+                    return last;
                 iter += 2;
             }
         }
@@ -511,6 +513,8 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
             auto conditional = conditional_fullfilled(curIter, last);
             if (!conditional)
                 continue;
+            if (curIter == last)
+                throw std::runtime_error{"key declared, but no value"};
 
             while (*curIter == TYTI_L(charT, '/'))
             {
