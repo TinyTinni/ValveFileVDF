@@ -3,3 +3,4 @@ project (vdf-Parser)
 
 include(CTest)
 add_subdirectory(./tests)
+add_subdirectory(fuzzing)
