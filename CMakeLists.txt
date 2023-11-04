@@ -6,8 +6,8 @@ add_subdirectory(./tests)
 
 ## add fuzzing, if supported
 
-set( ENABLE_FUZZING OFF)
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+set(ENABLE_FUZZING OFF)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC" AND NOT APPLE)
 	set(ENABLE_FUZZING ON)
 endif()
 
