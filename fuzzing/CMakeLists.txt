@@ -2,6 +2,7 @@ set(FUZZ_RUNTIME
     10
     CACHE STRING "Number of seconds to run fuzz tests during ctest run")
 
+set (CMAKE_CXX_STANDARD 17)
 add_executable(fuzzing main.cpp)
 target_link_libraries(fuzzing PRIVATE -coverage -fsanitize=fuzzer)
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
