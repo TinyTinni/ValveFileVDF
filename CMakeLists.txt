@@ -6,25 +6,11 @@ add_subdirectory(./tests)
 
 ## add fuzzing, if supported
 
-function(check_libfuzzer_support var_name)
-  set(LibFuzzerTestSource
-      "
-#include <cstdint>
+set( ENABLE_FUZZING OFF)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+	set(ENABLE_FUZZING ON)
+endif
 
-extern \"C\" int LLVMFuzzerTestOneInput(const std::uint8_t *data, std::size_t size) {
-  return 0;
-}
-    ")
-
-  include(CheckCXXSourceCompiles)
-
-  set(CMAKE_REQUIRED_FLAGS "-fsanitize=fuzzer")
-  set(CMAKE_REQUIRED_LINK_OPTIONS "-fsanitize=fuzzer")
-  check_cxx_source_compiles("${LibFuzzerTestSource}" ${var_name})
-
-endfunction()
-
-check_libfuzzer_support(ENABLE_FUZZING)
 if (${ENABLE_FUZZING})
     add_subdirectory(fuzzing)
 endif()
