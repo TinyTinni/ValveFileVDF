@@ -19,7 +19,7 @@ This header-only file provides a parser and writer to load and save the given da
 - C++11 
 
 ## Test Requirements
-- C++14 (uses [catch2](https://github.com/catchorg/Catch2))
+- C++17 (uses [catch2](https://github.com/catchorg/Catch2))
 
 (works with the C++11 features of vs120/"Visual Studio 2013" and newer)
  
