@@ -339,24 +339,27 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                                             const IterT &last) -> IterT
     {
         ++iter;
-        if (iter != last)
-        {
-            if (*iter == TYTI_L(charT, '/'))
-            {
-                // line comment, skip whole line
-                iter = std::find(iter + 1, last, TYTI_L(charT, '\n'));
-            }
+        if (iter == last)
+            return last;
 
-            if (*iter == '*')
-            {
-                // block comment, skip until next occurance of "*\"
-                iter = std::search(iter + 1, last, std::begin(comment_end_str),
-                                   std::end(comment_end_str));
-                if (std::distance(iter,last) < 2)
-                    return last;
-                iter += 2;
-            }
+        if (*iter == TYTI_L(charT, '/'))
+        {
+            // line comment, skip whole line
+            iter = std::find(iter + 1, last, TYTI_L(charT, '\n'));
+            if (iter == last)
+                return last;
         }
+
+        if (*iter == '*')
+        {
+            // block comment, skip until next occurance of "*\"
+            iter = std::search(iter + 1, last, std::begin(comment_end_str),
+                               std::end(comment_end_str));
+            if (std::distance(iter, last) <= 2)
+                return last;
+            iter += 2;
+        }
+
         return iter;
     };
 
@@ -482,9 +485,6 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
 
     while (curIter != last && *curIter != '\0')
     {
-        // auto fuzz_test = curIter != last;
-        // if (*curIter == '\0')
-        //     break;
         //  find first starting attrib/child, or ending
         curIter = skip_whitespaces(curIter, last);
         if (curIter == last || *curIter == '\0')
@@ -492,10 +492,11 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         if (*curIter == TYTI_L(charT, '/'))
         {
             curIter = skip_comments(curIter, last);
+            if (curIter == last || *curIter == '\0')
+                throw std::runtime_error("Unexpected eof");
         }
         else if (*curIter != TYTI_L(charT, '}'))
         {
-
             // get key
             const auto keyEnd = (*curIter == TYTI_L(charT, '\"'))
                                     ? end_quote(curIter, last)
@@ -530,7 +531,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
             if (*curIter != '{')
             {
                 if (curIter == last)
-                    throw std::runtime_error("idk");
+                    throw std::runtime_error{"key declared, but no value"};
                 const auto valueEnd = (*curIter == TYTI_L(charT, '\"'))
                                           ? end_quote(curIter, last)
                                           : end_word(curIter, last);
@@ -538,6 +539,8 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                     throw std::runtime_error("No closed word");
                 if (*curIter == TYTI_L(charT, '\"'))
                     ++curIter;
+                if (curIter == last)
+                    throw std::runtime_error("No closed word");
 
                 auto value = std::basic_string<charT>(curIter, valueEnd);
                 strip_escape_symbols(value);
