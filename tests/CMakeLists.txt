@@ -1,4 +1,4 @@
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 
 ##find_package(Catch2 QUIET)
 ##if (NOT TARGET Catch2::Catch)
@@ -44,6 +44,11 @@ add_executable(tests "../vdf_parser.hpp" ${SRCS})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests) #requires cmake 3.6
 set_property(TARGET tests PROPERTY COMPILE_WARNING_AS_ERROR ON)
 add_definitions("-DSOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"" "-DCATCH_AMALGAMATED_CUSTOM_MAIN")
+target_compile_definitions(tests PRIVATE "-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS")
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    target_link_libraries(tests PUBLIC -fsanitize=address,undefined)
+endif()
 
 if (BUILD_TESTING)
     add_test(NAME vdf_tests COMMAND tests)

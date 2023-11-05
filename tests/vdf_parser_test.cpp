@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -266,16 +268,16 @@ TEST_CASE("counter test", "[counter]")
 /////////////////////////////////////////////////////////////
 // fuzzer findings
 /////////////////////////////////////////////////////////////
-
-TEST_CASE("fuzzing_endless_loop", "[fuzzing]")
+TEST_CASE("fuzzing_files", "[fuzzing]")
 {
-    std::string test_corpus{u8R"(-�
-/
-{)"};
-    bool ok;
-    tyti::vdf::Options opt;
-    opt.ignore_includes = true;
-    auto result =
-        tyti::vdf::read(test_corpus.begin(), test_corpus.end(), &ok, opt);
-    CHECK_FALSE(ok);
+
+    for (auto const &dir_entry :
+         std::filesystem::directory_iterator{"fuzzing_data"})
+    {
+        SECTION(dir_entry.path().filename().string())
+        {
+            std::ifstream f(dir_entry.path().string());
+            CHECK_THROWS(tyti::vdf::read(f));
+        }
+    }
 }
