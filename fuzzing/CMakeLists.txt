@@ -13,4 +13,6 @@ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
     target_compile_definitions(fuzzing PRIVATE "-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS")
 endif()
 
-add_test(NAME fuzzing_run COMMAND fuzzing -max_total_time=${FUZZ_RUNTIME} -timeout=${FUZZ_RUNTIME}) 
+target_link_libraries(fuzzing PRIVATE ValveFileVDF)
+
+add_test(NAME fuzzing_run COMMAND fuzzing -max_total_time=${FUZZ_RUNTIME} -timeout=${FUZZ_RUNTIME})

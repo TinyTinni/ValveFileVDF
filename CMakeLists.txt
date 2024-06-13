@@ -1,6 +1,9 @@
 cmake_minimum_required (VERSION 3.6)
 project (vdf-Parser)
 
+add_library(ValveFileVDF INTERFACE)
+target_include_directories(ValveFileVDF INTERFACE "include")
+
 include(CTest)
 add_subdirectory(./tests)
 
