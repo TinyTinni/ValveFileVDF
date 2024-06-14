@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.6)
 project (vdf-Parser)
 
 add_library(ValveFileVDF INTERFACE)
+add_library(ValveFileVDF::ValveFileVDF ALIAS ValveFileVDF)
 target_include_directories(ValveFileVDF INTERFACE "include")
 
 include(CTest)
