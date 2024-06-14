@@ -3,7 +3,6 @@ project (vdf-Python)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-	
 find_package(Git REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
 
@@ -30,7 +29,7 @@ endif()
 
 add_subdirectory(${PYBIND11_PATH})
 pybind11_add_module(vdf "../vdf_parser.hpp;vdf_python_bindings.cpp;Readme.md")
-target_link_libraries(vdf PRIVATE Python::Python)
+target_link_libraries(vdf PRIVATE Python::Python ValveFileVDF)
 
 
 ## add tests

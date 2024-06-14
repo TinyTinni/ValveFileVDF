@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <string_view>
 
-#include "../vdf_parser.hpp"
+#include <vdf_parser.hpp>
 #include <iostream>
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)

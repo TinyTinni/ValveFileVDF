@@ -1,4 +1,4 @@
-#include "../vdf_parser.hpp"
+#include "vdf_parser.hpp"
 #include <fstream>
 #include <string>
 
