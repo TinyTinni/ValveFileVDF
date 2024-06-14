@@ -44,7 +44,7 @@ add_executable(tests ${SRCS})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests) #requires cmake 3.6
 set_property(TARGET tests PROPERTY COMPILE_WARNING_AS_ERROR ON)
 add_definitions("-DSOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"" "-DCATCH_AMALGAMATED_CUSTOM_MAIN")
-target_compile_definitions(tests PRIVATE "-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS")
+target_compile_definitions(tests PRIVATE "-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS" "-D_LIBCPP_DISABLE_DEPRECATION_WARNINGS")
 target_link_libraries(tests PRIVATE ValveFileVDF)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
