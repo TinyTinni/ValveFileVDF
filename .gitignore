@@ -1,4 +1,6 @@
-build/
 .vs/
 .vscode/
+install/
+build/
 out/
+Testing/
