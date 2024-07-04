@@ -64,7 +64,10 @@ install(FILES
 
 ###################################
 # Tests
-include(CTest)
+if (${VALVEFILEVDF_ENABLE_TESTING} OR ${VALVEFILEVDF_ENABLE_FUZZING})
+    include(CTest)
+endif()
+
 if (${VALVEFILEVDF_ENABLE_TESTING})
     add_subdirectory(./tests)
 endif()
