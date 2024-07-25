@@ -38,7 +38,7 @@
 #include <system_error>
 
 // for wstring support
-#include <locale>
+#include <cwchar>
 #include <string>
 
 // internal
@@ -105,24 +105,15 @@ template <> struct literal_macro_help<wchar_t>
 
 inline std::string string_converter(const std::string &w) NOEXCEPT { return w; }
 
-// utility wrapper to adapt locale-bound facets for wstring/wbuffer convert
-// from cppreference
-template <class Facet> struct deletable_facet : Facet
+inline std::string string_converter(const std::wstring &w) NOEXCEPT
 {
-    template <class... Args>
-    deletable_facet(Args &&...args) : Facet(std::forward<Args>(args)...)
-    {
-    }
-    ~deletable_facet() {}
-};
-
-inline std::string
-string_converter(const std::wstring &w) // todo: use us-locale
-{
-    std::wstring_convert<
-        deletable_facet<std::codecvt<wchar_t, char, std::mbstate_t>>>
-        conv1;
-    return conv1.to_bytes(w);
+    std::mbstate_t state = std::mbstate_t();
+    auto wstr = w.data();
+    std::size_t len = 1 + std::wcsrtombs(nullptr, &wstr, 0, &state);
+    std::string mbstr(len, '\0');
+    // unsafe: ignores any error handling
+    std::wcsrtombs(&mbstr[0], &wstr, mbstr.size(), &state);
+    return mbstr;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -717,7 +708,7 @@ OutputT read(IterT first, const IterT last, bool *ok,
 template <typename IterT>
 inline auto read(IterT first, const IterT last, bool *ok,
                  const Options &opt = Options{}) NOEXCEPT
-    ->basic_object<typename std::iterator_traits<IterT>::value_type>
+    -> basic_object<typename std::iterator_traits<IterT>::value_type>
 {
     return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(
         first, last, ok, opt);
@@ -726,7 +717,7 @@ inline auto read(IterT first, const IterT last, bool *ok,
 template <typename IterT>
 inline auto read(IterT first, IterT last, std::error_code &ec,
                  const Options &opt = Options{}) NOEXCEPT
-    ->basic_object<typename std::iterator_traits<IterT>::value_type>
+    -> basic_object<typename std::iterator_traits<IterT>::value_type>
 {
     return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(
         first, last, ec, opt);
