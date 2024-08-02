@@ -109,10 +109,18 @@ inline std::string string_converter(const std::wstring &w) NOEXCEPT
 {
     std::mbstate_t state = std::mbstate_t();
     auto wstr = w.data();
+// unsafe: ignores any error handling
+// and disables warning that wcsrtombs_s should be used
+#ifdef WIN32
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
     std::size_t len = 1 + std::wcsrtombs(nullptr, &wstr, 0, &state);
     std::string mbstr(len, '\0');
-    // unsafe: ignores any error handling
     std::wcsrtombs(&mbstr[0], &wstr, mbstr.size(), &state);
+#ifdef WIN32
+#pragma warning(pop)
+#endif
     return mbstr;
 }
 
@@ -502,8 +510,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
 
             curIter = skip_whitespaces(curIter, last);
 
-            auto conditional = conditional_fullfilled(curIter, last);
-            if (!conditional)
+            if (!conditional_fullfilled(curIter, last))
                 continue;
             if (curIter == last)
                 throw std::runtime_error{"key declared, but no value"};
@@ -538,8 +545,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                 curIter =
                     valueEnd + ((*valueEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
-                auto conditional = conditional_fullfilled(curIter, last);
-                if (!conditional)
+                if (!conditional_fullfilled(curIter, last))
                     continue;
 
                 // process value
