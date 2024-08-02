@@ -1,4 +1,5 @@
-#include "catch.hpp"
+#define DOCTEST_CONFIG_IMPLEMENT
+#include "doctest.h"
 #include <iostream>
 
 const char *testdata_dir = SOURCE_DIR "/testdata/";
@@ -16,6 +17,9 @@ const char *testdata_dir = SOURCE_DIR "/testdata/";
 int main(int argc, char *argv[])
 {
 
+    doctest::Context context;
+    context.applyCommandLine(argc, argv);
+
     if (cd(testdata_dir) != 0)
     {
         std::cerr << "Cannot set working directory to " << testdata_dir
@@ -23,7 +27,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int result = Catch::Session().run(argc, argv);
+    int result = context.run();
 
     // your clean-up...
 
