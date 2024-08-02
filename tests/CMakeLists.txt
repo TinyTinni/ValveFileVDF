@@ -11,6 +11,12 @@ add_definitions("-DSOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 target_compile_features(tests PUBLIC cxx_std_17)
 target_link_libraries(tests PRIVATE ValveFileVDF)
 
+target_compile_options(tests PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+          -Wall>
+     $<$<CXX_COMPILER_ID:MSVC>:
+          /W4>)
+
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     target_link_libraries(tests PUBLIC -fsanitize=address,undefined)
 endif()
