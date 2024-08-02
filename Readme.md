@@ -21,7 +21,7 @@ This header-only file provides a parser and writer to load and save the given da
 (works with the C++11 features of vs120/"Visual Studio 2013" and newer)
 
 ## Test Requirements
-- C++17 (uses [doctest]([https://github.com/catchorg/Catch2](https://github.com/doctest/doctest)))
+- C++17 (uses [doctest](https://github.com/doctest/doctest))
  
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
