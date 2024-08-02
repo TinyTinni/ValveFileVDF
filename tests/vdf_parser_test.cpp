@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -10,7 +9,8 @@
 #define T_L(x) TYTI_L(charT, x)
 using namespace tyti;
 
-#include "catch.hpp"
+#include "doctest.h"
+
 template <typename charT>
 void check_DST_AST(const vdf::basic_object<charT> &obj)
 {
@@ -77,59 +77,43 @@ void check_DST_AST_multikey(const vdf::basic_multikey_object<charT> &obj)
           T_L("yay"));
 }
 
-template <typename charT> void read_check_DST_file_ok()
+TEST_CASE_TEMPLATE("Read File", charT, char, wchar_t)
 {
-    std::basic_ifstream<charT> file("DST_Manifest.acf");
-    bool ok;
-    auto objects = vdf::read(file, &ok);
+    SUBCASE("bool return")
+    {
+        std::basic_ifstream<charT> file("DST_Manifest.acf");
+        bool ok;
+        auto objects = vdf::read(file, &ok);
 
-    REQUIRE(ok);
-    auto it = objects.childs.find(T_L("AppState"));
-    CHECK(it != objects.childs.end());
-    check_DST_AST(*(it->second));
+        REQUIRE(ok);
+        auto it = objects.childs.find(T_L("AppState"));
+        CHECK(it != objects.childs.end());
+        check_DST_AST(*(it->second));
+    }
+
+    SUBCASE("ec return")
+    {
+        std::basic_ifstream<charT> file("DST_Manifest.acf");
+        std::error_code ec;
+        auto objects = vdf::read(file, ec);
+
+        REQUIRE(!ec);
+        auto it = objects.childs.find(T_L("AppState"));
+        CHECK(it != objects.childs.end());
+        check_DST_AST(*(it->second));
+    }
+
+    SUBCASE("exception")
+    {
+        std::basic_ifstream<charT> file("DST_Manifest.acf");
+        auto objects = vdf::read(file);
+        auto it = objects.childs.find(T_L("AppState"));
+        CHECK(it != objects.childs.end());
+        check_DST_AST(*(it->second));
+    }
 }
 
-template <typename charT> void read_check_DST_file_ec()
-{
-    std::basic_ifstream<charT> file("DST_Manifest.acf");
-    std::error_code ec;
-    auto objects = vdf::read(file, ec);
-
-    REQUIRE(!ec);
-    auto it = objects.childs.find(T_L("AppState"));
-    CHECK(it != objects.childs.end());
-    check_DST_AST(*(it->second));
-}
-
-template <typename charT> void read_check_DST_file_throw()
-{
-    std::basic_ifstream<charT> file("DST_Manifest.acf");
-    auto objects = vdf::read(file);
-    auto it = objects.childs.find(T_L("AppState"));
-    CHECK(it != objects.childs.end());
-    check_DST_AST(*(it->second));
-}
-
-template <typename charT> void read_check_DST_file_multikey_throw()
-{
-    std::basic_ifstream<charT> file("DST_Manifest.acf");
-    auto objects = vdf::read<vdf::basic_multikey_object<charT>>(file);
-    auto it = objects.childs.find(T_L("AppState"));
-    CHECK(it != objects.childs.end());
-    check_DST_AST_multikey(*(it->second));
-}
-
-TEST_CASE("Read File", "[read]")
-{
-    read_check_DST_file_ok<char>();
-    read_check_DST_file_ok<wchar_t>();
-    read_check_DST_file_ec<char>();
-    read_check_DST_file_ec<wchar_t>();
-    read_check_DST_file_throw<char>();
-    read_check_DST_file_throw<wchar_t>();
-}
-
-template <typename charT> void read_string()
+TEST_CASE_TEMPLATE("Read String", charT, char, wchar_t)
 {
     std::basic_string<charT> attribs(
         T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}"));
@@ -139,8 +123,30 @@ template <typename charT> void read_string()
     REQUIRE(ok);
 }
 
-template <typename charT> void check_string(const vdf::basic_object<charT> &obj)
+// todo: error checking
+TEST_CASE_TEMPLATE("Find Error", charT, char, wchar_t)
 {
+    bool ok;
+    std::basic_string<charT> attribs(
+        T_L("\"firstNode\"{\"SecondNode\"{\"Key\" //myComment\n}}"));
+    vdf::read(attribs.begin(), attribs.end(), &ok);
+
+    REQUIRE(!ok);
+}
+
+TEST_CASE_TEMPLATE("Write and Read", charT, char, wchar_t)
+{
+    std::basic_string<charT> attribs(
+        T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}"));
+    bool ok;
+    auto obj = vdf::read(attribs.begin(), attribs.end(), &ok);
+
+    REQUIRE(ok);
+
+    std::basic_stringstream<charT> output;
+    vdf::write(output, obj);
+    obj = vdf::read(output);
+
     CHECK(obj.name == T_L("firstNode"));
 
     CHECK(obj.attribs.empty() == true);
@@ -153,58 +159,21 @@ template <typename charT> void check_string(const vdf::basic_object<charT> &obj)
     CHECK(secondNode->attribs.at(T_L("Key")) == T_L("Value"));
 }
 
-TEST_CASE("Read String", "[read]")
+TEST_CASE_TEMPLATE("read multikey", charT, char, wchar_t)
 {
-    read_string<char>();
-    read_string<wchar_t>();
+    std::basic_ifstream<charT> file("DST_Manifest.acf");
+    auto objects = vdf::read<vdf::basic_multikey_object<charT>>(file);
+    auto it = objects.childs.find(T_L("AppState"));
+    CHECK(it != objects.childs.end());
+    check_DST_AST_multikey(*(it->second));
 }
 
-template <typename charT> void check_fail()
+TEST_CASE_TEMPLATE("read broken file", charT, char, wchar_t)
 {
-    bool ok;
-    std::basic_string<charT> attribs(
-        T_L("\"firstNode\"{\"SecondNode\"{\"Key\" //myComment\n}}"));
-    vdf::read(attribs.begin(), attribs.end(), &ok);
-
-    REQUIRE(!ok);
-}
-// todo: error checking
-TEST_CASE("Find Error", "[read_error]")
-{
-    check_fail<char>();
-    check_fail<wchar_t>();
-}
-
-template <typename charT> void write_and_read()
-{
-    std::basic_string<charT> attribs(
-        T_L("\"firstNode\"{\"SecondNode\"{\"Key\" \"Value\" //myComment\n}}"));
-    bool ok;
-    auto objs = vdf::read(attribs.begin(), attribs.end(), &ok);
-
-    REQUIRE(ok);
-
-    std::basic_stringstream<charT> output;
-    vdf::write(output, objs);
-    objs = vdf::read(output);
-
-    check_string(objs);
-}
-
-TEST_CASE("Write and Read", "[read_write]")
-{
-    write_and_read<char>();
-    write_and_read<wchar_t>();
-}
-
-TEST_CASE("read multikey", "[read]")
-{
-    read_check_DST_file_multikey_throw<char>();
-    read_check_DST_file_multikey_throw<wchar_t>();
-}
-
-template <typename charT> void read_broken_file()
-{
+#ifndef WIN32
+    if constexpr (std::is_same_v<charT, wchar_t>)
+        return;
+#endif
     std::basic_ifstream<charT> file("broken_file.acf");
     std::error_code ec;
     auto objects = vdf::read(file, ec);
@@ -214,29 +183,17 @@ template <typename charT> void read_broken_file()
     REQUIRE(objects.childs.empty());
 }
 
-template <typename charT> void read_broken_file_throw()
+TEST_CASE_TEMPLATE("read broken file throw", charT, char, wchar_t)
 {
+#ifndef WIN32
+    if constexpr (std::is_same_v<charT, wchar_t>)
+        return;
+#endif
     std::basic_ifstream<charT> file("broken_file.acf");
-    auto objects = vdf::read(file);
+    CHECK_THROWS(vdf::read(file));
 }
 
-TEST_CASE("read broken file", "[read]")
-{
-    read_broken_file<char>();
-#ifdef WIN32
-    read_broken_file<wchar_t>();
-#endif
-}
-
-TEST_CASE("read broken file throw", "[read]")
-{
-    CHECK_THROWS(read_broken_file_throw<char>());
-#ifdef WIN32
-    CHECK_THROWS(read_broken_file_throw<wchar_t>());
-#endif
-}
-
-TEST_CASE("issue14", "[read]")
+TEST_CASE("issue14")
 {
     std::ifstream input_file("issue14.vdf", std::ios::in);
     CHECK_THROWS(tyti::vdf::read(input_file));
@@ -246,20 +203,23 @@ TEST_CASE("issue14", "[read]")
 // readme test
 /////////////////////////////////////////////////////////////
 
-struct counter
+TEST_CASE("counter test")
 {
-    size_t num_attributes;
-    counter() : num_attributes(0) {}
-    void add_attribute(std::string key, std::string value) { ++num_attributes; }
-    void add_child(std::unique_ptr<counter> child)
+    struct counter
     {
-        num_attributes += child->num_attributes;
-    }
-    void set_name(std::string n) {}
-};
+        size_t num_attributes;
+        counter() : num_attributes(0) {}
+        void add_attribute(std::string key, std::string value)
+        {
+            ++num_attributes;
+        }
+        void add_child(std::unique_ptr<counter> child)
+        {
+            num_attributes += child->num_attributes;
+        }
+        void set_name(std::string n) {}
+    };
 
-TEST_CASE("counter test", "[counter]")
-{
     std::ifstream file("DST_Manifest.acf");
     counter num = tyti::vdf::read<counter>(file);
     CHECK(num.num_attributes == 29);
@@ -268,13 +228,13 @@ TEST_CASE("counter test", "[counter]")
 /////////////////////////////////////////////////////////////
 // fuzzer findings
 /////////////////////////////////////////////////////////////
-TEST_CASE("fuzzing_files", "[fuzzing]")
+TEST_CASE("fuzzing_files")
 {
 
     for (auto const &dir_entry :
          std::filesystem::directory_iterator{"fuzzing_data"})
     {
-        SECTION(dir_entry.path().filename().string())
+        SUBCASE(dir_entry.path().filename().string().c_str())
         {
             std::ifstream f(dir_entry.path().string());
             CHECK_THROWS(tyti::vdf::read(f));
