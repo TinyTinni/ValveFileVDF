@@ -82,7 +82,7 @@ template <typename T> struct literal_macro_help
     {
         return c;
     }
-    static CONSTEXPR const char result(const char c, const wchar_t) NOEXCEPT
+    static CONSTEXPR char result(const char c, const wchar_t) NOEXCEPT
     {
         return c;
     }
@@ -95,7 +95,7 @@ template <> struct literal_macro_help<wchar_t>
     {
         return wc;
     }
-    static CONSTEXPR const wchar_t result(const char, const wchar_t wc) NOEXCEPT
+    static CONSTEXPR wchar_t result(const char, const wchar_t wc) NOEXCEPT
     {
         return wc;
     }
@@ -258,7 +258,7 @@ std::basic_string<typename iStreamT::char_type> read_file(iStreamT &inStream)
         return str;
 
     inStream.seekg(0, std::ios::beg);
-    inStream.read(&str[0], str.size());
+    inStream.read(&str[0], static_cast<std::streamsize>(str.size()));
     return str;
 }
 

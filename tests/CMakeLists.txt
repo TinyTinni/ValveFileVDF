@@ -13,7 +13,7 @@ target_link_libraries(tests PRIVATE ValveFileVDF)
 
 target_compile_options(tests PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-          -Wall>
+          -Wall -Wextra -Wconversion -pedantic-errors -Wsign-conversion>
      $<$<CXX_COMPILER_ID:MSVC>:
           /W4>)
 

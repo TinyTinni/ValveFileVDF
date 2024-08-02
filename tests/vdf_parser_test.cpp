@@ -209,15 +209,12 @@ TEST_CASE("counter test")
     {
         size_t num_attributes;
         counter() : num_attributes(0) {}
-        void add_attribute(std::string key, std::string value)
-        {
-            ++num_attributes;
-        }
+        void add_attribute(std::string, std::string) { ++num_attributes; }
         void add_child(std::unique_ptr<counter> child)
         {
             num_attributes += child->num_attributes;
         }
-        void set_name(std::string n) {}
+        void set_name(std::string) {}
     };
 
     std::ifstream file("DST_Manifest.acf");
