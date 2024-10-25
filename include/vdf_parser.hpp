@@ -150,6 +150,22 @@ oStreamT &operator<<(oStreamT &s, const tabs<typename oStreamT::char_type> t)
     s << t.print();
     return s;
 }
+
+template <typename charT>
+std::basic_string<charT> escape(std::basic_string<charT> in)
+{
+    // std::replace_if(in.begin(), end.begin(), [](const charT))
+    for (size_t i = 0; i < in.size(); ++i)
+    {
+        if (in[i] == TYTI_L(charT, '\"') || in[i] == TYTI_L(charT, '\\'))
+        {
+            in.insert(i, TYTI_L(charT, "\\"));
+            ++i;
+        }
+    }
+    return in;
+}
+
 } // end namespace detail
 
 ///////////////////////////////////////////////////////////////////////////
@@ -241,11 +257,12 @@ void write(oStreamT &s, const T &r,
 {
     typedef typename oStreamT::char_type charT;
     using namespace detail;
-    s << tab << TYTI_L(charT, '"') << r.name << TYTI_L(charT, "\"\n") << tab
-      << TYTI_L(charT, "{\n");
+    s << tab << TYTI_L(charT, '"') << escape(r.name) << TYTI_L(charT, "\"\n")
+      << tab << TYTI_L(charT, "{\n");
     for (const auto &i : r.attribs)
-        s << tab + 1 << TYTI_L(charT, '"') << i.first
-          << TYTI_L(charT, "\"\t\t\"") << i.second << TYTI_L(charT, "\"\n");
+        s << tab + 1 << TYTI_L(charT, '"') << escape(i.first)
+          << TYTI_L(charT, "\"\t\t\"") << escape(i.second)
+          << TYTI_L(charT, "\"\n");
     for (const auto &i : r.childs)
         if (i.second)
             write(s, *i.second, tab + 1);
@@ -433,7 +450,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         while (p != s.npos)
         {
             s.replace(p, 2, TYTI_L(charT, "\""));
-            p = quote_searcher(p);
+            p = quote_searcher(p + 1);
         }
         auto searcher = [&s](size_t pos)
         { return s.find(TYTI_L(charT, "\\\\"), pos); };
@@ -441,7 +458,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         while (p != s.npos)
         {
             s.replace(p, 2, TYTI_L(charT, "\\"));
-            p = searcher(p);
+            p = searcher(p + 1);
         }
     };
 
@@ -714,7 +731,7 @@ OutputT read(IterT first, const IterT last, bool *ok,
 template <typename IterT>
 inline auto read(IterT first, const IterT last, bool *ok,
                  const Options &opt = Options{}) NOEXCEPT
-    -> basic_object<typename std::iterator_traits<IterT>::value_type>
+    ->basic_object<typename std::iterator_traits<IterT>::value_type>
 {
     return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(
         first, last, ok, opt);
@@ -723,7 +740,7 @@ inline auto read(IterT first, const IterT last, bool *ok,
 template <typename IterT>
 inline auto read(IterT first, IterT last, std::error_code &ec,
                  const Options &opt = Options{}) NOEXCEPT
-    -> basic_object<typename std::iterator_traits<IterT>::value_type>
+    ->basic_object<typename std::iterator_traits<IterT>::value_type>
 {
     return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(
         first, last, ec, opt);

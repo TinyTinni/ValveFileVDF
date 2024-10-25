@@ -21,6 +21,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     target_link_libraries(tests PUBLIC -fsanitize=address,undefined)
 endif()
 
-if (BUILD_TESTING)
-    add_test(NAME vdf_tests COMMAND tests)
-endif()
+
+add_test(NAME vdf_tests COMMAND tests)
+
+add_subdirectory(proptests)
+
