@@ -22,9 +22,20 @@ bool operator==(const tyti::vdf::object &rhs, const tyti::vdf::object &lhs)
         auto itr = lhs.childs.find(k);
         if (itr == lhs.childs.end())
             return false;
+
+#ifdef _MSC_VER
+// suppress warning about recursive call of operator==. This is here
+// by intention
+#pragma warning(disable : 5232)
+#endif
         if (itr->second != v)
+        {
             if (itr->second == nullptr || v == nullptr || *(itr->second) != *v)
                 return false;
+        }
+#ifdef _MSC_VER
+#pragma warning(default : 5232)
+#endif
     }
 
     return true;
