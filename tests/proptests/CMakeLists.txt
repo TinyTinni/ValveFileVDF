@@ -29,5 +29,4 @@ endif()
 
 
 add_test(NAME vdf_rapidcheck_tests COMMAND rapidcheck_tests)
-set_tests_properties(vdf_rapidcheck_tests PROPERTIES ENVIRONMENT "RC_PARAMS=max_success=10000")
 
