@@ -86,13 +86,16 @@ template <> struct Arbitrary<tyti::vdf::object>
 
 int main()
 {
+    ////////////////////////////////////////////////////////////////
+    // object parsing tests
+
     using namespace tyti;
     rc::check("serializing and then parsing just the name with default options "
               "should return the original name",
-              [](std::string n)
+              []()
               {
                   vdf::object obj;
-                  obj.name = n;
+                  obj.name = *rc::gen::string<std::string>();
 
                   std::stringstream sstr;
                   vdf::write(sstr, obj);
@@ -129,6 +132,9 @@ int main()
                   auto to_test = tyti::vdf::read(sstr);
                   RC_ASSERT(in == to_test);
               });
+
+    ////////////////////////////////////////////////////////////////
+    // comments parsing tests
 
     rc::check("single line comment should not cause any errors",
               []()

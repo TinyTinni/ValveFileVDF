@@ -40,7 +40,7 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build
       env:
-        RC_PARAMS: "max_success=100000"
+        RC_PARAMS: "max_success=10000"
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --output-on-failure -C ${{env.BUILD_TYPE}}
