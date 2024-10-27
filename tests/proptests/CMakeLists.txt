@@ -4,7 +4,7 @@ CPMAddPackage(NAME rapidcheck
     GITHUB_REPOSITORY "emil-e/rapidcheck"
     GIT_TAG "ff6af6fc683159deb51c543b065eba14dfcf329b"
     OPTIONS
-    "RC_ENABLE_DOCTEST ON"
+    "RC_ENABLE_DOCTEST OFF"
     "CATCH_BUILD_TESTING OFF"
     "CATCH_INSTALL_DOCS OFF"
 )
