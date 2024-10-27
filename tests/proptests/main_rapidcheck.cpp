@@ -104,6 +104,20 @@ int main()
                   RC_ASSERT(obj.name == to_test.name);
               });
 
+    rc::check("serializing and then parsing just the name with default options "
+              "should return the original name - wchar_t",
+              []()
+              {
+                  vdf::wobject obj;
+                  obj.name = *rc::gen::string<std::wstring>();
+
+                  std::wstringstream sstr;
+                  vdf::write(sstr, obj);
+
+                  auto to_test = vdf::read(sstr);
+                  RC_ASSERT(obj.name == to_test.name);
+              });
+
     rc::check("check if the attributes are also written and parsed correctly",
               [](const vdf::object &in)
               {
