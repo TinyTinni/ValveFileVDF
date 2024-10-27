@@ -87,8 +87,8 @@ template <> struct Arbitrary<tyti::vdf::object>
 int main()
 {
     using namespace tyti;
-    rc::check("serializing and then parsing with default options should yield "
-              "original name",
+    rc::check("serializing and then parsing just the name with default options "
+              "should return the original name",
               [](std::string n)
               {
                   vdf::object obj;

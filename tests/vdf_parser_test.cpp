@@ -207,11 +207,14 @@ TEST_CASE("issue14")
 TEST_CASE_TEMPLATE("Write escaped", charT, char, wchar_t)
 {
     std::vector<std::basic_string<charT>> data = {
-        TYTI_L(charT, "\""), TYTI_L(charT, "\\"), TYTI_L(charT, "\\\\"),
-        TYTI_L(charT, "\\\\\\"), TYTI_L(charT, "\"\\\"")};
+        TYTI_L(charT, "\""),        TYTI_L(charT, "\\"),
+        TYTI_L(charT, "\\\\"),      TYTI_L(charT, "\\\\\\"),
+        TYTI_L(charT, "\"\\\""),    TYTI_L(charT, "\\\""),
+        TYTI_L(charT, "\\\\\"\\\\")};
     for (const auto &datapoint : data)
     {
         CAPTURE(datapoint);
+
         vdf::basic_object<charT> obj;
         obj.name = datapoint;
 
