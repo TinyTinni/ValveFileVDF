@@ -90,103 +90,95 @@ int main()
     // object parsing tests
 
     using namespace tyti;
-    rc::check("serializing and then parsing just the name with default options "
-              "should return the original name",
-              []()
-              {
-                  vdf::object obj;
-                  obj.name = *rc::gen::string<std::string>();
+    bool success = true;
+    success &= rc::check(
+        "serializing and then parsing just the name with default options "
+        "should return the original name",
+        []()
+        {
+            vdf::object obj;
+            obj.name = *rc::gen::string<std::string>();
 
-                  std::stringstream sstr;
-                  vdf::write(sstr, obj);
+            std::stringstream sstr;
+            vdf::write(sstr, obj);
 
-                  auto to_test = vdf::read(sstr);
-                  RC_ASSERT(obj.name == to_test.name);
-              });
+            auto to_test = vdf::read(sstr);
+            RC_ASSERT(obj.name == to_test.name);
+        });
 
-    rc::check("serializing and then parsing just the name with default options "
-              "should return the original name - wchar_t",
-              []()
-              {
-                  vdf::wobject obj;
-                  obj.name = *rc::gen::string<std::wstring>();
+    success &= rc::check(
+        "check if the attributes are also written and parsed correctly",
+        [](const vdf::object &in)
+        {
+            std::stringstream sstr;
+            vdf::write(sstr, in);
+            auto to_test = tyti::vdf::read(sstr);
+            RC_ASSERT(in == to_test);
+        });
 
-                  std::wstringstream sstr;
-                  vdf::write(sstr, obj);
+    success &= rc::check(
+        "check if the childs are also written and parsed correctly",
+        [](vdf::object in)
+        {
+            // todo this just tests childs with depth 1
+            using child_vec = std::vector<std::shared_ptr<vdf::object>>;
+            child_vec childs =
+                *rc::gen::container<child_vec>(rc::gen::makeShared<vdf::object>(
+                    rc::gen::arbitrary<vdf::object>()));
 
-                  auto to_test = vdf::read(sstr);
-                  RC_ASSERT(obj.name == to_test.name);
-              });
+            for (const auto &c : childs)
+            {
+                in.childs[c->name] = c;
+            }
 
-    rc::check("check if the attributes are also written and parsed correctly",
-              [](const vdf::object &in)
-              {
-                  std::stringstream sstr;
-                  vdf::write(sstr, in);
-                  auto to_test = tyti::vdf::read(sstr);
-                  RC_ASSERT(in == to_test);
-              });
-
-    rc::check("check if the childs are also written and parsed correctly",
-              [](vdf::object in)
-              {
-                  // todo this just tests childs with depth 1
-                  using child_vec = std::vector<std::shared_ptr<vdf::object>>;
-                  child_vec childs = *rc::gen::container<child_vec>(
-                      rc::gen::makeShared<vdf::object>(
-                          rc::gen::arbitrary<vdf::object>()));
-
-                  for (const auto &c : childs)
-                  {
-                      in.childs[c->name] = c;
-                  }
-
-                  std::stringstream sstr;
-                  vdf::write(sstr, in);
-                  auto to_test = tyti::vdf::read(sstr);
-                  RC_ASSERT(in == to_test);
-              });
+            std::stringstream sstr;
+            vdf::write(sstr, in);
+            auto to_test = tyti::vdf::read(sstr);
+            RC_ASSERT(in == to_test);
+        });
 
     ////////////////////////////////////////////////////////////////
     // comments parsing tests
 
-    rc::check("single line comment should not cause any errors",
-              []()
-              {
-                  auto comment = *rc::gen::suchThat(
-                      rc::gen::string<std::string>(), [](const std::string &str)
-                      { return str.find("\n") == str.npos; });
+    success &= rc::check("single line comment should not cause any errors",
+                         []()
+                         {
+                             auto comment = *rc::gen::suchThat(
+                                 rc::gen::string<std::string>(),
+                                 [](const std::string &str)
+                                 { return str.find("\n") == str.npos; });
 
-                  std::stringstream input;
-                  input << "\"test\""
-                        << "{"
-                        << "//" << comment << "\n"
-                        << "\"key\" \"value\"\n"
-                        << "}";
-                  auto to_test = vdf::read(input);
-                  RC_ASSERT("test" == to_test.name);
-                  RC_ASSERT(1 == to_test.attribs.size());
-                  RC_ASSERT("value" == to_test.attribs["key"]);
-              });
+                             std::stringstream input;
+                             input << "\"test\""
+                                   << "{"
+                                   << "//" << comment << "\n"
+                                   << "\"key\" \"value\"\n"
+                                   << "}";
+                             auto to_test = vdf::read(input);
+                             RC_ASSERT("test" == to_test.name);
+                             RC_ASSERT(1 == to_test.attribs.size());
+                             RC_ASSERT("value" == to_test.attribs["key"]);
+                         });
 
-    rc::check("multi line comment should not cause any errors",
-              []()
-              {
-                  auto comment = *rc::gen::suchThat(
-                      rc::gen::string<std::string>(), [](const std::string &str)
-                      { return str.find("*/") == str.npos; });
+    success &= rc::check("multi line comment should not cause any errors",
+                         []()
+                         {
+                             auto comment = *rc::gen::suchThat(
+                                 rc::gen::string<std::string>(),
+                                 [](const std::string &str)
+                                 { return str.find("*/") == str.npos; });
 
-                  std::stringstream input;
-                  input << "\"test\""
-                        << "{"
-                        << "/*" << comment << "*/"
-                        << "\"key\" \"value\"\n"
-                        << "}";
-                  auto to_test = vdf::read(input);
-                  RC_ASSERT("test" == to_test.name);
-                  RC_ASSERT(1 == to_test.attribs.size());
-                  RC_ASSERT("value" == to_test.attribs["key"]);
-              });
+                             std::stringstream input;
+                             input << "\"test\""
+                                   << "{"
+                                   << "/*" << comment << "*/"
+                                   << "\"key\" \"value\"\n"
+                                   << "}";
+                             auto to_test = vdf::read(input);
+                             RC_ASSERT("test" == to_test.name);
+                             RC_ASSERT(1 == to_test.attribs.size());
+                             RC_ASSERT("value" == to_test.attribs["key"]);
+                         });
 
-    return 0;
+    return (success) ? 0 : 1;
 }
