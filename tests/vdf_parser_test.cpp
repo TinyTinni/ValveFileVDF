@@ -15,7 +15,7 @@ template <typename charT>
 void check_DST_AST(const vdf::basic_object<charT> &obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 24);
+    REQUIRE(obj.attribs.size() == 25);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.at(T_L("appid")) == T_L("343050"));
@@ -33,6 +33,7 @@ void check_DST_AST(const vdf::basic_object<charT> &obj)
           T_L("quote_with_other_escapes\\\"\\"));
     CHECK(obj.attribs.at(T_L("tab_escape")) == T_L("new\\ttab"));
     CHECK(obj.attribs.at(T_L("new_line_escape")) == T_L("new\\nline"));
+    CHECK(obj.attribs.at(T_L("quad_escape")) == T_L("\\\\"));
 #endif
 
     CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
@@ -51,7 +52,7 @@ template <typename charT>
 void check_DST_AST_multikey(const vdf::basic_multikey_object<charT> &obj)
 {
     CHECK(obj.name == T_L("AppState"));
-    REQUIRE(obj.attribs.size() == 25);
+    REQUIRE(obj.attribs.size() == 26);
     REQUIRE(obj.childs.size() == 4);
 
     CHECK(obj.attribs.find(T_L("appid"))->second == T_L("343050"));
@@ -200,6 +201,33 @@ TEST_CASE("issue14")
 }
 
 /////////////////////////////////////////////////////////////
+// write test
+/////////////////////////////////////////////////////////////
+
+TEST_CASE_TEMPLATE("Write escaped", charT, char, wchar_t)
+{
+    std::vector<std::basic_string<charT>> data = {
+        TYTI_L(charT, "\""),     TYTI_L(charT, "\\"),
+        TYTI_L(charT, "\\\\"),   TYTI_L(charT, "\"\""),
+        TYTI_L(charT, "\\\\\\"), TYTI_L(charT, "\"\\\""),
+        TYTI_L(charT, "\\\""),   TYTI_L(charT, "\\\\\"\\\\")};
+    for (const auto &datapoint : data)
+    {
+        CAPTURE(datapoint);
+
+        vdf::basic_object<charT> obj;
+        obj.name = datapoint;
+
+        std::basic_stringstream<charT> output;
+        vdf::write(output, obj);
+        auto test_obj = vdf::read(output);
+
+        CAPTURE(output.str());
+        CHECK(test_obj.name == obj.name);
+    }
+}
+
+/////////////////////////////////////////////////////////////
 // readme test
 /////////////////////////////////////////////////////////////
 
@@ -219,7 +247,7 @@ TEST_CASE("counter test")
 
     std::ifstream file("DST_Manifest.acf");
     counter num = tyti::vdf::read<counter>(file);
-    CHECK(num.num_attributes == 29);
+    CHECK(num.num_attributes == 30);
 }
 
 /////////////////////////////////////////////////////////////

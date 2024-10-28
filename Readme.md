@@ -22,6 +22,8 @@ This header-only file provides a parser and writer to load and save the given da
 
 ## Test Requirements
 - C++17 (uses [doctest](https://github.com/doctest/doctest))
+- property tests require C++20 (they use [rapidcheck](https://github.com/emil-e/rapidcheck))
+- fuzzing requires clang or MSVC
  
 ## How-To Use
 First, you have to include the main file `vdf-Parser.h`.
