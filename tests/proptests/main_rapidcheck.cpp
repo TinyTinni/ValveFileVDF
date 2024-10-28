@@ -107,6 +107,30 @@ int main()
         });
 
     success &= rc::check(
+        "serializing and then parsing just the name with default options "
+        "should return the original name - not escaped",
+        []()
+        {
+            vdf::object obj;
+            obj.name = *rc::gen::suchThat(rc::gen::string<std::string>(),
+                                          [](const std::string &str) {
+                                              return str.find("\"") == str.npos;
+                                          });
+
+            vdf::WriteOptions writeOpts;
+            writeOpts.escape_symbols = false;
+
+            vdf::Options readOpts;
+            readOpts.strip_escape_symbols = false;
+
+            std::stringstream sstr;
+            vdf::write(sstr, obj, writeOpts);
+
+            auto to_test = vdf::read(sstr, readOpts);
+            RC_ASSERT(obj.name == to_test.name);
+        });
+
+    success &= rc::check(
         "check if the attributes are also written and parsed correctly",
         [](const vdf::object &in)
         {
