@@ -242,6 +242,12 @@ struct Options
     }
 };
 
+struct WriteOptions
+{
+    bool escape_symbols;
+    WriteOptions() : escape_symbols(true) {}
+};
+
 // forward decls
 // forward decl
 template <typename OutputT, typename iStreamT>
@@ -251,21 +257,28 @@ OutputT read(iStreamT &inStream, const Options &opt = Options{});
 Output is prettyfied, using tabs
 */
 template <typename oStreamT, typename T>
-void write(oStreamT &s, const T &r,
+void write(oStreamT &s, const T &r, const WriteOptions &opts = {},
            const detail::tabs<typename oStreamT::char_type> tab =
                detail::tabs<typename oStreamT::char_type>(0))
 {
     typedef typename oStreamT::char_type charT;
     using namespace detail;
-    s << tab << TYTI_L(charT, '"') << escape(r.name) << TYTI_L(charT, "\"\n")
-      << tab << TYTI_L(charT, "{\n");
+    auto escapeFunction = [&opts](const std::basic_string<charT> &in)
+    {
+        if (opts.escape_symbols)
+            return escape(std::move(in));
+        return in;
+    };
+
+    s << tab << TYTI_L(charT, '"') << escapeFunction(r.name)
+      << TYTI_L(charT, "\"\n") << tab << TYTI_L(charT, "{\n");
     for (const auto &i : r.attribs)
-        s << tab + 1 << TYTI_L(charT, '"') << escape(i.first)
-          << TYTI_L(charT, "\"\t\t\"") << escape(i.second)
+        s << tab + 1 << TYTI_L(charT, '"') << escapeFunction(i.first)
+          << TYTI_L(charT, "\"\t\t\"") << escapeFunction(i.second)
           << TYTI_L(charT, "\"\n");
     for (const auto &i : r.childs)
         if (i.second)
-            write(s, *i.second, tab + 1);
+            write(s, *i.second, opts, tab + 1);
     s << tab << TYTI_L(charT, "}\n");
 }
 
@@ -379,7 +392,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         return iter;
     };
 
-    auto end_quote = [](IterT iter, const IterT &last) -> IterT
+    auto end_quote = [opt](IterT iter, const IterT &last) -> IterT
     {
         const auto begin = iter;
         auto last_esc = iter;
@@ -393,8 +406,11 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                 break;
 
             last_esc = std::prev(iter);
-            while (last_esc != begin && *last_esc == '\\')
-                --last_esc;
+            if (opt.strip_escape_symbols)
+            {
+                while (last_esc != begin && *last_esc == '\\')
+                    --last_esc;
+            }
         } while (!(std::distance(last_esc, iter) % 2) && iter != last);
         if (iter == last)
             throw std::runtime_error{"quote was opened but not closed."};
@@ -731,7 +747,7 @@ OutputT read(IterT first, const IterT last, bool *ok,
 template <typename IterT>
 inline auto read(IterT first, const IterT last, bool *ok,
                  const Options &opt = Options{}) NOEXCEPT
-    ->basic_object<typename std::iterator_traits<IterT>::value_type>
+    -> basic_object<typename std::iterator_traits<IterT>::value_type>
 {
     return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(
         first, last, ok, opt);
@@ -740,7 +756,7 @@ inline auto read(IterT first, const IterT last, bool *ok,
 template <typename IterT>
 inline auto read(IterT first, IterT last, std::error_code &ec,
                  const Options &opt = Options{}) NOEXCEPT
-    ->basic_object<typename std::iterator_traits<IterT>::value_type>
+    -> basic_object<typename std::iterator_traits<IterT>::value_type>
 {
     return read<basic_object<typename std::iterator_traits<IterT>::value_type>>(
         first, last, ec, opt);

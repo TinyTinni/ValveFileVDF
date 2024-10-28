@@ -227,6 +227,36 @@ TEST_CASE_TEMPLATE("Write escaped", charT, char, wchar_t)
     }
 }
 
+TEST_CASE_TEMPLATE("write not-escaped", charT, char, wchar_t)
+{
+
+    vdf::WriteOptions writeOpts;
+    writeOpts.escape_symbols = false;
+
+    vdf::Options readOpts;
+    readOpts.strip_escape_symbols = false;
+    std::vector<std::basic_string<charT>> data = {
+        TYTI_L(charT, "\\"),
+        TYTI_L(charT, "\\\\"),
+        TYTI_L(charT, "\\\\\\"),
+
+    };
+    for (const auto &datapoint : data)
+    {
+        CAPTURE(datapoint);
+
+        vdf::basic_object<charT> obj;
+        obj.name = datapoint;
+
+        std::basic_stringstream<charT> output;
+        vdf::write(output, obj, writeOpts);
+        auto test_obj = vdf::read(output, readOpts);
+
+        CAPTURE(output.str());
+        CHECK(test_obj.name == obj.name);
+    }
+}
+
 /////////////////////////////////////////////////////////////
 // readme test
 /////////////////////////////////////////////////////////////
