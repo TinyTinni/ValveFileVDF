@@ -130,6 +130,46 @@ int main()
             RC_ASSERT(obj.name == to_test.name);
         });
 
+#ifdef WIN32
+    success &= rc::check(
+        "serializing and then parsing just the name with default options "
+        "should return the original name - wchar_t",
+        []()
+        {
+            vdf::wobject obj;
+            obj.name = *rc::gen::string<std::wstring>();
+
+            std::wstringstream sstr;
+            vdf::write(sstr, obj);
+
+            auto to_test = vdf::read(sstr);
+            RC_ASSERT(obj.name == to_test.name);
+        });
+
+    success &= rc::check(
+        "serializing and then parsing just the name with default options "
+        "should return the original name - not escaped",
+        []()
+        {
+            vdf::wobject obj;
+            obj.name = *rc::gen::suchThat(
+                rc::gen::string<std::wstring>(), [](const std::wstring &str)
+                { return str.find(L"\"") == str.npos; });
+
+            vdf::WriteOptions writeOpts;
+            writeOpts.escape_symbols = false;
+
+            vdf::Options readOpts;
+            readOpts.strip_escape_symbols = false;
+
+            std::wstringstream sstr;
+            vdf::write(sstr, obj, writeOpts);
+
+            auto to_test = vdf::read(sstr, readOpts);
+            RC_ASSERT(obj.name == to_test.name);
+        });
+#endif
+
     success &= rc::check(
         "check if the attributes are also written and parsed correctly",
         [](const vdf::object &in)
