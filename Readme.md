@@ -145,6 +145,11 @@ struct Options
     bool ignore_includes; //default false
 };
 
+struct WriteOptions
+{
+    bool escape_symbols; //default true
+};
+
 ```
 
 ## Reference
@@ -267,7 +272,7 @@ struct Options
   /// writes given obj into out in vdf style 
   /// Output is prettyfied, using tabs
   template<typename oStreamT, typename T>
-  void write(oStreamT& out, const T& obj);
+  void write(oStreamT& out, const T& obj, const WriteOptions& opts);
   
 ```
 
