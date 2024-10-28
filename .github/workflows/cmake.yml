@@ -2,7 +2,7 @@ name: CMake
 
 on:
   push:
-    branches: [ "master", "wchart-proptests" ]
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 

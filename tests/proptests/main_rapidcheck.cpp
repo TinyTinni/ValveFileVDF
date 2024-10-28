@@ -84,8 +84,14 @@ template <> struct Arbitrary<tyti::vdf::object>
 };
 } // namespace rc
 
+bool containsSurrogate(const std::wstring &str)
+{
+    return str.find(wchar_t(-1)) != str.npos;
+}
+
 int main()
 {
+
     ////////////////////////////////////////////////////////////////
     // object parsing tests
 
@@ -130,14 +136,15 @@ int main()
             RC_ASSERT(obj.name == to_test.name);
         });
 
-#ifdef WIN32
     success &= rc::check(
         "serializing and then parsing just the name with default options "
         "should return the original name - wchar_t",
         []()
         {
             vdf::wobject obj;
-            obj.name = *rc::gen::string<std::wstring>();
+            obj.name = *rc::gen::suchThat(rc::gen::string<std::wstring>(),
+                                          [](const auto &str)
+                                          { return !containsSurrogate(str); });
 
             std::wstringstream sstr;
             vdf::write(sstr, obj);
@@ -148,13 +155,16 @@ int main()
 
     success &= rc::check(
         "serializing and then parsing just the name with default options "
-        "should return the original name - not escaped",
+        "should return the original name - not escaped - wchar_t",
         []()
         {
             vdf::wobject obj;
-            obj.name = *rc::gen::suchThat(
-                rc::gen::string<std::wstring>(), [](const std::wstring &str)
-                { return str.find(L"\"") == str.npos; });
+            obj.name =
+                *rc::gen::suchThat(rc::gen::string<std::wstring>(),
+                                   [](const std::wstring &str) {
+                                       return str.find(L"\"") == str.npos &&
+                                              !containsSurrogate(str);
+                                   });
 
             vdf::WriteOptions writeOpts;
             writeOpts.escape_symbols = false;
@@ -168,7 +178,6 @@ int main()
             auto to_test = vdf::read(sstr, readOpts);
             RC_ASSERT(obj.name == to_test.name);
         });
-#endif
 
     success &= rc::check(
         "check if the attributes are also written and parsed correctly",
