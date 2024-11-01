@@ -39,6 +39,8 @@ void check_DST_AST(const vdf::basic_object<charT> &obj)
     CHECK(obj.childs.at(T_L("UserConfig"))->name == T_L("UserConfig"));
     CHECK(obj.childs.at(T_L("UserConfig"))->childs.empty());
 
+    CHECK(obj.childs.at(T_L("MountedDepots"))->attribs.size() == 1);
+
     const auto &inc = obj.childs.at(T_L("IncludedStuff"));
     CHECK(inc->name == T_L("IncludedStuff"));
     const auto &base = obj.childs.at(T_L("BaseInclude"));
@@ -122,6 +124,22 @@ TEST_CASE_TEMPLATE("Read String", charT, char, wchar_t)
     vdf::read(attribs.begin(), attribs.end(), &ok);
 
     REQUIRE(ok);
+}
+
+TEST_CASE_TEMPLATE("Read String with conditional, assuming PC platform", charT,
+                   char, wchar_t)
+{
+    std::basic_stringstream<charT> input;
+    input << T_L("\"firstNode\"{");
+    input << T_L("\"Key\" \"InvalidValue\"[!$WIN32]\n");
+    input << T_L("\"Key\" \"Value\"[$WIN32]\n");
+    input << T_L("}");
+    auto debug = input.str();
+
+    auto obj = vdf::read(input);
+
+    REQUIRE(obj.attribs.size() == 1);
+    REQUIRE(obj.attribs.find(T_L("Key"))->second == T_L("Value"));
 }
 
 // todo: error checking
