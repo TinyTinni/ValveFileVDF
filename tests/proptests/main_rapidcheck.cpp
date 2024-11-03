@@ -8,15 +8,8 @@ bool operator==(const tyti::vdf::object &rhs, const tyti::vdf::object &lhs)
 {
     if (rhs.name != lhs.name)
         return false;
-    return true;
-    for (const auto &[k, v] : rhs.attribs)
-    {
-        auto itr = lhs.attribs.find(k);
-        if (itr == lhs.attribs.end())
-            return false;
-        if (itr->second != v)
-            return false;
-    }
+    if (rhs.attribs != lhs.attribs)
+        return false;
     for (const auto &[k, v] : rhs.childs)
     {
         auto itr = lhs.childs.find(k);
