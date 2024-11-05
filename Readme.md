@@ -26,7 +26,7 @@ This header-only file provides a parser and writer to load and save the given da
 - fuzzing requires clang or MSVC
  
 ## How-To Use
-First, you have to include the main file `vdf-Parser.h`.
+First, you have to include the main file `vdf_parser.h`.
 This file provides several functions and data-structures which are
 in the namespace `tyti::vdf`.
 
