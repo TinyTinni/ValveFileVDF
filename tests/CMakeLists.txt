@@ -22,7 +22,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif()
 
 
-add_test(NAME vdf_tests COMMAND tests)
+add_test(NAME vdf_tests COMMAND tests --order-by=rand)
 
 add_subdirectory(proptests)
 
