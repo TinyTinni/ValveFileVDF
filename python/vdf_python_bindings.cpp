@@ -16,26 +16,34 @@ struct python_object
     {
         dict[py::cast(std::move(key))] = py::cast(std::move(value));
     }
-    void add_child(std::unique_ptr< python_object > child)
+    void add_child(std::unique_ptr<python_object> child)
     {
         std::string n = std::move(child->name);
         dict[py::cast(n)] = std::move(child->dict);
     }
-    void set_name(std::string n)
-    {
-        name = std::move(n);
-    }
+    void set_name(std::string n) { name = std::move(n); }
 };
 
-py::dict py_read_file(const char* filename)
+py::dict py_read_file(const char *filename)
 {
     std::ifstream input(filename);
-    return tyti::vdf::read<python_object>(input).dict;
+    auto obj = tyti::vdf::read<python_object>(input);
+    if (obj.name.empty())
+        return obj.dict;
+    auto result = py::dict();
+    result[py::cast(obj.name)] = std::move(obj.dict);
+    return result;
 }
 
-py::dict py_read(const std::string& filename)
+py::dict py_read(const std::string &filename)
 {
-    return tyti::vdf::read<python_object>(std::begin(filename), std::end(filename)).dict;
+    auto obj = tyti::vdf::read<python_object>(std::begin(filename),
+                                              std::end(filename));
+    if (obj.name.empty())
+        return obj.dict;
+    auto result = py::dict();
+    result[py::cast(obj.name)] = std::move(obj.dict);
+    return result;
 }
 
 PYBIND11_MODULE(vdf, m)

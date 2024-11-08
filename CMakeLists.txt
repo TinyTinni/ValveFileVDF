@@ -9,6 +9,7 @@ project(
 
 option(VALVEFILEVDF_ENABLE_TESTING OFF)
 option(VALVEFILEVDF_ENABLE_FUZZING OFF)
+option(VALVEFILEVDF_ENABLE_PYTHON OFF)
 
 if (VALVEFILEVDF_ENABLE_FUZZING)
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC" AND NOT APPLE)
@@ -75,4 +76,8 @@ endif()
 
 if (${VALVEFILEVDF_ENABLE_FUZZING})
     add_subdirectory(fuzzing)
+endif()
+
+if (${VALVEFILEVDF_ENABLE_PYTHON})
+    add_subdirectory(python)
 endif()

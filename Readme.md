@@ -152,6 +152,9 @@ struct WriteOptions
 
 ```
 
+## Python Binding
+Please have a look at the [./python](./python) directory.
+
 ## Reference
 ```c++
 /////////////////////////////////////////////////////////////
