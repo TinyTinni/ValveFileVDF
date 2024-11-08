@@ -13,7 +13,6 @@ get_property(rapidcheck_include_dirs TARGET rapidcheck PROPERTY INTERFACE_INCLUD
 set_property(TARGET rapidcheck PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${rapidcheck_include_dirs}")
 
 add_executable(rapidcheck_tests "main_rapidcheck.cpp")
-set_property(TARGET tests PROPERTY COMPILE_WARNING_AS_ERROR ON)
 target_compile_features(rapidcheck_tests PUBLIC cxx_std_20)
 target_link_libraries(rapidcheck_tests PRIVATE ValveFileVDF rapidcheck)
 
