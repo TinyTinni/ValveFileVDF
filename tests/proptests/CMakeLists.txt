@@ -12,7 +12,7 @@ CPMAddPackage(NAME rapidcheck
 get_property(rapidcheck_include_dirs TARGET rapidcheck PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 set_property(TARGET rapidcheck PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${rapidcheck_include_dirs}")
 
-add_executable(rapidcheck_tests "main_rapidcheck.cpp")
+add_executable(rapidcheck_tests "main_rapidcheck.cpp;generators/vdf_object_generator.cpp;generators/vdf_multiobject_generator.cpp")
 target_compile_features(rapidcheck_tests PUBLIC cxx_std_20)
 target_link_libraries(rapidcheck_tests PRIVATE ValveFileVDF rapidcheck)
 
