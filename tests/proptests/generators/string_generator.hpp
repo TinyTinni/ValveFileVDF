@@ -30,14 +30,13 @@ rc::Gen<std::basic_string<charT>> gen_unescaped_name_string();
 
 template <> inline rc::Gen<std::string> gen_unescaped_name_string<char>()
 {
-    return rc::gen::suchThat(rc::gen::string<std::string>(),
-                             [](const std::string &str)
+    return rc::gen::suchThat(gen_name_string<char>(), [](const std::string &str)
                              { return str.find("\"") == str.npos; });
 }
 
 template <> inline rc::Gen<std::wstring> gen_unescaped_name_string<wchar_t>()
 {
-    return rc::gen::suchThat(
-        rc::gen::string<std::wstring>(), [](const std::wstring &str)
-        { return str.find(L"\"") == str.npos && !contains_surrogate(str); });
+    return rc::gen::suchThat(gen_name_string<wchar_t>(),
+                             [](const std::wstring &str)
+                             { return str.find(L"\"") == str.npos; });
 }
