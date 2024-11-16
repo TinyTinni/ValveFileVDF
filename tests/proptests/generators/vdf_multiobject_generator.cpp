@@ -1,9 +1,8 @@
 #include "vdf_multiobject_generator.hpp"
 
-namespace tyti::vdf
-{
-bool operator==(const tyti::vdf::multikey_object &rhs,
-                const tyti::vdf::multikey_object &lhs)
+template <typename charT>
+bool equal_impl(const tyti::vdf::basic_multikey_object<charT> &rhs,
+                const tyti::vdf::basic_multikey_object<charT> &lhs)
 {
     if (rhs.name != lhs.name)
         return false;
@@ -34,6 +33,20 @@ bool operator==(const tyti::vdf::multikey_object &rhs,
 
     return true;
 }
+namespace tyti::vdf
+{
+
+bool operator==(const tyti::vdf::multikey_object &rhs,
+                const tyti::vdf::multikey_object &lhs)
+{
+    return equal_impl(rhs, lhs);
+}
+bool operator==(const tyti::vdf::wmultikey_object &rhs,
+                const tyti::vdf::wmultikey_object &lhs)
+{
+    return equal_impl(rhs, lhs);
+}
+
 } // namespace tyti::vdf
 
 namespace rc::detail

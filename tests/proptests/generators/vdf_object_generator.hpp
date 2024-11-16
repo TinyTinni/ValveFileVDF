@@ -6,6 +6,7 @@
 namespace tyti::vdf
 {
 bool operator==(const tyti::vdf::object &rhs, const tyti::vdf::object &lhs);
+bool operator==(const tyti::vdf::wobject &rhs, const tyti::vdf::wobject &lhs);
 
 } // namespace tyti::vdf
 
@@ -15,9 +16,17 @@ template <> struct Arbitrary<tyti::vdf::object>
 {
     static Gen<tyti::vdf::object> arbitrary()
     {
-        using tyti::vdf::object;
-        return gen::build<object>(gen::set(&object::name),
-                                  gen::set(&object::attribs));
+        using obj = tyti::vdf::object;
+        return gen::build<obj>(gen::set(&obj::name), gen::set(&obj::attribs));
+    }
+};
+
+template <> struct Arbitrary<tyti::vdf::wobject>
+{
+    static Gen<tyti::vdf::wobject> arbitrary()
+    {
+        using obj = tyti::vdf::wobject;
+        return gen::build<obj>(gen::set(&obj::name), gen::set(&obj::attribs));
     }
 };
 } // namespace rc

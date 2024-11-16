@@ -1,12 +1,94 @@
+#define TYTI_NO_L_UNDEF
+#include <vdf_parser.hpp>
+#define T_L(x) TYTI_L(charT, x)
+
 #include "generators/vdf_multiobject_generator.hpp"
 #include "generators/vdf_object_generator.hpp"
 #include <algorithm>
 #include <string>
-#include <vdf_parser.hpp>
 
 bool containsSurrogate(const std::wstring &str)
 {
     return str.find(wchar_t(-1)) != str.npos;
+}
+
+////////////////////////////////////////////////////////////////
+template <typename charT> std::basic_string<charT> genValidNameString();
+
+template <> std::string genValidNameString<char>()
+{
+    return *rc::gen::string<std::string>();
+}
+
+template <> std::wstring genValidNameString<wchar_t>()
+{
+    return *rc::gen::suchThat(rc::gen::string<std::wstring>(),
+                              [](const auto &str)
+                              { return !containsSurrogate(str); });
+}
+
+////////////////////////////////////////////////////////////////
+template <typename charT>
+std::basic_string<charT> genValidUnescapedNameString();
+
+template <> std::string genValidUnescapedNameString<char>()
+{
+    return *rc::gen::suchThat(rc::gen::string<std::string>(),
+                              [](const std::string &str)
+                              { return str.find("\"") == str.npos; });
+}
+
+template <> std::wstring genValidUnescapedNameString<wchar_t>()
+{
+    return *rc::gen::suchThat(
+        rc::gen::string<std::wstring>(), [](const std::wstring &str)
+        { return str.find(L"\"") == str.npos && !containsSurrogate(str); });
+}
+
+////////////////////////////////////////////////////////////////
+template <typename T> const char *getName();
+
+template <> const char *getName<tyti::vdf::multikey_object>()
+{
+    return "multikey_object";
+}
+template <> const char *getName<tyti::vdf::wmultikey_object>()
+{
+    return "wmultikey_object";
+}
+
+template <> const char *getName<tyti::vdf::object>() { return "object"; }
+template <> const char *getName<tyti::vdf::wobject>() { return "wobject"; }
+
+template <> const char *getName<char>() { return "char"; }
+
+template <> const char *getName<wchar_t>() { return "wchar_t"; }
+////////////////////////////////////////////////////////////////
+
+template <typename charT, template <typename T> typename basic_obj>
+bool executeTest(std::string_view test_name, auto test_f)
+{
+    using obj = basic_obj<charT>;
+    auto f = [test_f = std::move(test_f)]()
+    { test_f.template operator()<charT, obj>(); };
+
+    return rc::check(std::format("{} - {} - {}", std::string{test_name},
+                                 getName<charT>(), getName<obj>()),
+                     f);
+}
+
+bool forAllObjectPermutations(std::string_view test_name, auto test_f)
+{
+    using namespace tyti;
+    bool ret = false;
+    ret &= executeTest<char, vdf::basic_object>(test_name, std::move(test_f));
+    ret &=
+        executeTest<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
+    ret &= executeTest<char, vdf::basic_multikey_object>(test_name,
+                                                         std::move(test_f));
+    ret &= executeTest<wchar_t, vdf::basic_multikey_object>(test_name,
+                                                            std::move(test_f));
+    return ret;
 }
 
 int main()
@@ -14,34 +96,31 @@ int main()
 
     ////////////////////////////////////////////////////////////////
     // object parsing tests
-
     using namespace tyti;
     bool success = true;
-    success &= rc::check(
+
+    success &= forAllObjectPermutations(
         "serializing and then parsing just the name with default options "
         "should return the original name",
-        []()
+        []<typename charT, typename objType>()
         {
-            vdf::object obj;
-            obj.name = *rc::gen::string<std::string>();
+            objType obj;
+            obj.name = genValidNameString<charT>();
 
-            std::stringstream sstr;
+            std::basic_stringstream<charT> sstr;
             vdf::write(sstr, obj);
 
-            auto to_test = vdf::read(sstr);
+            auto to_test = vdf::read<objType>(sstr);
             RC_ASSERT(obj.name == to_test.name);
         });
 
-    success &= rc::check(
+    success &= forAllObjectPermutations(
         "serializing and then parsing just the name with default options "
         "should return the original name - not escaped",
-        []()
+        []<typename charT, typename objType>()
         {
-            vdf::object obj;
-            obj.name = *rc::gen::suchThat(rc::gen::string<std::string>(),
-                                          [](const std::string &str) {
-                                              return str.find("\"") == str.npos;
-                                          });
+            objType obj;
+            obj.name = genValidUnescapedNameString<charT>();
 
             vdf::WriteOptions writeOpts;
             writeOpts.escape_symbols = false;
@@ -49,106 +128,42 @@ int main()
             vdf::Options readOpts;
             readOpts.strip_escape_symbols = false;
 
-            std::stringstream sstr;
+            std::basic_stringstream<charT> sstr;
             vdf::write(sstr, obj, writeOpts);
 
-            auto to_test = vdf::read(sstr, readOpts);
+            auto to_test = vdf::read<objType>(sstr, readOpts);
             RC_ASSERT(obj.name == to_test.name);
         });
 
-    success &= rc::check(
-        "serializing and then parsing just the name with default options "
-        "should return the original name - wchar_t",
-        []()
-        {
-            vdf::wobject obj;
-            obj.name = *rc::gen::suchThat(rc::gen::string<std::wstring>(),
-                                          [](const auto &str)
-                                          { return !containsSurrogate(str); });
-
-            std::wstringstream sstr;
-            vdf::write(sstr, obj);
-
-            auto to_test = vdf::read(sstr);
-            RC_ASSERT(obj.name == to_test.name);
-        });
-
-    success &= rc::check(
-        "serializing and then parsing just the name with default options "
-        "should return the original name - not escaped - wchar_t",
-        []()
-        {
-            vdf::wobject obj;
-            obj.name =
-                *rc::gen::suchThat(rc::gen::string<std::wstring>(),
-                                   [](const std::wstring &str) {
-                                       return str.find(L"\"") == str.npos &&
-                                              !containsSurrogate(str);
-                                   });
-
-            vdf::WriteOptions writeOpts;
-            writeOpts.escape_symbols = false;
-
-            vdf::Options readOpts;
-            readOpts.strip_escape_symbols = false;
-
-            std::wstringstream sstr;
-            vdf::write(sstr, obj, writeOpts);
-
-            auto to_test = vdf::read(sstr, readOpts);
-            RC_ASSERT(obj.name == to_test.name);
-        });
-
-    success &= rc::check(
+    success &= forAllObjectPermutations(
         "check if the attributes are also written and parsed correctly",
-        [](const vdf::object &in)
+        []<typename charT, typename objType>()
         {
-            std::stringstream sstr;
+            objType in = *rc::gen::arbitrary<objType>();
+            std::basic_stringstream<charT> sstr;
             vdf::write(sstr, in);
-            auto to_test = tyti::vdf::read(sstr);
+            auto to_test = tyti::vdf::read<objType>(sstr);
             RC_ASSERT(in == to_test);
         });
 
-    success &= rc::check(
+    success &= forAllObjectPermutations(
         "check if the childs are also written and parsed correctly",
-        [](vdf::object in)
+        []<typename charT, typename objType>()
         {
+            objType in = *rc::gen::arbitrary<objType>();
             // todo this just tests childs with depth 1
-            using child_vec = std::vector<std::shared_ptr<vdf::object>>;
-            child_vec childs =
-                *rc::gen::container<child_vec>(rc::gen::makeShared<vdf::object>(
-                    rc::gen::arbitrary<vdf::object>()));
-
-            for (const auto &c : childs)
-            {
-                in.childs.emplace(c->name, c);
-            }
-
-            std::stringstream sstr;
-            vdf::write(sstr, in);
-            auto to_test = tyti::vdf::read(sstr);
-            RC_ASSERT(in == to_test);
-        });
-
-    success &= rc::check(
-        "check if the childs are also written and parsed correctly - multikey",
-        [](vdf::multikey_object in)
-        {
-            // todo this just tests childs with depth 1
-            using child_vec =
-                std::vector<std::shared_ptr<vdf::multikey_object>>;
+            using child_vec = std::vector<std::shared_ptr<objType>>;
             child_vec childs = *rc::gen::container<child_vec>(
-                rc::gen::makeShared<vdf::multikey_object>(
-                    rc::gen::arbitrary<vdf::multikey_object>()));
+                rc::gen::makeShared<objType>(rc::gen::arbitrary<objType>()));
 
             for (const auto &c : childs)
             {
                 in.childs.emplace(c->name, c);
             }
 
-            std::stringstream sstr;
+            std::basic_stringstream<charT> sstr;
             vdf::write(sstr, in);
-            auto to_test = tyti::vdf::read<vdf::multikey_object>(sstr);
+            auto to_test = tyti::vdf::read<objType>(sstr);
             RC_ASSERT(in == to_test);
         });
 

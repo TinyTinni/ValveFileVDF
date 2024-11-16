@@ -7,18 +7,20 @@ namespace tyti::vdf
 {
 bool operator==(const tyti::vdf::multikey_object &rhs,
                 const tyti::vdf::multikey_object &lhs);
+bool operator==(const tyti::vdf::wmultikey_object &rhs,
+                const tyti::vdf::wmultikey_object &lhs);
 } // namespace tyti::vdf
 
 namespace rc
 {
 
-template <> struct Arbitrary<tyti::vdf::multikey_object>
+template <typename charT>
+struct Arbitrary<tyti::vdf::basic_multikey_object<charT>>
 {
-    static Gen<tyti::vdf::multikey_object> arbitrary()
+    static Gen<tyti::vdf::basic_multikey_object<charT>> arbitrary()
     {
-        using tyti::vdf::multikey_object;
-        return gen::build<multikey_object>(gen::set(&multikey_object::name),
-                                           gen::set(&multikey_object::attribs));
+        using obj = tyti::vdf::basic_multikey_object<charT>;
+        return gen::build<obj>(gen::set(&obj::name), gen::set(&obj::attribs));
     }
 };
 } // namespace rc

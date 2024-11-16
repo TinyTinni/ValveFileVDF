@@ -1,8 +1,8 @@
 #include "vdf_object_generator.hpp"
 
-namespace tyti::vdf
-{
-bool operator==(const tyti::vdf::object &rhs, const tyti::vdf::object &lhs)
+template <typename charT>
+bool equal_impl(const tyti::vdf::basic_object<charT> &rhs,
+                const tyti::vdf::basic_object<charT> &lhs)
 {
     if (rhs.name != lhs.name)
         return false;
@@ -33,6 +33,20 @@ bool operator==(const tyti::vdf::object &rhs, const tyti::vdf::object &lhs)
 
     return true;
 }
+
+namespace tyti::vdf
+{
+
+bool operator==(const tyti::vdf::wobject &rhs, const tyti::vdf::wobject &lhs)
+{
+    return equal_impl(rhs, lhs);
+}
+
+bool operator==(const tyti::vdf::object &rhs, const tyti::vdf::object &lhs)
+{
+    return equal_impl(rhs, lhs);
+}
+
 } // namespace tyti::vdf
 
 namespace rc::details
