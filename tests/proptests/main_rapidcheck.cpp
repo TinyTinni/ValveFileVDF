@@ -46,23 +46,29 @@ template <> std::wstring genValidUnescapedNameString<wchar_t>()
 }
 
 ////////////////////////////////////////////////////////////////
-template <typename T> const char *getName();
+template <typename T> constexpr std::string_view getName();
 
-template <> const char *getName<tyti::vdf::multikey_object>()
+template <> constexpr std::string_view getName<tyti::vdf::multikey_object>()
 {
     return "multikey_object";
 }
-template <> const char *getName<tyti::vdf::wmultikey_object>()
+template <> constexpr std::string_view getName<tyti::vdf::wmultikey_object>()
 {
     return "wmultikey_object";
 }
 
-template <> const char *getName<tyti::vdf::object>() { return "object"; }
-template <> const char *getName<tyti::vdf::wobject>() { return "wobject"; }
+template <> constexpr std::string_view getName<tyti::vdf::object>()
+{
+    return "object";
+}
+template <> constexpr std::string_view getName<tyti::vdf::wobject>()
+{
+    return "wobject";
+}
 
-template <> const char *getName<char>() { return "char"; }
+template <> constexpr std::string_view getName<char>() { return "char"; }
 
-template <> const char *getName<wchar_t>() { return "wchar_t"; }
+template <> constexpr std::string_view getName<wchar_t>() { return "wchar_t"; }
 ////////////////////////////////////////////////////////////////
 
 template <typename charT, template <typename T> typename basic_obj>
@@ -72,22 +78,46 @@ bool executeTest(std::string_view test_name, auto test_f)
     auto f = [test_f = std::move(test_f)]()
     { test_f.template operator()<charT, obj>(); };
 
-    return rc::check(std::format("{} - {} - {}", std::string{test_name},
-                                 getName<charT>(), getName<obj>()),
-                     f);
+    return rc::check(std::string{test_name} + " - " +
+                         std::string{getName<charT>()} + " - " +
+                         std::string{getName<obj>()},
+                     std::move(f));
 }
 
 bool forAllObjectPermutations(std::string_view test_name, auto test_f)
 {
     using namespace tyti;
-    bool ret = false;
+    bool ret = true;
     ret &= executeTest<char, vdf::basic_object>(test_name, std::move(test_f));
-    ret &=
-        executeTest<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
+
     ret &= executeTest<char, vdf::basic_multikey_object>(test_name,
                                                          std::move(test_f));
+    ret &=
+        executeTest<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
+
     ret &= executeTest<wchar_t, vdf::basic_multikey_object>(test_name,
                                                             std::move(test_f));
+    return ret;
+}
+
+bool forLimitedObjectPermutation(std::string_view test_name, auto test_f)
+{
+    using namespace tyti;
+    bool ret = true;
+    ret &= executeTest<char, vdf::basic_object>(test_name, std::move(test_f));
+
+    ret &= executeTest<char, vdf::basic_multikey_object>(test_name,
+                                                         std::move(test_f));
+    // todo, remove surrogate to the wobject generator and it's
+    // attributes for linux support
+    // afterwards, use "forAllObjectPermutations" and delete this function
+#if defined(WIN32) || defined(__APPLE__)
+    ret &=
+        executeTest<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
+
+    ret &= executeTest<wchar_t, vdf::basic_multikey_object>(test_name,
+                                                            std::move(test_f));
+#endif
     return ret;
 }
 
@@ -135,7 +165,7 @@ int main()
             RC_ASSERT(obj.name == to_test.name);
         });
 
-    success &= forAllObjectPermutations(
+    success &= forLimitedObjectPermutation(
         "check if the attributes are also written and parsed correctly",
         []<typename charT, typename objType>()
         {
@@ -146,7 +176,7 @@ int main()
             RC_ASSERT(in == to_test);
         });
 
-    success &= forAllObjectPermutations(
+    success &= forLimitedObjectPermutation(
         "check if the childs are also written and parsed correctly",
         []<typename charT, typename objType>()
         {
