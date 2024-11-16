@@ -1,85 +1,66 @@
+#define TYTI_NO_L_UNDEF
+#include <vdf_parser.hpp>
+#define T_L(x) TYTI_L(charT, x)
+
+#include "generators/string_generator.hpp"
+#include "generators/vdf_multiobject_generator.hpp"
+#include "generators/vdf_object_generator.hpp"
 #include <algorithm>
 #include <string>
-#include <vdf_parser.hpp>
 
-namespace rc::detail
+////////////////////////////////////////////////////////////////
+template <typename T> constexpr std::string_view name_of();
+
+template <> constexpr std::string_view name_of<tyti::vdf::multikey_object>()
 {
-bool operator==(const tyti::vdf::object &rhs, const tyti::vdf::object &lhs)
+    return "multikey_object";
+}
+template <> constexpr std::string_view name_of<tyti::vdf::wmultikey_object>()
 {
-    if (rhs.name != lhs.name)
-        return false;
-    if (rhs.attribs != lhs.attribs)
-        return false;
-    for (const auto &[k, v] : rhs.childs)
-    {
-        auto itr = lhs.childs.find(k);
-        if (itr == lhs.childs.end())
-            return false;
-
-#ifdef _MSC_VER
-// suppress warning about recursive call of operator==. This is here
-// by intention
-#pragma warning(disable : 5232)
-#endif
-        if (itr->second != v)
-        {
-            if (itr->second == nullptr || v == nullptr || *(itr->second) != *v)
-                return false;
-        }
-#ifdef _MSC_VER
-#pragma warning(default : 5232)
-#endif
-    }
-
-    return true;
+    return "wmultikey_object";
 }
 
-void showValue(tyti::vdf::object obj, std::ostream &os)
+template <> constexpr std::string_view name_of<tyti::vdf::object>()
 {
-    os << "name: " << obj.name << "\n";
-    os << "attribs (size:" << obj.attribs.size() << "): \n";
-    for (const auto &[k, v] : obj.attribs)
-        os << k << "\t" << v << "\n";
-    os << "childs: (size:" << obj.childs.size() << "): \n";
-    for (const auto &[k, v] : obj.childs)
-    {
-        os << k << "\t";
-        if (v)
-            showValue(*v, os);
-        else
-            os << "nullptr!";
-        os << "\n";
-    }
+    return "object";
 }
-void showValue(const std::tuple<tyti::vdf::object, tyti::vdf::object> &objs,
-               std::ostream &os)
+template <> constexpr std::string_view name_of<tyti::vdf::wobject>()
 {
-    os << "[LHS]: \n";
-    showValue(std::get<0>(objs), os);
-    os << "[RHS]: \n";
-    showValue(std::get<1>(objs), os);
+    return "wobject";
 }
-} // namespace rc::detail
 
-#include <rapidcheck.h>
+template <> constexpr std::string_view name_of<char>() { return "char"; }
 
-namespace rc
+template <> constexpr std::string_view name_of<wchar_t>() { return "wchar_t"; }
+////////////////////////////////////////////////////////////////
+
+template <typename charT, template <typename T> typename basic_obj>
+bool execute_test(std::string_view test_name, auto test_f)
 {
+    using obj = basic_obj<charT>;
+    auto f = [test_f = std::move(test_f)]()
+    { test_f.template operator()<charT, obj>(); };
 
-template <> struct Arbitrary<tyti::vdf::object>
-{
-    static Gen<tyti::vdf::object> arbitrary()
-    {
-        using tyti::vdf::object;
-        return gen::build<object>(gen::set(&object::name),
-                                  gen::set(&object::attribs));
-    }
-};
-} // namespace rc
+    return rc::check(std::string{test_name} + " - " +
+                         std::string{name_of<charT>()} + " - " +
+                         std::string{name_of<obj>()},
+                     std::move(f));
+}
 
-bool containsSurrogate(const std::wstring &str)
+bool for_all_object_permutations(std::string_view test_name, auto test_f)
 {
-    return str.find(wchar_t(-1)) != str.npos;
+    using namespace tyti;
+    bool ret = true;
+    ret &= execute_test<char, vdf::basic_object>(test_name, std::move(test_f));
+
+    ret &= execute_test<char, vdf::basic_multikey_object>(test_name,
+                                                          std::move(test_f));
+    ret &=
+        execute_test<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
+
+    ret &= execute_test<wchar_t, vdf::basic_multikey_object>(test_name,
+                                                             std::move(test_f));
+    return ret;
 }
 
 int main()
@@ -87,34 +68,31 @@ int main()
 
     ////////////////////////////////////////////////////////////////
     // object parsing tests
-
     using namespace tyti;
     bool success = true;
-    success &= rc::check(
+
+    success &= for_all_object_permutations(
         "serializing and then parsing just the name with default options "
         "should return the original name",
-        []()
+        []<typename charT, typename objType>()
         {
-            vdf::object obj;
-            obj.name = *rc::gen::string<std::string>();
+            objType obj;
+            obj.name = *gen_name_string<charT>();
 
-            std::stringstream sstr;
+            std::basic_stringstream<charT> sstr;
             vdf::write(sstr, obj);
 
-            auto to_test = vdf::read(sstr);
+            auto to_test = vdf::read<objType>(sstr);
             RC_ASSERT(obj.name == to_test.name);
         });
 
-    success &= rc::check(
+    success &= for_all_object_permutations(
         "serializing and then parsing just the name with default options "
         "should return the original name - not escaped",
-        []()
+        []<typename charT, typename objType>()
         {
-            vdf::object obj;
-            obj.name = *rc::gen::suchThat(rc::gen::string<std::string>(),
-                                          [](const std::string &str) {
-                                              return str.find("\"") == str.npos;
-                                          });
+            objType obj;
+            obj.name = *gen_unescaped_name_string<charT>();
 
             vdf::WriteOptions writeOpts;
             writeOpts.escape_symbols = false;
@@ -122,129 +100,93 @@ int main()
             vdf::Options readOpts;
             readOpts.strip_escape_symbols = false;
 
-            std::stringstream sstr;
+            std::basic_stringstream<charT> sstr;
             vdf::write(sstr, obj, writeOpts);
 
-            auto to_test = vdf::read(sstr, readOpts);
+            auto to_test = vdf::read<objType>(sstr, readOpts);
             RC_ASSERT(obj.name == to_test.name);
         });
 
-    success &= rc::check(
-        "serializing and then parsing just the name with default options "
-        "should return the original name - wchar_t",
-        []()
-        {
-            vdf::wobject obj;
-            obj.name = *rc::gen::suchThat(rc::gen::string<std::wstring>(),
-                                          [](const auto &str)
-                                          { return !containsSurrogate(str); });
-
-            std::wstringstream sstr;
-            vdf::write(sstr, obj);
-
-            auto to_test = vdf::read(sstr);
-            RC_ASSERT(obj.name == to_test.name);
-        });
-
-    success &= rc::check(
-        "serializing and then parsing just the name with default options "
-        "should return the original name - not escaped - wchar_t",
-        []()
-        {
-            vdf::wobject obj;
-            obj.name =
-                *rc::gen::suchThat(rc::gen::string<std::wstring>(),
-                                   [](const std::wstring &str) {
-                                       return str.find(L"\"") == str.npos &&
-                                              !containsSurrogate(str);
-                                   });
-
-            vdf::WriteOptions writeOpts;
-            writeOpts.escape_symbols = false;
-
-            vdf::Options readOpts;
-            readOpts.strip_escape_symbols = false;
-
-            std::wstringstream sstr;
-            vdf::write(sstr, obj, writeOpts);
-
-            auto to_test = vdf::read(sstr, readOpts);
-            RC_ASSERT(obj.name == to_test.name);
-        });
-
-    success &= rc::check(
+    success &= for_all_object_permutations(
         "check if the attributes are also written and parsed correctly",
-        [](const vdf::object &in)
+        []<typename charT, typename objType>()
         {
-            std::stringstream sstr;
+            objType in = *rc::gen::arbitrary<objType>();
+            std::basic_stringstream<charT> sstr;
             vdf::write(sstr, in);
-            auto to_test = tyti::vdf::read(sstr);
+            auto to_test = tyti::vdf::read<objType>(sstr);
             RC_ASSERT(in == to_test);
         });
 
-    success &= rc::check(
+    success &= for_all_object_permutations(
         "check if the childs are also written and parsed correctly",
-        [](vdf::object in)
+        []<typename charT, typename objType>()
         {
+            objType in = *rc::gen::arbitrary<objType>();
             // todo this just tests childs with depth 1
-            using child_vec = std::vector<std::shared_ptr<vdf::object>>;
-            child_vec childs =
-                *rc::gen::container<child_vec>(rc::gen::makeShared<vdf::object>(
-                    rc::gen::arbitrary<vdf::object>()));
+            using child_vec = std::vector<std::shared_ptr<objType>>;
+            child_vec childs = *rc::gen::container<child_vec>(
+                rc::gen::makeShared<objType>(rc::gen::arbitrary<objType>()));
 
             for (const auto &c : childs)
             {
-                in.childs[c->name] = c;
+                in.childs.emplace(c->name, c);
             }
 
-            std::stringstream sstr;
+            std::basic_stringstream<charT> sstr;
             vdf::write(sstr, in);
-            auto to_test = tyti::vdf::read(sstr);
+            auto to_test = tyti::vdf::read<objType>(sstr);
             RC_ASSERT(in == to_test);
         });
 
     ////////////////////////////////////////////////////////////////
     // comments parsing tests
 
-    success &= rc::check("single line comment should not cause any errors",
-                         []()
-                         {
-                             auto comment = *rc::gen::suchThat(
-                                 rc::gen::string<std::string>(),
-                                 [](const std::string &str)
-                                 { return str.find("\n") == str.npos; });
+    success &= for_all_object_permutations(
+        "single line comment should not cause any errors",
+        []<typename charT, typename objType>()
+        {
+            using string = std::basic_string<charT>;
 
-                             std::stringstream input;
-                             input << "\"test\""
-                                   << "{"
-                                   << "//" << comment << "\n"
-                                   << "\"key\" \"value\"\n"
-                                   << "}";
-                             auto to_test = vdf::read(input);
-                             RC_ASSERT("test" == to_test.name);
-                             RC_ASSERT(1 == to_test.attribs.size());
-                             RC_ASSERT("value" == to_test.attribs["key"]);
-                         });
+            auto comment = *rc::gen::suchThat(
+                rc::gen::string<string>(), [](const string &str)
+                { return str.find(T_L("\n")) == str.npos; });
 
-    success &= rc::check("multi line comment should not cause any errors",
-                         []()
-                         {
-                             auto comment = *rc::gen::suchThat(
-                                 rc::gen::string<std::string>(),
-                                 [](const std::string &str)
-                                 { return str.find("*/") == str.npos; });
+            std::basic_stringstream<charT> input;
+            input << T_L("\"test\"") << T_L("{") << "//" << comment << T_L("\n")
+                  << T_L("\"key\" \"value\"\n") << T_L("}");
 
-                             std::stringstream input;
-                             input << "\"test\""
-                                   << "{"
-                                   << "/*" << comment << "*/"
-                                   << "\"key\" \"value\"\n"
-                                   << "}";
-                             auto to_test = vdf::read(input);
-                             RC_ASSERT("test" == to_test.name);
-                             RC_ASSERT(1 == to_test.attribs.size());
-                             RC_ASSERT("value" == to_test.attribs["key"]);
-                         });
+            auto to_test = vdf::read<objType>(input);
+
+            RC_ASSERT(string{T_L("test")} == to_test.name);
+            RC_ASSERT(1 == to_test.attribs.size());
+            auto finder = to_test.attribs.find(T_L("key"));
+            RC_ASSERT(finder != to_test.attribs.end());
+            RC_ASSERT(string{T_L("value")} == finder->second);
+        });
+
+    success &= for_all_object_permutations(
+        "multi line comment should not cause any errors",
+        []<typename charT, typename objType>()
+        {
+            using string = std::basic_string<charT>;
+
+            auto comment = *rc::gen::suchThat(
+                rc::gen::string<string>(), [](const string &str)
+                { return str.find(T_L("*/")) == str.npos; });
+
+            std::basic_stringstream<charT> input;
+            input << T_L("\"test\"") << T_L("{") << T_L("/*") << comment
+                  << T_L("*/") << T_L("\"key\" \"value\"\n") << T_L("}");
+
+            auto to_test = vdf::read<objType>(input);
+
+            RC_ASSERT(string{T_L("test")} == to_test.name);
+            RC_ASSERT(1 == to_test.attribs.size());
+            auto finder = to_test.attribs.find(T_L("key"));
+            RC_ASSERT(finder != to_test.attribs.end());
+            RC_ASSERT(string{T_L("value")} == finder->second);
+        });
 
     return (success) ? 0 : 1;
 }
