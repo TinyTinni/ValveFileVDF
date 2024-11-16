@@ -200,45 +200,51 @@ int main()
     ////////////////////////////////////////////////////////////////
     // comments parsing tests
 
-    success &= rc::check("single line comment should not cause any errors",
-                         []()
-                         {
-                             auto comment = *rc::gen::suchThat(
-                                 rc::gen::string<std::string>(),
-                                 [](const std::string &str)
-                                 { return str.find("\n") == str.npos; });
+    success &= forAllObjectPermutations(
+        "single line comment should not cause any errors",
+        []<typename charT, typename objType>()
+        {
+            using string = std::basic_string<charT>;
 
-                             std::stringstream input;
-                             input << "\"test\""
-                                   << "{"
-                                   << "//" << comment << "\n"
-                                   << "\"key\" \"value\"\n"
-                                   << "}";
-                             auto to_test = vdf::read(input);
-                             RC_ASSERT("test" == to_test.name);
-                             RC_ASSERT(1 == to_test.attribs.size());
-                             RC_ASSERT("value" == to_test.attribs["key"]);
-                         });
+            auto comment = *rc::gen::suchThat(
+                rc::gen::string<string>(), [](const string &str)
+                { return str.find(T_L("\n")) == str.npos; });
 
-    success &= rc::check("multi line comment should not cause any errors",
-                         []()
-                         {
-                             auto comment = *rc::gen::suchThat(
-                                 rc::gen::string<std::string>(),
-                                 [](const std::string &str)
-                                 { return str.find("*/") == str.npos; });
+            std::basic_stringstream<charT> input;
+            input << T_L("\"test\"") << T_L("{") << "//" << comment << T_L("\n")
+                  << T_L("\"key\" \"value\"\n") << T_L("}");
 
-                             std::stringstream input;
-                             input << "\"test\""
-                                   << "{"
-                                   << "/*" << comment << "*/"
-                                   << "\"key\" \"value\"\n"
-                                   << "}";
-                             auto to_test = vdf::read(input);
-                             RC_ASSERT("test" == to_test.name);
-                             RC_ASSERT(1 == to_test.attribs.size());
-                             RC_ASSERT("value" == to_test.attribs["key"]);
-                         });
+            auto to_test = vdf::read<objType>(input);
+
+            RC_ASSERT(string{T_L("test")} == to_test.name);
+            RC_ASSERT(1 == to_test.attribs.size());
+            auto finder = to_test.attribs.find(T_L("key"));
+            RC_ASSERT(finder != to_test.attribs.end());
+            RC_ASSERT(string{T_L("value")} == finder->second);
+        });
+
+    success &= forAllObjectPermutations(
+        "multi line comment should not cause any errors",
+        []<typename charT, typename objType>()
+        {
+            using string = std::basic_string<charT>;
+
+            auto comment = *rc::gen::suchThat(
+                rc::gen::string<string>(), [](const string &str)
+                { return str.find(T_L("*/")) == str.npos; });
+
+            std::basic_stringstream<charT> input;
+            input << T_L("\"test\"") << T_L("{") << T_L("/*") << comment
+                  << T_L("*/") << T_L("\"key\" \"value\"\n") << T_L("}");
+
+            auto to_test = vdf::read<objType>(input);
+
+            RC_ASSERT(string{T_L("test")} == to_test.name);
+            RC_ASSERT(1 == to_test.attribs.size());
+            auto finder = to_test.attribs.find(T_L("key"));
+            RC_ASSERT(finder != to_test.attribs.end());
+            RC_ASSERT(string{T_L("value")} == finder->second);
+        });
 
     return (success) ? 0 : 1;
 }
