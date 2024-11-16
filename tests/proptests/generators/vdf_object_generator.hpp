@@ -3,6 +3,8 @@
 #include <rapidcheck.h>
 #include <vdf_parser.hpp>
 
+#include "string_generator.hpp"
+
 namespace tyti::vdf
 {
 bool operator==(const tyti::vdf::object &rhs, const tyti::vdf::object &lhs);
@@ -26,7 +28,14 @@ template <> struct Arbitrary<tyti::vdf::wobject>
     static Gen<tyti::vdf::wobject> arbitrary()
     {
         using obj = tyti::vdf::wobject;
-        return gen::build<obj>(gen::set(&obj::name), gen::set(&obj::attribs));
+        return gen::build<obj>(
+            gen::set(&obj::name, genValidNameString<wchar_t>()),
+            gen::set(&obj::attribs,
+
+                     rc::gen::container<
+                         std::unordered_map<std::wstring, std::wstring>>(
+                         genValidNameString<wchar_t>(),
+                         genValidNameString<wchar_t>())));
     }
 };
 } // namespace rc

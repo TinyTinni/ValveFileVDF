@@ -3,6 +3,8 @@
 #include <rapidcheck.h>
 #include <vdf_parser.hpp>
 
+#include "string_generator.hpp"
+
 namespace tyti::vdf
 {
 bool operator==(const tyti::vdf::multikey_object &rhs,
@@ -14,13 +16,28 @@ bool operator==(const tyti::vdf::wmultikey_object &rhs,
 namespace rc
 {
 
-template <typename charT>
-struct Arbitrary<tyti::vdf::basic_multikey_object<charT>>
+template <> struct Arbitrary<tyti::vdf::multikey_object>
 {
-    static Gen<tyti::vdf::basic_multikey_object<charT>> arbitrary()
+    static Gen<tyti::vdf::multikey_object> arbitrary()
     {
-        using obj = tyti::vdf::basic_multikey_object<charT>;
+        using obj = tyti::vdf::multikey_object;
         return gen::build<obj>(gen::set(&obj::name), gen::set(&obj::attribs));
+    }
+};
+
+template <> struct Arbitrary<tyti::vdf::wmultikey_object>
+{
+    static Gen<tyti::vdf::wmultikey_object> arbitrary()
+    {
+        using obj = tyti::vdf::wmultikey_object;
+        return gen::build<obj>(
+            gen::set(&obj::name, genValidNameString<wchar_t>()),
+            gen::set(&obj::attribs,
+
+                     rc::gen::container<
+                         std::unordered_multimap<std::wstring, std::wstring>>(
+                         genValidNameString<wchar_t>(),
+                         genValidNameString<wchar_t>())));
     }
 };
 } // namespace rc

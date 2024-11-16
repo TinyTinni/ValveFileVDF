@@ -7,44 +7,6 @@
 #include <algorithm>
 #include <string>
 
-bool containsSurrogate(const std::wstring &str)
-{
-    return str.find(wchar_t(-1)) != str.npos;
-}
-
-////////////////////////////////////////////////////////////////
-template <typename charT> std::basic_string<charT> genValidNameString();
-
-template <> std::string genValidNameString<char>()
-{
-    return *rc::gen::string<std::string>();
-}
-
-template <> std::wstring genValidNameString<wchar_t>()
-{
-    return *rc::gen::suchThat(rc::gen::string<std::wstring>(),
-                              [](const auto &str)
-                              { return !containsSurrogate(str); });
-}
-
-////////////////////////////////////////////////////////////////
-template <typename charT>
-std::basic_string<charT> genValidUnescapedNameString();
-
-template <> std::string genValidUnescapedNameString<char>()
-{
-    return *rc::gen::suchThat(rc::gen::string<std::string>(),
-                              [](const std::string &str)
-                              { return str.find("\"") == str.npos; });
-}
-
-template <> std::wstring genValidUnescapedNameString<wchar_t>()
-{
-    return *rc::gen::suchThat(
-        rc::gen::string<std::wstring>(), [](const std::wstring &str)
-        { return str.find(L"\"") == str.npos && !containsSurrogate(str); });
-}
-
 ////////////////////////////////////////////////////////////////
 template <typename T> constexpr std::string_view getName();
 
@@ -100,27 +62,6 @@ bool forAllObjectPermutations(std::string_view test_name, auto test_f)
     return ret;
 }
 
-bool forLimitedObjectPermutation(std::string_view test_name, auto test_f)
-{
-    using namespace tyti;
-    bool ret = true;
-    ret &= executeTest<char, vdf::basic_object>(test_name, std::move(test_f));
-
-    ret &= executeTest<char, vdf::basic_multikey_object>(test_name,
-                                                         std::move(test_f));
-    // todo, remove surrogate to the wobject generator and it's
-    // attributes for linux support
-    // afterwards, use "forAllObjectPermutations" and delete this function
-#if defined(WIN32)
-    ret &=
-        executeTest<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
-
-    ret &= executeTest<wchar_t, vdf::basic_multikey_object>(test_name,
-                                                            std::move(test_f));
-#endif
-    return ret;
-}
-
 int main()
 {
 
@@ -135,7 +76,7 @@ int main()
         []<typename charT, typename objType>()
         {
             objType obj;
-            obj.name = genValidNameString<charT>();
+            obj.name = *genValidNameString<charT>();
 
             std::basic_stringstream<charT> sstr;
             vdf::write(sstr, obj);
@@ -150,7 +91,7 @@ int main()
         []<typename charT, typename objType>()
         {
             objType obj;
-            obj.name = genValidUnescapedNameString<charT>();
+            obj.name = *genValidUnescapedNameString<charT>();
 
             vdf::WriteOptions writeOpts;
             writeOpts.escape_symbols = false;
@@ -165,7 +106,7 @@ int main()
             RC_ASSERT(obj.name == to_test.name);
         });
 
-    success &= forLimitedObjectPermutation(
+    success &= forAllObjectPermutations(
         "check if the attributes are also written and parsed correctly",
         []<typename charT, typename objType>()
         {
@@ -176,7 +117,7 @@ int main()
             RC_ASSERT(in == to_test);
         });
 
-    success &= forLimitedObjectPermutation(
+    success &= forAllObjectPermutations(
         "check if the childs are also written and parsed correctly",
         []<typename charT, typename objType>()
         {
