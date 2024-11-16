@@ -2,63 +2,64 @@
 #include <vdf_parser.hpp>
 #define T_L(x) TYTI_L(charT, x)
 
+#include "generators/string_generator.hpp"
 #include "generators/vdf_multiobject_generator.hpp"
 #include "generators/vdf_object_generator.hpp"
 #include <algorithm>
 #include <string>
 
 ////////////////////////////////////////////////////////////////
-template <typename T> constexpr std::string_view getName();
+template <typename T> constexpr std::string_view name_of();
 
-template <> constexpr std::string_view getName<tyti::vdf::multikey_object>()
+template <> constexpr std::string_view name_of<tyti::vdf::multikey_object>()
 {
     return "multikey_object";
 }
-template <> constexpr std::string_view getName<tyti::vdf::wmultikey_object>()
+template <> constexpr std::string_view name_of<tyti::vdf::wmultikey_object>()
 {
     return "wmultikey_object";
 }
 
-template <> constexpr std::string_view getName<tyti::vdf::object>()
+template <> constexpr std::string_view name_of<tyti::vdf::object>()
 {
     return "object";
 }
-template <> constexpr std::string_view getName<tyti::vdf::wobject>()
+template <> constexpr std::string_view name_of<tyti::vdf::wobject>()
 {
     return "wobject";
 }
 
-template <> constexpr std::string_view getName<char>() { return "char"; }
+template <> constexpr std::string_view name_of<char>() { return "char"; }
 
-template <> constexpr std::string_view getName<wchar_t>() { return "wchar_t"; }
+template <> constexpr std::string_view name_of<wchar_t>() { return "wchar_t"; }
 ////////////////////////////////////////////////////////////////
 
 template <typename charT, template <typename T> typename basic_obj>
-bool executeTest(std::string_view test_name, auto test_f)
+bool execute_test(std::string_view test_name, auto test_f)
 {
     using obj = basic_obj<charT>;
     auto f = [test_f = std::move(test_f)]()
     { test_f.template operator()<charT, obj>(); };
 
     return rc::check(std::string{test_name} + " - " +
-                         std::string{getName<charT>()} + " - " +
-                         std::string{getName<obj>()},
+                         std::string{name_of<charT>()} + " - " +
+                         std::string{name_of<obj>()},
                      std::move(f));
 }
 
-bool forAllObjectPermutations(std::string_view test_name, auto test_f)
+bool for_all_object_permutations(std::string_view test_name, auto test_f)
 {
     using namespace tyti;
     bool ret = true;
-    ret &= executeTest<char, vdf::basic_object>(test_name, std::move(test_f));
+    ret &= execute_test<char, vdf::basic_object>(test_name, std::move(test_f));
 
-    ret &= executeTest<char, vdf::basic_multikey_object>(test_name,
-                                                         std::move(test_f));
+    ret &= execute_test<char, vdf::basic_multikey_object>(test_name,
+                                                          std::move(test_f));
     ret &=
-        executeTest<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
+        execute_test<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
 
-    ret &= executeTest<wchar_t, vdf::basic_multikey_object>(test_name,
-                                                            std::move(test_f));
+    ret &= execute_test<wchar_t, vdf::basic_multikey_object>(test_name,
+                                                             std::move(test_f));
     return ret;
 }
 
@@ -70,13 +71,13 @@ int main()
     using namespace tyti;
     bool success = true;
 
-    success &= forAllObjectPermutations(
+    success &= for_all_object_permutations(
         "serializing and then parsing just the name with default options "
         "should return the original name",
         []<typename charT, typename objType>()
         {
             objType obj;
-            obj.name = *genValidNameString<charT>();
+            obj.name = *gen_name_string<charT>();
 
             std::basic_stringstream<charT> sstr;
             vdf::write(sstr, obj);
@@ -85,13 +86,13 @@ int main()
             RC_ASSERT(obj.name == to_test.name);
         });
 
-    success &= forAllObjectPermutations(
+    success &= for_all_object_permutations(
         "serializing and then parsing just the name with default options "
         "should return the original name - not escaped",
         []<typename charT, typename objType>()
         {
             objType obj;
-            obj.name = *genValidUnescapedNameString<charT>();
+            obj.name = *gen_unescaped_name_string<charT>();
 
             vdf::WriteOptions writeOpts;
             writeOpts.escape_symbols = false;
@@ -106,7 +107,7 @@ int main()
             RC_ASSERT(obj.name == to_test.name);
         });
 
-    success &= forAllObjectPermutations(
+    success &= for_all_object_permutations(
         "check if the attributes are also written and parsed correctly",
         []<typename charT, typename objType>()
         {
@@ -117,7 +118,7 @@ int main()
             RC_ASSERT(in == to_test);
         });
 
-    success &= forAllObjectPermutations(
+    success &= for_all_object_permutations(
         "check if the childs are also written and parsed correctly",
         []<typename charT, typename objType>()
         {
@@ -141,7 +142,7 @@ int main()
     ////////////////////////////////////////////////////////////////
     // comments parsing tests
 
-    success &= forAllObjectPermutations(
+    success &= for_all_object_permutations(
         "single line comment should not cause any errors",
         []<typename charT, typename objType>()
         {
@@ -164,7 +165,7 @@ int main()
             RC_ASSERT(string{T_L("value")} == finder->second);
         });
 
-    success &= forAllObjectPermutations(
+    success &= for_all_object_permutations(
         "multi line comment should not cause any errors",
         []<typename charT, typename objType>()
         {

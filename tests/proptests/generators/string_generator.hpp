@@ -3,42 +3,41 @@
 #include <rapidcheck.h>
 #include <string>
 
-inline bool containsSurrogate(const std::wstring &str)
+inline bool contains_surrogate(const std::wstring &str)
 {
     return str.find(wchar_t(-1)) != str.npos;
 }
 
 ////////////////////////////////////////////////////////////////
-template <typename charT>
-rc::Gen<std::basic_string<charT>> genValidNameString();
+template <typename charT> rc::Gen<std::basic_string<charT>> gen_name_string();
 
-template <> inline rc::Gen<std::basic_string<char>> genValidNameString<char>()
+template <> inline rc::Gen<std::basic_string<char>> gen_name_string<char>()
 {
     return rc::gen::string<std::string>();
 }
 
 template <>
-inline rc::Gen<std::basic_string<wchar_t>> genValidNameString<wchar_t>()
+inline rc::Gen<std::basic_string<wchar_t>> gen_name_string<wchar_t>()
 {
     return rc::gen::suchThat(rc::gen::string<std::wstring>(),
                              [](const auto &str)
-                             { return !containsSurrogate(str); });
+                             { return !contains_surrogate(str); });
 }
 
 ////////////////////////////////////////////////////////////////
 template <typename charT>
-rc::Gen<std::basic_string<charT>> genValidUnescapedNameString();
+rc::Gen<std::basic_string<charT>> gen_unescaped_name_string();
 
-template <> inline rc::Gen<std::string> genValidUnescapedNameString<char>()
+template <> inline rc::Gen<std::string> gen_unescaped_name_string<char>()
 {
     return rc::gen::suchThat(rc::gen::string<std::string>(),
                              [](const std::string &str)
                              { return str.find("\"") == str.npos; });
 }
 
-template <> inline rc::Gen<std::wstring> genValidUnescapedNameString<wchar_t>()
+template <> inline rc::Gen<std::wstring> gen_unescaped_name_string<wchar_t>()
 {
     return rc::gen::suchThat(
         rc::gen::string<std::wstring>(), [](const std::wstring &str)
-        { return str.find(L"\"") == str.npos && !containsSurrogate(str); });
+        { return str.find(L"\"") == str.npos && !contains_surrogate(str); });
 }

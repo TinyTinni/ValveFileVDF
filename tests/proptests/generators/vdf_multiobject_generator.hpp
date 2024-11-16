@@ -31,13 +31,13 @@ template <> struct Arbitrary<tyti::vdf::wmultikey_object>
     {
         using obj = tyti::vdf::wmultikey_object;
         return gen::build<obj>(
-            gen::set(&obj::name, genValidNameString<wchar_t>()),
-            gen::set(&obj::attribs,
+            gen::set(&obj::name, gen_name_string<wchar_t>()),
+            gen::set(
+                &obj::attribs,
 
-                     rc::gen::container<
-                         std::unordered_multimap<std::wstring, std::wstring>>(
-                         genValidNameString<wchar_t>(),
-                         genValidNameString<wchar_t>())));
+                rc::gen::container<
+                    std::unordered_multimap<std::wstring, std::wstring>>(
+                    gen_name_string<wchar_t>(), gen_name_string<wchar_t>())));
     }
 };
 } // namespace rc
