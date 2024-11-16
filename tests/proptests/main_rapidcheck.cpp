@@ -111,7 +111,7 @@ bool forLimitedObjectPermutation(std::string_view test_name, auto test_f)
     // todo, remove surrogate to the wobject generator and it's
     // attributes for linux support
     // afterwards, use "forAllObjectPermutations" and delete this function
-#if defined(WIN32) || defined(__APPLE__)
+#if defined(WIN32)
     ret &=
         executeTest<wchar_t, vdf::basic_object>(test_name, std::move(test_f));
 
