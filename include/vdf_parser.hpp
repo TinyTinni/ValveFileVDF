@@ -111,14 +111,14 @@ inline std::string string_converter(const std::wstring &w) NOEXCEPT
     auto wstr = w.data();
 // unsafe: ignores any error handling
 // and disables warning that wcsrtombs_s should be used
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #endif
     std::size_t len = 1 + std::wcsrtombs(nullptr, &wstr, 0, &state);
     std::string mbstr(len, '\0');
     std::wcsrtombs(&mbstr[0], &wstr, mbstr.size(), &state);
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #endif
     return mbstr;
