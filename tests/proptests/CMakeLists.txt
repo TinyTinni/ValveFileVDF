@@ -24,6 +24,10 @@ target_compile_options(rapidcheck_tests PRIVATE
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     target_link_libraries(rapidcheck_tests PUBLIC -fsanitize=address,undefined)
+elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+    # disable annotations or possible annotation mismatch with librapidcheck. It is not really required by the vdf parser
+    target_compile_definitions(rapidcheck_tests PRIVATE "_DISABLE_VECTOR_ANNOTATION" "_DISABLE_STRING_ANNOTATION") 
+    target_compile_options(rapidcheck_tests PRIVATE /fsanitize=address)
 endif()
 
 

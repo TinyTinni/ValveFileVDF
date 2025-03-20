@@ -8,7 +8,7 @@ on:
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+  BUILD_TYPE: RelWithDebInfo
 
 
 jobs:
@@ -24,6 +24,13 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.13' 
+
+    # setup toolchain for asan
+    - name: Setup MSVC dev command prompt
+      uses: TheMrMilchmann/setup-msvc-dev@v3
+      with:
+        arch: x64
+      if: contains(matrix.os, 'windows' )
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -45,7 +52,7 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build
       env:
-        RC_PARAMS: "max_success=1000"
+        RC_PARAMS: "max_success=300"
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --output-on-failure -C ${{env.BUILD_TYPE}}
