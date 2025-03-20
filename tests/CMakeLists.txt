@@ -18,6 +18,8 @@ target_compile_options(tests PRIVATE
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     target_link_libraries(tests PUBLIC -fsanitize=address,undefined)
+elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+    target_compile_options(tests PRIVATE /fsanitize=address)
 endif()
 
 
