@@ -10,6 +10,7 @@ project(
 option(VALVEFILEVDF_ENABLE_TESTING OFF)
 option(VALVEFILEVDF_ENABLE_FUZZING OFF)
 option(VALVEFILEVDF_ENABLE_PYTHON OFF)
+option(VALVEFILEVDF_ENABLE_BENCHMARK OFF)
 
 if (VALVEFILEVDF_ENABLE_FUZZING)
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC" AND NOT APPLE)
@@ -70,9 +71,8 @@ if (${VALVEFILEVDF_ENABLE_TESTING} OR ${VALVEFILEVDF_ENABLE_FUZZING})
 endif()
 
 if (${VALVEFILEVDF_ENABLE_TESTING})
-    add_subdirectory(./tests)
+    add_subdirectory(tests)
 endif()
-
 
 if (${VALVEFILEVDF_ENABLE_FUZZING})
     add_subdirectory(fuzzing)
@@ -80,4 +80,8 @@ endif()
 
 if (${VALVEFILEVDF_ENABLE_PYTHON})
     add_subdirectory(python)
+endif()
+
+if (${VALVEFILEVDF_ENABLE_BENCHMARK})
+    add_subdirectory(benchmark)
 endif()
