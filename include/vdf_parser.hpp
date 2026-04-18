@@ -328,7 +328,6 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
     typedef typename std::iterator_traits<IterT>::value_type charT;
 
     const std::basic_string<charT> comment_end_str = TYTI_L(charT, "*/");
-    const std::basic_string<charT> whitespaces = TYTI_L(charT, " \n\v\f\r\t");
 
 #ifdef WIN32
     std::function<bool(const std::basic_string<charT> &)> is_platform_str =
@@ -417,7 +416,13 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         return iter;
     };
 
-    auto end_word = [&whitespaces](IterT iter, const IterT &last) -> IterT
+    auto is_whitespace = [](charT c)
+    {
+        return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' ||
+                c == '\f');
+    };
+
+    auto end_word = [is_whitespace](IterT iter, const IterT &last) -> IterT
     {
         const auto begin = iter;
         auto last_esc = iter;
@@ -426,8 +431,8 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         do
         {
             ++iter;
-            iter = std::find_first_of(iter, last, std::begin(whitespaces),
-                                      std::end(whitespaces));
+            while (iter != last && !is_whitespace(*iter))
+                ++iter;
             if (iter == last)
                 break;
 
@@ -440,26 +445,27 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         return iter;
     };
 
-    auto skip_whitespaces = [&whitespaces](IterT iter,
-                                           const IterT &last) -> IterT
+    auto skip_whitespaces = [&is_whitespace](IterT iter,
+                                             const IterT &last) -> IterT
     {
-        if (iter == last)
-            return iter;
-        iter = std::find_if_not(iter, last,
-                                [&whitespaces](charT c)
-                                {
-                                    // return true if whitespace
-                                    return std::any_of(std::begin(whitespaces),
-                                                       std::end(whitespaces),
-                                                       [c](charT pc)
-                                                       { return pc == c; });
-                                });
+        while (iter != last && is_whitespace(*iter))
+            ++iter;
         return iter;
     };
 
-    std::function<void(std::basic_string<charT> &)> strip_escape_symbols =
-        [](std::basic_string<charT> &s)
+    auto strip_escape_symbols =
+        [strip = opt.strip_escape_symbols](std::basic_string<charT> &&s)
     {
+        if (!strip)
+        {
+            return s;
+        }
+        // fast exit, in case the string has no escape symbol
+        if (s.find('\\') == s.npos)
+        {
+            return s;
+        }
+
         auto quote_searcher = [&s](size_t pos)
         { return s.find(TYTI_L(charT, "\\\""), pos); };
         auto p = quote_searcher(0);
@@ -476,10 +482,8 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
             s.replace(p, 2, TYTI_L(charT, "\\"));
             p = searcher(p + 1);
         }
+        return s;
     };
-
-    if (!opt.strip_escape_symbols)
-        strip_escape_symbols = [](std::basic_string<charT> &) {};
 
     auto conditional_fullfilled =
         [&skip_whitespaces, &is_platform_str](IterT &iter, const IterT &last)
@@ -487,25 +491,22 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         iter = skip_whitespaces(iter, last);
         if (iter == last)
             return true;
-        if (*iter == '[')
-        {
+        if (*iter != '[')
+            return true;
+        ++iter;
+
+        if (iter == last)
+            throw std::runtime_error("conditional not closed");
+        const auto end = std::find(iter, last, ']');
+        if (end == last)
+            throw std::runtime_error("conditional not closed");
+        const bool negate = *iter == '!';
+        if (negate)
             ++iter;
-            if (iter == last)
-                throw std::runtime_error("conditional not closed");
-            const auto end = std::find(iter, last, ']');
-            if (end == last)
-                throw std::runtime_error("conditional not closed");
-            const bool negate = *iter == '!';
-            if (negate)
-                ++iter;
-            auto conditional = std::basic_string<charT>(iter, end);
-
-            const bool is_platform = is_platform_str(conditional);
-            iter = end + 1;
-
-            return static_cast<bool>(is_platform ^ negate);
-        }
-        return true;
+        auto conditional = std::basic_string<charT>(iter, end);
+        const bool is_platform = is_platform_str(conditional);
+        iter = end + 1;
+        return static_cast<bool>(is_platform ^ negate);
     };
 
     // read header
@@ -536,7 +537,6 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
             if (*curIter == TYTI_L(charT, '\"'))
                 ++curIter;
             std::basic_string<charT> key(curIter, keyEnd);
-            strip_escape_symbols(key);
             curIter = keyEnd + ((*keyEnd == TYTI_L(charT, '\"')) ? 1 : 0);
             if (curIter == last)
                 throw std::runtime_error{"key opened, but never closed"};
@@ -574,7 +574,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                     throw std::runtime_error("No closed word");
 
                 auto value = std::basic_string<charT>(curIter, valueEnd);
-                strip_escape_symbols(value);
+
                 curIter =
                     valueEnd + ((*valueEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
@@ -587,7 +587,9 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                 {
                     if (curObj)
                     {
-                        curObj->add_attribute(std::move(key), std::move(value));
+                        curObj->add_attribute(
+                            strip_escape_symbols(std::move(key)),
+                            strip_escape_symbols(std::move(value)));
                     }
                     else
                     {
@@ -622,7 +624,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                 if (curObj)
                     lvls.push(std::move(curObj));
                 curObj = std::make_unique<OutputT>();
-                curObj->set_name(std::move(key));
+                curObj->set_name(strip_escape_symbols(std::move(key)));
                 ++curIter;
             }
         }
