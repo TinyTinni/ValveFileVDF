@@ -19,15 +19,15 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.13' 
 
     # setup toolchain for asan
     - name: Setup MSVC dev command prompt
-      uses: TheMrMilchmann/setup-msvc-dev@v3
+      uses: TheMrMilchmann/setup-msvc-dev@v4
       with:
         arch: x64
       if: contains(matrix.os, 'windows' )
@@ -65,7 +65,7 @@ jobs:
 
     # Download previous benchmark result from cache (if exists)
     - name: Download previous benchmark data
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ./cache
         key: ${{ runner.os }}-benchmark
