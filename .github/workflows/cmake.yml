@@ -58,3 +58,28 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --output-on-failure -C ${{env.BUILD_TYPE}}
 
+    - name: Benchmark
+      working-directory: ${{github.workspace}}/build/benchmark
+      run: ./benchmark_vdf --benchmark_format=json | tee benchmark_result.json
+      if: ${{!contains(matrix.os, 'windows' )}} # disable on windows as the benchmark path is somewhere else
+
+    # Download previous benchmark result from cache (if exists)
+    - name: Download previous benchmark data
+      uses: actions/cache@v4
+      with:
+        path: ./cache
+        key: ${{ runner.os }}-benchmark
+      if: ${{!contains(matrix.os, 'windows' )}}
+
+    - name: Store benchmark result
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        tool: 'googlecpp'
+        output-file-path: ${{github.workspace}}/build/benchmark/benchmark_result.json
+        external-data-json-path: ./cache/benchmark-data.json
+        # Enable alert commit comment
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        comment-on-alert: true
+      if: ${{!contains(matrix.os, 'windows' )}}
+
+
