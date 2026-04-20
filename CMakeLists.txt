@@ -33,14 +33,14 @@ target_sources(ValveFileVDF
 #############################
 ## Install
 
-set_target_properties(ValveFileVDF PROPERTIES PUBLIC_HEADER "include/vdf_parser.hpp")
-
 include(GNUInstallDirs)
 install(TARGETS ValveFileVDF
+    EXPORT ValveFileVDFTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 include(CMakePackageConfigHelpers)
@@ -54,15 +54,20 @@ write_basic_package_version_file(
 
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-    INSTALL_DESTINATION cmake
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ValveFileVDF"
 )
 
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-    DESTINATION cmake
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ValveFileVDF"
 )
 
+install(EXPORT ValveFileVDFTargets
+    FILE ${PROJECT_NAME}Targets.cmake
+    NAMESPACE ValveFileVDF::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ValveFileVDF"
+)
 
 ###################################
 # Tests
