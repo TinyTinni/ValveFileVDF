@@ -308,7 +308,7 @@ If the file is mailformatted, parser will try to read it until it can.
                         prevents circular includes
 
 can thow:
-        - "std::runtime_error" if a parsing error occured
+        - "std::runtime_error" if a parsing error occurred
         - "std::bad_alloc" if not enough memory coup be allocated
 */
 template <typename OutputT, typename IterT>
@@ -669,7 +669,7 @@ If the file is mailformatted, parser will try to read it until it can.
 @param end end iterator
 
 can thow:
-        - "std::runtime_error" if a parsing error occured
+        - "std::runtime_error" if a parsing error occurred
         - "std::bad_alloc" if not enough memory coup be allocated
 */
 template <typename OutputT, typename IterT>
@@ -796,7 +796,7 @@ read(iStreamT &inStream, std::error_code &ec, const Options &opt = Options{})
 
 /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf
    formatted data. throws "std::bad_alloc" if file buffer could not be allocated
-    ok == false, if a parsing error occured
+    ok == false, if a parsing error occurred
 */
 template <typename OutputT, typename iStreamT>
 OutputT read(iStreamT &inStream, bool *ok, const Options &opt = Options{})
@@ -817,7 +817,7 @@ read(iStreamT &inStream, bool *ok, const Options &opt = Options{})
 
 /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf
    formatted data. throws "std::bad_alloc" if file buffer could not be allocated
-    throws "std::runtime_error" if a parsing error occured
+    throws "std::runtime_error" if a parsing error occurred
 */
 template <typename OutputT, typename iStreamT>
 OutputT read(iStreamT &inStream, const Options &opt)

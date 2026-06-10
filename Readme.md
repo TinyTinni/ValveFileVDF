@@ -198,7 +198,7 @@ Please have a look at the [./python](./python) directory.
 
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
-      throws "std::runtime_error" if a parsing error occured
+      throws "std::runtime_error" if a parsing error occurred
   */
   template<ytpename OutputT, typename iStreamT>
   std::vector<OutputT> read(iStreamT& inStream, const Options &opt = Options{});
@@ -208,7 +208,7 @@ Please have a look at the [./python](./python) directory.
 
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
-      ok == false, if a parsing error occured
+      ok == false, if a parsing error occurred
   */
   template<typename OutputT, typename iStreamT>
   std::vector<OutputT> read(iStreamT& inStream, bool* ok, const Options &opt = Options{});
@@ -234,7 +234,7 @@ Please have a look at the [./python](./python) directory.
   @param first begin iterator
   @param end end iterator
   
-  throws "std::runtime_error" if a parsing error occured
+  throws "std::runtime_error" if a parsing error occurred
   throws "std::bad_alloc" if not enough memory could be allocated
   */
   template<typename OutputT, typename IterT>
