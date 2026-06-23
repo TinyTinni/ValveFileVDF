@@ -518,6 +518,7 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
 // Forward declaring 'X' in namespace std is not permitted by the C++ Standard.
 DOCTEST_MSVC_SUPPRESS_WARNING_WITH_PUSH(4643)
+DOCTEST_MSVC_SUPPRESS_WARNING(5285)
 
 namespace std { // NOLINT(cert-dcl58-cpp)
 typedef decltype(nullptr) nullptr_t; // NOLINT(modernize-use-using)
