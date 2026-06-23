@@ -8,7 +8,7 @@ This header-only file provides a parser and writer to load and save the given da
 
 ## Features:
 - read and write vdf data in C++
-- build-in encodings: `char`  and `wchar_t`
+- built-in encodings: `char`  and `wchar_t`
 - supports custom character sets
 - support for C++ (//) and C (/**/) comments
 - `#include`/`#base` keyword (note: searches for files in the current working directory)
@@ -34,7 +34,7 @@ All functions and data structures supports wide characters.
 The wide character data structure is indicated by the commonly known `w`-prefix.
 Functions are templates and don't need a prefix.
 
-To read an file, create a stream e.g. `std::ifsteam` or `std::wifstream`
+To read an file, create a stream e.g. `std::ifstream` or `std::wifstream`
 and call the `tyti::vdf::read` function.
 ```c++
 std::ifstream file("PathToMyFile");
@@ -77,7 +77,7 @@ tyti::vdf::write(file, object);
 
 ## Multi-Key and Custom Output Type
 
-It is also possible to customize your output dataformat.
+It is also possible to customize your output data format.
 Per default, the parser stores all items in a std::unordered_map, which, per definition,
 doesn't allow different entries with the same key.
 
@@ -103,7 +103,7 @@ void add_attribute(std::basic_string<CHAR> key, std::basic_string<CHAR> value);
 void add_child(std::unique_ptr< MYCLASS > child);
 void set_name(std::basic_string<CHAR> n);
 ```
-where ```MYCLASS``` is the tpe of your class and ```CHAR``` the type of your character set.
+where ```MYCLASS``` is the type of your class and ```CHAR``` the type of your character set.
 Also, the type has to be [default constructible](http://en.cppreference.com/w/cpp/types/is_default_constructible)
 and [move constructible](http://en.cppreference.com/w/cpp/types/is_move_constructible).
 
@@ -169,7 +169,7 @@ Please have a look at the [./python](./python) directory.
     std::unordered_map<std::basic_string<char_type>, std::shared_ptr< basic_object<char_type> > > childs;
   };
   typedef basic_object<char> object;
-  typedef basic_object<wchar_t> wobject
+  typedef basic_object<wchar_t> wobject;
 
   // output object with multikey support
   template<typename T>
@@ -180,16 +180,16 @@ Please have a look at the [./python](./python) directory.
     std::unordered_multimap<std::basic_string<char_type>, std::shared_ptr< basic_object<char_type> > > childs;
   };
   typedef basic_multikey_object<char> multikey_object;
-  typedef basic_multikey_object<wchar_t> wmultikey_object
+  typedef basic_multikey_object<wchar_t> wmultikey_object;
 
 /////////////////////////////////////////////////////////////
 // error codes
 /////////////////////////////////////////////////////////////
 /*
   Possible error codes:
-    std::errc::protocol_error: file is mailformatted
+    std::errc::protocol_error: file is malformed
     std::errc::not_enough_memory: not enough space
-    std::errc::invalid_argument: iterators throws e.g. out of range
+    std::errc::invalid_argument: iterator throws e.g. out of range
 */
 
 /////////////////////////////////////////////////////////////
@@ -198,82 +198,82 @@ Please have a look at the [./python](./python) directory.
 
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
-      throws "std::runtime_error" if a parsing error occured
+      throws "std::runtime_error" if a parsing error occurred
   */
-  template<ytpename OutputT, typename iStreamT>
-  std::vector<OutputT> read(iStreamT& inStream, const Options &opt = Options{});
+  template<typename OutputT, typename iStreamT>
+  OutputT read(iStreamT& inStream, const Options &opt = Options{});
 
   template<typename iStreamT>
-   std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, const Options &opt = Options{});
+   basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, const Options &opt = Options{});
 
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
-      ok == false, if a parsing error occured
+      ok == false, if a parsing error occurred
   */
   template<typename OutputT, typename iStreamT>
-  std::vector<OutputT> read(iStreamT& inStream, bool* ok, const Options &opt = Options{});
+  OutputT read(iStreamT& inStream, bool* ok, const Options &opt = Options{});
 
   template<typename iStreamT>
-   std::vector<basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, bool* ok, const Options &opt = Options{});
+   basic_object<typename iStreamT::char_type>> read(iStreamT& inStream, bool* ok, const Options &opt = Options{});
   
   /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf formatted data.
       throws "std::bad_alloc" if file buffer could not be allocated
   */
   template<typename OutputT, typename iStreamT>
-   std::vector<OutputT> read(iStreamT& inStream, std::error_code& ec, const Options &opt = Options{});
+   OutputT read(iStreamT& inStream, std::error_code& ec, const Options &opt = Options{});
 
   template<typename iStreamT>
-   std::vector<basic_object<iStreamT::char_type>> read(iStreamT& inStream, std::error_code& ec, const Options &opt = Options{});
+   basic_object<iStreamT::char_type>> read(iStreamT& inStream, std::error_code& ec, const Options &opt = Options{});
 
 /////////////////////////////////////////////////////////////
 // read from memory
 /////////////////////////////////////////////////////////////
 
   /** \brief Read VDF formatted sequences defined by the range [first, last).
-  If the file is mailformatted, parser will try to read it until it can.
+  If the file is malformed, parser will try to read it until it can.
   @param first begin iterator
   @param end end iterator
   
-  throws "std::runtime_error" if a parsing error occured
+  throws "std::runtime_error" if a parsing error occurred
   throws "std::bad_alloc" if not enough memory could be allocated
   */
   template<typename OutputT, typename IterT>
-   std::vector<OutputT> read(IterT first, IterT last, const Options &opt = Options{});
+   OutputT read(IterT first, IterT last, const Options &opt = Options{});
 
   template<typename IterT>
-   std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, const Options &opt = Options{});
+   basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, const Options &opt = Options{});
  
   /** \brief Read VDF formatted sequences defined by the range [first, last).
-  If the file is mailformatted, parser will try to read it until it can.
+  If the file is malformed, parser will try to read it until it can.
   @param first begin iterator
   @param end end iterator
-  @param ok output bool. true, if parser successed, false, if parser failed
+  @param ok output bool. true, if parser succeeded, false, if parser failed
   */
   template<typename OutputT, typename IterT>
-   std::vector<OutputT> read(IterT first, IterT last, bool* ok, const Options &opt = Options{}) noexcept;
+   OutputT read(IterT first, IterT last, bool* ok, const Options &opt = Options{}) noexcept;
   
   template<typename IterT>
-   std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, bool* ok, const Options &opt = Options{}) noexcept;
+   basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, bool* ok, const Options &opt = Options{}) noexcept;
   
 
 
   /** \brief Read VDF formatted sequences defined by the range [first, last).
-  If the file is mailformatted, parser will try to read it until it can.
+  If the file is malformed, parser will try to read it until it can.
   @param first begin iterator
   @param end end iterator
-  @param ec output bool. 0 if ok, otherwise, holds an system error code
+  @param ec output bool. 0 if ok, otherwise, holds a system error code
   */
   template<typename OutputT, typename IterT>
-  std::vector<OutputT> read(IterT first, IterT last, std::error_code& ec, const Options &opt = Options{}) noexcept;
+  OutputT read(IterT first, IterT last, std::error_code& ec, const Options &opt = Options{}) noexcept;
   
   template<typename IterT>
-  std::vector<basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, std::error_code& ec, const Options &opt = Options{}) noexcept;
+  basic_object<typename std::iterator_traits<IterT>::value_type>> read(IterT first, IterT last, std::error_code& ec, const Options &opt = Options{}) noexcept;
   
 
 /////////////////////////////////////////////////////////////////////////////
   // Writer functions
   /// writes given obj into out in vdf style 
-  /// Output is prettyfied, using tabs
+  /// Output is prettified, using tabs
   template<typename oStreamT, typename T>
   void write(oStreamT& out, const T& obj, const WriteOptions& opts);
   
@@ -281,7 +281,7 @@ Please have a look at the [./python](./python) directory.
 
 ## Remarks for Errors
 The current version is a greedy implementation and jumps over unrecognized fields.
-Therefore, the error detection is very imprecise an does not give the line, where the error occurs.
+Therefore, the error detection is very imprecise and does not give the line, where the error occurs.
 
 ## License
 

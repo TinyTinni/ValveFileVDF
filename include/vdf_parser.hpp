@@ -14,7 +14,7 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -73,7 +73,7 @@ namespace vdf
 namespace detail
 {
 ///////////////////////////////////////////////////////////////////////////
-//  Helper functions selecting the right encoding (char/wchar_T)
+//  Helper functions selecting the right encoding (char/wchar_t)
 ///////////////////////////////////////////////////////////////////////////
 
 template <typename T> struct literal_macro_help
@@ -175,7 +175,7 @@ std::basic_string<charT> escape(std::basic_string<charT> in)
 /// custom objects and their corresponding write functions
 
 /// basic object node. Every object has a name and can contains attributes saved
-/// as key_value pairs or childrens
+/// as key_value pairs or children
 template <typename CharT> struct basic_object
 {
     typedef CharT char_type;
@@ -301,15 +301,15 @@ std::basic_string<typename iStreamT::char_type> read_file(iStreamT &inStream)
 }
 
 /** \brief Read VDF formatted sequences defined by the range [first, last).
-If the file is mailformatted, parser will try to read it until it can.
+If the file is malformed, parser will try to read it until it can.
 @param first            begin iterator
 @param end              end iterator
 @param exclude_files    list of files which cant be included anymore.
                         prevents circular includes
 
-can thow:
-        - "std::runtime_error" if a parsing error occured
-        - "std::bad_alloc" if not enough memory coup be allocated
+can throw:
+        - "std::runtime_error" if a parsing error occurred
+        - "std::bad_alloc" if not enough memory could be allocated
 */
 template <typename OutputT, typename IterT>
 std::vector<std::unique_ptr<OutputT>> read_internal(
@@ -362,7 +362,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         { return false; };
 
     // function for skipping a comment block
-    // iter: iterator poition to the position after a '/'
+    // iter: iterator position to the position after a '/'
     auto skip_comments = [&comment_end_str](IterT iter,
                                             const IterT &last) -> IterT
     {
@@ -380,7 +380,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
 
         if (*iter == '*')
         {
-            // block comment, skip until next occurance of "*\"
+            // block comment, skip until next occurrence of "*\"
             iter = std::search(iter + 1, last, std::begin(comment_end_str),
                                std::end(comment_end_str));
             if (std::distance(iter, last) <= 2)
@@ -485,7 +485,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
         return s;
     };
 
-    auto conditional_fullfilled =
+    auto conditional_fulfilled =
         [&skip_whitespaces, &is_platform_str](IterT &iter, const IterT &last)
     {
         iter = skip_whitespaces(iter, last);
@@ -543,7 +543,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
 
             curIter = skip_whitespaces(curIter, last);
 
-            if (!conditional_fullfilled(curIter, last))
+            if (!conditional_fulfilled(curIter, last))
                 continue;
             if (curIter == last)
                 throw std::runtime_error{"key declared, but no value"};
@@ -578,7 +578,7 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
                 curIter =
                     valueEnd + ((*valueEnd == TYTI_L(charT, '\"')) ? 1 : 0);
 
-                if (!conditional_fullfilled(curIter, last))
+                if (!conditional_fulfilled(curIter, last))
                     continue;
 
                 // process value
@@ -664,13 +664,13 @@ std::vector<std::unique_ptr<OutputT>> read_internal(
 } // namespace detail
 
 /** \brief Read VDF formatted sequences defined by the range [first, last).
-If the file is mailformatted, parser will try to read it until it can.
+If the file is malformed, parser will try to read it until it can.
 @param first begin iterator
 @param end end iterator
 
-can thow:
-        - "std::runtime_error" if a parsing error occured
-        - "std::bad_alloc" if not enough memory coup be allocated
+can throw:
+        - "std::runtime_error" if a parsing error occurred
+        - "std::bad_alloc" if not enough memory could be allocated
 */
 template <typename OutputT, typename IterT>
 OutputT read(IterT first, const IterT last, const Options &opt = Options{})
@@ -693,15 +693,15 @@ OutputT read(IterT first, const IterT last, const Options &opt = Options{})
 }
 
 /** \brief Read VDF formatted sequences defined by the range [first, last).
-If the file is mailformatted, parser will try to read it until it can.
+If the file is malformed, parser will try to read it until it can.
 @param first begin iterator
 @param end end iterator
-@param ec output bool. 0 if ok, otherwise, holds an system error code
+@param ec output bool. 0 if ok, otherwise, holds a system error code
 
 Possible error codes:
-std::errc::protocol_error: file is mailformatted
+std::errc::protocol_error: file is malformed
 std::errc::not_enough_memory: not enough space
-std::errc::invalid_argument: iterators throws e.g. out of range
+std::errc::invalid_argument: iterator throws e.g. out of range
 */
 template <typename OutputT, typename IterT>
 OutputT read(IterT first, IterT last, std::error_code &ec,
@@ -730,10 +730,10 @@ OutputT read(IterT first, IterT last, std::error_code &ec,
 }
 
 /** \brief Read VDF formatted sequences defined by the range [first, last).
-If the file is mailformatted, parser will try to read it until it can.
+If the file is malformed, parser will try to read it until it can.
 @param first begin iterator
 @param end end iterator
-@param ok output bool. true, if parser successed, false, if parser failed
+@param ok output bool. true, if parser succeeded, false, if parser failed
 */
 template <typename OutputT, typename IterT>
 OutputT read(IterT first, const IterT last, bool *ok,
@@ -796,7 +796,7 @@ read(iStreamT &inStream, std::error_code &ec, const Options &opt = Options{})
 
 /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf
    formatted data. throws "std::bad_alloc" if file buffer could not be allocated
-    ok == false, if a parsing error occured
+    ok == false, if a parsing error occurred
 */
 template <typename OutputT, typename iStreamT>
 OutputT read(iStreamT &inStream, bool *ok, const Options &opt = Options{})
@@ -817,7 +817,7 @@ read(iStreamT &inStream, bool *ok, const Options &opt = Options{})
 
 /** \brief Loads a stream (e.g. filestream) into the memory and parses the vdf
    formatted data. throws "std::bad_alloc" if file buffer could not be allocated
-    throws "std::runtime_error" if a parsing error occured
+    throws "std::runtime_error" if a parsing error occurred
 */
 template <typename OutputT, typename iStreamT>
 OutputT read(iStreamT &inStream, const Options &opt)
